@@ -1,0 +1,54 @@
+Phase 1: Backend Setup & Testing
+--------------------------------
+- Setup Node.js + Express
+- Integrate unofficial YTM API (ytmusic-api)
+- Implement endpoints:
+    • /search?q= → song list JSON
+    • /song/:videoId → song details JSON
+- Test with Postman / curl
+- Ensure search results & metadata (videoId, artist, thumbnails, duration) work
+
+            |
+            v
+
+Phase 2: Minimal Frontend Integration
+-------------------------------------
+- Simple HTML/JS UI (Monochrome-style)
+- Search bar → calls /search endpoint
+- Display results → clickable items
+- Use YouTube IFrame Player API for playback
+- Show song title, artist, and thumbnail
+- Basic play/pause/next/previous controls
+
+            |
+            v
+
+Phase 3: Core Enhancements
+---------------------------
+- Implement browser-side queue management
+- Store favorites/recently played in IndexedDB
+- Integrate Media Session API for OS media controls
+- Progressive Web App support (service worker caching)
+- Apply Monochrome-style UI/UX (glassmorphism, pastel theme)
+
+            |
+            v
+
+Phase 4: Advanced Features
+---------------------------
+- Support authentication (private playlists, liked songs) using YTM cookies
+- Add playlist, album, recommendations endpoints in backend
+- Cache backend data for faster response
+- Implement shuffle/repeat, song progress bar
+
+            |
+            v
+
+Phase 5: Optional Extras
+-------------------------
+- Lyrics display / karaoke mode
+- Dark/light theme toggle
+- Queue reordering, drag & drop
+- Smooth animations, transitions, visual polish
+- Offline library support (cached songs metadata, not audio)
+
