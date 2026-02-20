@@ -1,70 +1,72 @@
 // ── piped.js ──────────────────────────────────────────────────────────────
 //
-//  SEARCH  → Invidious only  (consistent CORS support, very reliable)
-//  STREAMS → Piped first     (direct audio URL)
-//            → YT embed URL  (fallback if Piped also has CORS issues)
+//  All requests are routed through corsproxy.io to bypass CORS restrictions.
+//
+//  SEARCH  → Invidious (reliable API, good data)
+//  STREAMS → Piped (direct audio URL) → YT embed fallback
 //
 // ─────────────────────────────────────────────────────────────────────────
+
+const CORS = 'https://corsproxy.io/?url=';
 
 const INVIDIOUS_INSTANCES = [
   'https://inv.nadeko.net',
   'https://invidious.fdn.fr',
-  'https://yt.artemislena.eu',
-  'https://invidious.nerdvpn.de',
-  'https://iv.melmac.space',
   'https://invidious.privacydev.net',
+  'https://iv.melmac.space',
+  'https://invidious.nerdvpn.de',
+  'https://yt.artemislena.eu',
 ];
 
 const PIPED_INSTANCES = [
-  'https://api.piped.yt',
   'https://pipedapi.kavin.rocks',
+  'https://api.piped.yt',
   'https://piped.adminforge.de',
-  'https://piped-api.garudalinux.org',
-  'https://pipedapi.in',
 ];
 
-const TIMEOUT_MS = 5000;
+const TIMEOUT_MS = 6000;
 
-let activeInvidious = null;  // search
-let activePiped     = null;  // streams (optional — falls back to YT embed)
+let activeInvidious = null;
+let activePiped     = null;
 
-// ── pick Invidious instance for search ───────────────────────────────────
+// ── proxied fetch helper ──────────────────────────────────────────────────
+async function pfetch(url, timeout = TIMEOUT_MS) {
+  const proxied = CORS + encodeURIComponent(url);
+  const res = await fetch(proxied, { signal: AbortSignal.timeout(timeout) });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res;
+}
+
+// ── pick instances ────────────────────────────────────────────────────────
 async function pickInstance(onStatus) {
   onStatus?.('connecting');
+
   for (const inst of INVIDIOUS_INSTANCES) {
     try {
-      const r = await fetch(
-        `${inst}/api/v1/search?q=music&type=video&fields=videoId`,
-        { signal: AbortSignal.timeout(TIMEOUT_MS) }
-      );
+      const r = await pfetch(`${inst}/api/v1/search?q=music&type=video&fields=videoId`);
       if (r.ok) {
         activeInvidious = inst;
         onStatus?.('ok', inst.replace('https://', ''));
-        // also try to grab a Piped instance in the background (non-blocking)
-        pickPipedQuietly();
+        pickPipedQuietly(); // non-blocking
         return;
       }
     } catch { /* try next */ }
   }
+
   onStatus?.('error');
-  throw new Error('All search servers unreachable. Check your connection.');
+  throw new Error('All servers unreachable. Try refreshing.');
 }
 
-// silently try to get a Piped instance — used only for streams
 async function pickPipedQuietly() {
   for (const inst of PIPED_INSTANCES) {
     try {
-      const r = await fetch(
-        `${inst}/streams/dQw4w9WgXcQ`,   // known video, quick probe
-        { signal: AbortSignal.timeout(TIMEOUT_MS) }
-      );
+      const r = await pfetch(`${inst}/streams/dQw4w9WgXcQ`);
       if (r.ok) { activePiped = inst; return; }
     } catch { /* try next */ }
   }
-  console.info('[Piped] No CORS-friendly Piped instance found — will use YT embed for playback');
 }
 
-// ── search via Invidious ──────────────────────────────────────────────────
+// ── search ────────────────────────────────────────────────────────────────
 async function searchTracks(query, onStatus) {
   if (!activeInvidious) await pickInstance(onStatus);
 
@@ -76,57 +78,41 @@ async function searchTracks(query, onStatus) {
 
   let res;
   try {
-    res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    res = await pfetch(url, 10000);
   } catch {
-    // instance dropped mid-session, re-pick
     activeInvidious = null;
     await pickInstance(onStatus);
     return searchTracks(query, onStatus);
   }
 
-  if (!res.ok) throw new Error(`Search failed (HTTP ${res.status})`);
-
   const items = await res.json();
-  return items.map(mapInvidiousItem).filter(Boolean);
+  return items.map(mapItem).filter(Boolean);
 }
 
-// ── get audio stream ──────────────────────────────────────────────────────
-// Returns { url, type } where type is 'direct' or 'embed'
-// player.js handles both cases
+// ── audio stream ──────────────────────────────────────────────────────────
 async function getAudioStream(videoId) {
-  // Try Piped direct audio first
   if (activePiped) {
     try {
-      const res = await fetch(
-        `${activePiped}/streams/${videoId}`,
-        { signal: AbortSignal.timeout(10000) }
-      );
-      if (res.ok) {
-        const data = await res.json();
-        if (data.audioStreams?.length) {
-          const best = data.audioStreams
-            .filter(s => s.url)
-            .sort((a, b) => (b.bitrate ?? 0) - (a.bitrate ?? 0))[0];
-          if (best?.url) {
-            return { url: best.url, type: 'direct', mimeType: best.mimeType };
-          }
-        }
+      const res  = await pfetch(`${activePiped}/streams/${videoId}`, 12000);
+      const data = await res.json();
+      if (data.audioStreams?.length) {
+        const best = data.audioStreams
+          .filter(s => s.url)
+          .sort((a, b) => (b.bitrate ?? 0) - (a.bitrate ?? 0))[0];
+        if (best?.url) return { url: best.url, type: 'direct', mimeType: best.mimeType };
       }
-    } catch {
-      activePiped = null;
-    }
+    } catch { activePiped = null; }
   }
 
-  // Piped unavailable — return YT embed URL as fallback
-  console.info(`[Stream] Using YT embed fallback for ${videoId}`);
+  // fallback — hidden YT embed iframe
   return {
-    url:  `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=0`,
+    url:  `https://www.youtube.com/embed/${videoId}?autoplay=1`,
     type: 'embed',
   };
 }
 
 // ── mapper ────────────────────────────────────────────────────────────────
-function mapInvidiousItem(item) {
+function mapItem(item) {
   if (!item?.videoId) return null;
   const thumbs   = item.videoThumbnails || [];
   const priority = ['medium', 'high', 'default'];
