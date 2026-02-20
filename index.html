@@ -1,180 +1,164 @@
 <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Music — Now Playing</title>
 
-<html class="dark" lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            colors: {
-              "primary": "#ea2a33",
-              "background-light": "#f8f6f6",
-              "background-dark": "#211111",
-            },
-            fontFamily: {
-              "display": ["Inter"]
-            },
-            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
-          },
-        },
-      }
-    </script>
-<style>
-      .material-symbols-outlined {
-        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-      }
-      .hide-scrollbar::-webkit-scrollbar { display: none; }
-      .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    </style>
-<style>
-    body {
-      min-height: max(884px, 100dvh);
-    }
-  </style>
-  </head>
-<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white min-h-screen pb-32">
-<!-- Top App Bar -->
-<div class="sticky top-0 z-20 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md">
-<div class="flex flex-col gap-2 p-4 pb-2">
-<div class="flex items-center h-12 justify-between">
-<div class="flex size-12 shrink-0 items-center">
-<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-primary/20" data-alt="user profile avatar circular" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA7NmXQQ-lFiYEljHe-zRYoQswRPmDywnOZwHQau_3SRT6_QaaAjCtDp0oXxbZmgoGLlMnFUZzpHp7Pth7kb-G_RXQbOQO_xZu1rS0mOotMvCLLn3PM3vzp6oNVRaMEK7Zz818jilU6q_0deY4RZh474bpLzjdJ27oh3_h2etdS7pgulD1WVIVjKmjv8hRDW-iL9lxadf2_U_3Br5ybtHxN6xqBWUFRcbqlguRka5gkxQe_awqnhqePj8OC7KHRAtW7yK6G33voKQ");'></div>
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/base.css"/>
+  <link rel="stylesheet" href="css/layout.css"/>
+  <link rel="stylesheet" href="css/sidebar.css"/>
+  <link rel="stylesheet" href="css/nowplaying.css"/>
+  <link rel="stylesheet" href="css/player.css"/>
+</head>
+<body>
+
+<!-- ── Ambient Background Layer ── -->
+<div id="ambient-bg">
+  <div id="ambient-art"></div>
 </div>
-<div class="flex w-12 items-center justify-end">
-<button class="flex cursor-pointer items-center justify-center rounded-full h-10 w-10 bg-transparent text-primary hover:bg-primary/10">
-<span class="material-symbols-outlined text-[28px]">search</span>
-</button>
+
+<!-- no hidden iframe needed — Piped gives us direct audio URLs -->
+
+<!-- ── App Shell ── -->
+<div id="app">
+
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       LEFT — Sidebar: search + queue
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  <aside id="sidebar">
+
+    <div class="sidebar-header">
+      <!-- Brand -->
+      <div class="brand">
+        <div class="brand-icon">♪</div>
+        <div class="brand-name">Music</div>
+      </div>
+
+      <!-- Search -->
+      <div class="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/>
+        </svg>
+        <input id="search-input" type="text" placeholder="Artists, songs, albums…" autocomplete="off" spellcheck="false"/>
+        <button id="search-btn" aria-label="Search">
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Queue header -->
+    <div class="queue-header">
+      <span class="queue-label">Queue</span>
+      <span class="queue-count" id="queue-count">0</span>
+    </div>
+
+    <!-- Track list -->
+    <div id="track-list"></div>
+
+    <!-- Server status -->
+    <div id="server-pill">
+      <div class="pill-dot"></div>
+      <span class="pill-text">Connecting…</span>
+    </div>
+
+  </aside>
+
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       CENTER — Now Playing
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  <main id="now-playing">
+
+    <!-- Album art -->
+    <div class="art-container">
+      <div id="album-art">
+        <img id="art-img" src="" alt="Album art"/>
+        <div class="art-placeholder">
+          <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Track info -->
+    <div id="track-meta" style="display:none;">
+      <div id="track-title">—</div>
+      <div id="track-artist"></div>
+    </div>
+
+    <!-- Idle hint -->
+    <div id="idle-hint">
+      <div class="idle-icon">🎵</div>
+      <div class="idle-label">Nothing playing</div>
+      <div class="idle-sub">Search for a song to get started</div>
+    </div>
+
+  </main>
+
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       BOTTOM — Player Bar
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  <footer id="player-bar">
+
+    <!-- Left: current track info -->
+    <div class="bar-info">
+      <img id="bar-thumb" src="" alt=""/>
+      <div class="bar-text">
+        <div id="bar-title">—</div>
+        <div id="bar-artist"></div>
+      </div>
+    </div>
+
+    <!-- Center: controls + progress -->
+    <div class="bar-controls">
+      <div class="ctrl-row">
+
+        <!-- Previous -->
+        <button class="ctrl-btn" id="btn-prev" aria-label="Previous">
+          <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+        </button>
+
+        <!-- Play / Pause -->
+        <button id="btn-play" aria-label="Play">
+          <svg viewBox="0 0 24 24">
+            <path id="play-icon" d="M8 5v14l11-7z"/>
+          </svg>
+        </button>
+
+        <!-- Next -->
+        <button class="ctrl-btn" id="btn-next" aria-label="Next">
+          <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zm2.5-6 5.5 3.9V8.1L8.5 12zM16 6h2v12h-2z"/></svg>
+        </button>
+
+      </div>
+
+      <!-- Progress bar -->
+      <div class="progress-row">
+        <span class="time-label" id="t-cur">0:00</span>
+        <div class="progress-track" id="progress-track">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <span class="time-label end" id="t-end">0:00</span>
+      </div>
+    </div>
+
+    <!-- Right: volume -->
+    <div class="bar-right">
+      <button class="vol-btn" aria-label="Volume">
+        <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+      </button>
+      <input type="range" class="volume-slider" id="volume-slider" min="0" max="100" value="80"/>
+    </div>
+
+  </footer>
+
 </div>
-</div>
-<p class="text-slate-900 dark:text-white tracking-tight text-[32px] font-bold leading-tight">Listen Now</p>
-</div>
-<div class="h-[1px] bg-slate-200 dark:bg-white/10 mx-4"></div>
-</div>
-<!-- Top Picks Carousel (Large Cards) -->
-<section>
-<h2 class="text-slate-900 dark:text-white text-[22px] font-bold leading-tight tracking-tight px-4 pb-3 pt-6">Top Picks for You</h2>
-<div class="flex overflow-x-auto hide-scrollbar">
-<div class="flex items-stretch px-4 gap-4">
-<div class="flex h-full flex-col gap-3 rounded-xl min-w-[300px]">
-<div class="w-full bg-center bg-no-repeat aspect-[4/3] bg-cover rounded-xl shadow-lg" data-alt="colorful abstract electronic music album cover" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD4Hk3jxVpCOMYSHksMT2miz0IYun3hQit2CBslCMegK3wP_mmLU7bH1patQ7afqqK_MIj0cBl37_g4-Q9pyF2u7EiyDVCi4ALRzNOVgl5l78Q5Rj6zabSwZ7RRUoCrVBSyJHYNGeEQiywnDJBGJ_MJ-vncuKBOx0NcNSPsu2iR9ONcaW3Z-B5W_D06NEdYRh8CanuR2rA2DGY-cnEOP9fjvNHX_YdUQUKTsNvrtCi7ZOf8-G8Pt1GZlWZ-sd2bIFGgHfrtxHWbHw");'></div>
-<div>
-<p class="text-primary text-xs font-bold uppercase tracking-wider">NEW STATION</p>
-<p class="text-slate-900 dark:text-white text-lg font-semibold">Discovery Station</p>
-<p class="text-slate-500 dark:text-[#b89d9f] text-sm">Based on your recent listening</p>
-</div>
-</div>
-<div class="flex h-full flex-col gap-3 rounded-xl min-w-[300px]">
-<div class="w-full bg-center bg-no-repeat aspect-[4/3] bg-cover rounded-xl shadow-lg" data-alt="dreamy pop music album cover art" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAbwLHJ-vXdHLFZGSZiubdW6mzxffxc_iSC2AcbCYlOHbaRqlSLHH1tEPVksEvdGL2RdYI7D-3-0kUoeDbxftMj-mKevNZFXRnNUT4vQbNWwXliAcc2FAXE2R5smLL4XvnUFdkHJuBcO8f31-OD_46Aw8uGzkppMEhBR1wzYdQL6eEp0nOyQO2qRiyKU8KlxFidzW0IBx7DoX7AcuG-tkkkO19xvrF1FqoWbeZ6GUp-u7Gn7NnfsVr8fejrPSGhr5oeXC6s20aADA");'></div>
-<div>
-<p class="text-primary text-xs font-bold uppercase tracking-wider">CURATED PLAYLIST</p>
-<p class="text-slate-900 dark:text-white text-lg font-semibold">New Music Mix</p>
-<p class="text-slate-500 dark:text-[#b89d9f] text-sm">Updated Friday</p>
-</div>
-</div>
-</div>
-</div>
-</section>
-<!-- Recently Played Grid -->
-<section>
-<div class="flex items-center justify-between px-4 pt-8 pb-3">
-<h2 class="text-slate-900 dark:text-white text-[22px] font-bold leading-tight tracking-tight">Recently Played</h2>
-<button class="text-primary text-sm font-medium">See All</button>
-</div>
-<div class="grid grid-cols-2 gap-4 p-4">
-<div class="flex flex-col gap-2">
-<div class="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-lg shadow-md" data-alt="album cover with neon lights" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBfcutUHArdOS64MSvLngXraVVHSHzwIkLu571PoXPrJd9TA939cE0LebiJID58Ojr2vwjZ6kT1YGFom0MfFhvHENaBdbrRsN2uELp3pnPJeLvktPglDaaD8K_IwtL_Mgk2y5OSvtT8J2t-VRKOMuNJRAbIcrc3kFtdB5b-S_b83m8rNtoCMrkQjgw64iBsq9LdbqZfN_DSBFBfEuLpj_NvKwhv9Ab3tsJFLxW4D9p5uxPFZTG_-ruA1M8-Zg-s0uqsGNKAa1bDLw");'></div>
-<div>
-<p class="text-slate-900 dark:text-white text-sm font-medium truncate">After Hours</p>
-<p class="text-slate-500 dark:text-[#b89d9f] text-xs truncate">The Weeknd</p>
-</div>
-</div>
-<div class="flex flex-col gap-2">
-<div class="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-lg shadow-md" data-alt="minimalist aesthetic album cover" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAjjNYJo84DooXmLTwG2RBObdJBCsiARSjW7kJcTSrNjzF8Glqid7z4U8roj8qyTcDpfYDI_7Qg78Av8ORDSchF40ec_JdE15ys2AtwxUNoMg6QsEZt__7xYlWRN_pirfVyx8Ty23l4lnu4s2kytV4Jn6bYxHUtsZnT0Hh57iA9ZMGxuvQFI_BA6zit16ToTKiX3IkGQmomntB9cTtTEFIVhot3MSTkXKif2ceLmpgNkySjF2yj8RcCu1iLWhN0KiRK9J9GGQIj2g");'></div>
-<div>
-<p class="text-slate-900 dark:text-white text-sm font-medium truncate">Midnights</p>
-<p class="text-slate-500 dark:text-[#b89d9f] text-xs truncate">Taylor Swift</p>
-</div>
-</div>
-<div class="flex flex-col gap-2">
-<div class="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-lg shadow-md" data-alt="vibrant artistic album cover" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAWeQM7BLnBYbdmzKgP9Utk4OcArkuFCaW2GdeF_DAXXy7Xp87QbU3nXY_QydtgXY9e1UhFE2smLYKS7NqSs9Ckmw_bl3JcSzW0-vCtXydZwolBZCrFHBp5_-ZoJxBHvqyky1f6yDeKSLfPNZDNoGz2Sx4MwwP24aLnZVh8Aa1Dd-3yqPjXGs8mPoL1ohwh-1dyUsruX9roN-B4BtKm2Z1hlyzxyw_Pd_0vlRXaBQhKOt5HcaVp_rgN7_3ixJtQNnp2AwxC1i-cpw");'></div>
-<div>
-<p class="text-slate-900 dark:text-white text-sm font-medium truncate">Starboy</p>
-<p class="text-slate-500 dark:text-[#b89d9f] text-xs truncate">The Weeknd</p>
-</div>
-</div>
-<div class="flex flex-col gap-2">
-<div class="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-lg shadow-md" data-alt="scenic nature album cover" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC4uZOqxvEypOglxUuo1ioTRxbRn205D0tSnqSS9znryJ6spNXjusYjN_hoEO5LQJZxr9ys_6hEWmXcZWLKs3RniIF6hIK2ieHIItc2azIuHLYjl-sTzRcRpTiC1Y6mFGJqLGZ4uw0dpDKSTG7ovZQKTKoQ4ZOZREPJyKEXCtpEWRx6OZnDofRlLfuot28MwGNCWsmzBCT9yTkNp9VSGzCEsoS4KfE-vQJ2D0JqcqjI9IokFLCQTbPDKfRkGlrS2z32gzkY3sXZRA");'></div>
-<div>
-<p class="text-slate-900 dark:text-white text-sm font-medium truncate">Folklore</p>
-<p class="text-slate-500 dark:text-[#b89d9f] text-xs truncate">Taylor Swift</p>
-</div>
-</div>
-</div>
-</section>
-<!-- Stations Section -->
-<section>
-<h2 class="text-slate-900 dark:text-white text-[22px] font-bold leading-tight tracking-tight px-4 pb-3 pt-6">Made For You</h2>
-<div class="flex overflow-x-auto hide-scrollbar">
-<div class="flex items-stretch px-4 gap-4">
-<div class="flex h-full flex-col gap-2 rounded-lg min-w-40">
-<div class="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-lg" data-alt="upbeat morning playlist cover" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDgSFyU8gahCtnLrg2Nw422d-z1AsPmloX_iie1vO4PQEyuQ9rPvlqoEAaERLRLNh-r4yvNcxcdjvfueZw3rAs23IsiP1WP-L-4Sk3mdXWUokmAHWwI_7eQNrR_s_gmNzki6hHcUtyTaDrObT3wDNss2wiSNhoIvR4014GH-IvgV2h-baDNBXgMyQXlVj5klPvn7NCmVkX7VDPLCU2m1khbMoh6ZTICmcEXNpKKJ6XpP3gy6ZaqFnuSsu8FfK_qGhtAaqQDSwTLlg");'></div>
-<p class="text-slate-900 dark:text-white text-sm font-medium truncate">Morning Routine</p>
-</div>
-<div class="flex h-full flex-col gap-2 rounded-lg min-w-40">
-<div class="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-lg" data-alt="relaxing lo-fi playlist cover" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAUwTB3BSfDN49_c55lXJ9RYimW38Q3ngmzprJIXuPstpTfYIVj3XRFFyM5OsfwPYXjLQgrRkm_JglMDTUkU-t75WSiD6HLYjOhpsDij6gVW8BIl47jFXBI7PCpg-4jrbYoVBUXfO7n1_LmaAFlddC0sAQ7dFmyQ6fEQnP4bqvqSrhUW7UqfofYNdOmpuWxQ_p_2VN8nZ8TBqdPCvYzlDQOpw87E9YO2iSkjQ_59KfcNOoagXzxfrPUKwX8vOZz_-srUEvMa9sImg");'></div>
-<p class="text-slate-900 dark:text-white text-sm font-medium truncate">Chill Station</p>
-</div>
-<div class="flex h-full flex-col gap-2 rounded-lg min-w-40">
-<div class="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-lg" data-alt="intense workout playlist cover" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC9vkkctbfIrUzYO7qCvwyTHErBnSR13XYILgAmoiot_s9CkE3wmItM5lLgeS8YsCUkd3xL4WBwHEgrJ6K7LHqHf36J0Tliptcx2Ov9f1zfw7g9Jr7ne12ZHFcp2NElB5ak5P9Ht5tThEeRk3iW3bKkBZRQq98CcbwdcV0LyPCB9hNFyYfxoNpkUoR5_cTHBZ6wtzeKHcUSrvDaqhkCzaxcEO6l_RP_SPBTfx0sdYGogLw7uIFzDy0OZ2XaVKSk0hcG1wjfHobObA");'></div>
-<p class="text-slate-900 dark:text-white text-sm font-medium truncate">Heavy Weights</p>
-</div>
-</div>
-</div>
-</section>
-<!-- Mini Player Bar -->
-<div class="fixed bottom-16 left-2 right-2 z-40">
-<div class="bg-white/95 dark:bg-[#2a1a1a]/95 backdrop-blur-xl border border-white/20 dark:border-white/5 rounded-xl h-14 flex items-center px-3 shadow-2xl">
-<div class="size-10 rounded-md bg-cover bg-center shrink-0" data-alt="currently playing track small album art" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBnRN97iMN8EXoHL1UxywRmBPszdYRKcrE40lXRjswQz4aUDTKlj9d_i182DisbMNpHV742c1TtHfQeE_RJfud3_hRTXCy65a1G6nrFqQeBHnOFvwY6yVR1jCGZz3hlhgYCJAqJLhXWVMN8MIWuAkrtXh1zMDbTKrdNxfgfBq2lW8a9jJ6ytx68ytZOTqCreLj8LpGEsqbroY9kreZO9W1UoZ-TvaVUbx5M0ltqe7xK6Lfil73pQhg2MAWGzzY5d4Ovrx_HfnIDGQ");'></div>
-<div class="ml-3 flex-1 min-w-0">
-<p class="text-slate-900 dark:text-white text-sm font-semibold truncate">Blinding Lights</p>
-</div>
-<div class="flex items-center gap-4 px-2">
-<button class="text-slate-900 dark:text-white">
-<span class="material-symbols-outlined text-[30px] fill-1">play_arrow</span>
-</button>
-<button class="text-slate-900 dark:text-white">
-<span class="material-symbols-outlined text-[30px]">skip_next</span>
-</button>
-</div>
-</div>
-</div>
-<!-- Tab Bar -->
-<div class="fixed bottom-0 left-0 right-0 z-50 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-lg border-t border-slate-200 dark:border-white/10 h-16 flex items-center justify-around px-6">
-<button class="flex flex-col items-center gap-1 text-primary">
-<span class="material-symbols-outlined fill-1">play_circle</span>
-<span class="text-[10px] font-medium">Listen Now</span>
-</button>
-<button class="flex flex-col items-center gap-1 text-slate-500 dark:text-[#b89d9f]">
-<span class="material-symbols-outlined">grid_view</span>
-<span class="text-[10px] font-medium">Browse</span>
-</button>
-<button class="flex flex-col items-center gap-1 text-slate-500 dark:text-[#b89d9f]">
-<span class="material-symbols-outlined">radio</span>
-<span class="text-[10px] font-medium">Radio</span>
-</button>
-<button class="flex flex-col items-center gap-1 text-slate-500 dark:text-[#b89d9f]">
-<span class="material-symbols-outlined">library_music</span>
-<span class="text-[10px] font-medium">Library</span>
-</button>
-<button class="flex flex-col items-center gap-1 text-slate-500 dark:text-[#b89d9f]">
-<span class="material-symbols-outlined">search</span>
-<span class="text-[10px] font-medium">Search</span>
-</button>
-</div>
-</body></html>
+
+<!-- ── Scripts (order matters) ── -->
+<script src="js/piped.js"></script>
+<script src="js/player.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>

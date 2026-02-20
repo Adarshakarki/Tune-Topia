@@ -1,0 +1,79 @@
+/* ── base.css — variables, reset, fonts ── */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Purple palette */
+  --purple:        #bf5af2;
+  --purple-light:  #d07ef7;
+  --purple-dark:   #9b3de0;
+  --purple-glow:   rgba(191, 90, 242, 0.35);
+  --purple-subtle: rgba(191, 90, 242, 0.12);
+  --purple-border: rgba(191, 90, 242, 0.25);
+
+  /* Dark base */
+  --bg:            #0a0a0f;
+  --bg2:           #0f0f18;
+  --bg3:           #13131e;
+
+  /* Glass surfaces */
+  --glass:         rgba(255, 255, 255, 0.06);
+  --glass-hover:   rgba(255, 255, 255, 0.10);
+  --glass-active:  rgba(191, 90, 242, 0.15);
+  --glass-border:  rgba(255, 255, 255, 0.10);
+  --glass-strong:  rgba(255, 255, 255, 0.13);
+
+  /* Text */
+  --text:          #ffffff;
+  --text-sec:      rgba(255, 255, 255, 0.65);
+  --text-ter:      rgba(255, 255, 255, 0.35);
+  --text-dim:      rgba(255, 255, 255, 0.18);
+
+  /* Misc */
+  --radius-sm:     10px;
+  --radius-md:     16px;
+  --radius-lg:     22px;
+  --radius-xl:     32px;
+  --blur:          blur(24px) saturate(1.6);
+  --blur-heavy:    blur(48px) saturate(1.8);
+  --transition:    0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  --shadow:        0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3);
+  --shadow-glow:   0 0 40px rgba(191, 90, 242, 0.2), 0 8px 32px rgba(0,0,0,0.6);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0; padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--purple-border); }
+
+/* selection */
+::selection { background: var(--purple-subtle); color: var(--text); }
+
+/* focus ring */
+:focus-visible {
+  outline: 2px solid var(--purple);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+img { display: block; }
+button { font-family: inherit; cursor: pointer; }
+input { font-family: inherit; }

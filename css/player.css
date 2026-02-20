@@ -1,0 +1,209 @@
+/* ── player.css — bottom control bar ── */
+
+#player-bar {
+  grid-column: 1 / -1;
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  gap: 20px;
+  background: rgba(10, 10, 20, 0.75);
+  backdrop-filter: var(--blur-heavy);
+  -webkit-backdrop-filter: var(--blur-heavy);
+  border-top: 1px solid var(--glass-border);
+  box-shadow: 0 -1px 0 rgba(255,255,255,0.04);
+}
+
+/* ── Track info (left) ── */
+.bar-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 240px;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+#bar-thumb {
+  width: 52px; height: 52px;
+  border-radius: 12px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--glass);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  transition: box-shadow var(--transition);
+}
+
+#bar-thumb.playing {
+  box-shadow: 0 4px 20px var(--purple-glow);
+}
+
+.bar-text { min-width: 0; }
+
+#bar-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text);
+  margin-bottom: 3px;
+}
+
+#bar-artist {
+  font-size: 12px;
+  color: var(--text-ter);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Center controls ── */
+.bar-controls {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  max-width: 600px;
+}
+
+.ctrl-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* icon buttons */
+.ctrl-btn {
+  background: none;
+  border: none;
+  color: var(--text-sec);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 50%;
+  transition: color var(--transition), transform var(--transition), background var(--transition);
+}
+.ctrl-btn:hover {
+  color: var(--text);
+  background: var(--glass-hover);
+  transform: scale(1.08);
+}
+.ctrl-btn svg {
+  width: 22px; height: 22px;
+  fill: currentColor;
+}
+
+/* play/pause — the hero button */
+#btn-play {
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  background: var(--text);
+  border: none;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(255,255,255,0.15);
+  transition: transform var(--transition), background var(--transition), box-shadow var(--transition);
+  flex-shrink: 0;
+}
+#btn-play:hover {
+  transform: scale(1.06);
+  box-shadow: 0 6px 28px rgba(255,255,255,0.25);
+}
+#btn-play:active { transform: scale(0.96); }
+
+#btn-play svg { width: 20px; height: 20px; fill: #0a0a0f; }
+
+/* progress bar row */
+.progress-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.time-label {
+  font-size: 11px;
+  color: var(--text-ter);
+  font-variant-numeric: tabular-nums;
+  width: 34px;
+  flex-shrink: 0;
+}
+.time-label.end { text-align: right; }
+
+.progress-track {
+  flex: 1;
+  height: 4px;
+  background: var(--glass-strong);
+  border-radius: 99px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: height var(--transition);
+}
+.progress-track:hover { height: 6px; }
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--purple), var(--purple-light));
+  border-radius: 99px;
+  width: 0%;
+  transition: width 0.9s linear;
+  pointer-events: none;
+}
+
+/* thumb dot on hover */
+.progress-track:hover::after {
+  content: '';
+  position: absolute;
+  right: calc(100% - var(--pct, 0%) - 6px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px; height: 12px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(255,255,255,0.5);
+}
+
+/* ── Right: volume + extras ── */
+.bar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 200px;
+  flex-shrink: 0;
+  justify-content: flex-end;
+}
+
+.vol-btn {
+  background: none; border: none;
+  color: var(--text-ter);
+  display: flex; align-items: center;
+  padding: 4px; transition: color var(--transition);
+  flex-shrink: 0;
+}
+.vol-btn:hover { color: var(--text); }
+.vol-btn svg { width: 16px; height: 16px; fill: currentColor; }
+
+.volume-slider {
+  -webkit-appearance: none;
+  width: 100px;
+  height: 4px;
+  background: var(--glass-strong);
+  border-radius: 99px;
+  outline: none;
+  cursor: pointer;
+  transition: height var(--transition);
+}
+.volume-slider:hover { height: 6px; }
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  background: var(--text);
+  cursor: pointer;
+  box-shadow: 0 0 4px rgba(255,255,255,0.3);
+}

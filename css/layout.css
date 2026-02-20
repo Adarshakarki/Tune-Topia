@@ -1,0 +1,64 @@
+/* ── layout.css — app shell grid ── */
+
+#app {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  grid-template-rows: 1fr 100px;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Ambient background ── */
+#ambient-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+#ambient-bg::before,
+#ambient-bg::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.18;
+  transition: background 1.2s ease;
+}
+
+#ambient-bg::before {
+  width: 600px; height: 600px;
+  top: -150px; right: -100px;
+  background: radial-gradient(circle, var(--purple) 0%, transparent 70%);
+  animation: drift1 18s ease-in-out infinite alternate;
+}
+
+#ambient-bg::after {
+  width: 500px; height: 500px;
+  bottom: -100px; left: -80px;
+  background: radial-gradient(circle, #5e5ce6 0%, transparent 70%);
+  animation: drift2 22s ease-in-out infinite alternate;
+}
+
+@keyframes drift1 {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(60px, 80px) scale(1.15); }
+}
+@keyframes drift2 {
+  from { transform: translate(0, 0) scale(1.1); }
+  to   { transform: translate(-40px, -60px) scale(1); }
+}
+
+#ambient-art {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(100px) saturate(2);
+  opacity: 0;
+  transition: opacity 1.2s ease, background-image 1s ease;
+  transform: scale(1.2);
+}
+#ambient-art.visible { opacity: 0.12; }
