@@ -1,96 +1,80 @@
-// ── api.js — Invidious search via corsproxy.io ──
-// No API key needed. All requests proxied to bypass CORS.
+// ── api.js — YouTube Data API v3 (native CORS, no proxy needed) ──
 
 const API = (() => {
 
-  const CORS_PROXY = 'https://corsproxy.io/?url=';
+  const YT_KEY      = 'AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8';
+  const YT_BASE     = 'https://www.googleapis.com/youtube/v3';
+  const MAX_RESULTS = 15;
 
-  const INSTANCES = [
-    'https://inv.nadeko.net',
-    'https://invidious.fdn.fr',
-    'https://invidious.privacydev.net',
-    'https://invidious.nerdvpn.de',
-    'https://iv.melmac.space',
-    'https://yt.artemislena.eu',
-  ];
-
-  const FIELDS   = 'videoId,title,author,videoThumbnails,lengthSeconds';
-  const TIMEOUT  = 6000;
-
-  let activeInstance = null;
-
-  // ── proxy-wrapped fetch ─────────────────────────────────────────────
-  async function pfetch(url, timeout = TIMEOUT) {
-    const proxied = CORS_PROXY + encodeURIComponent(url);
-    const res = await fetch(proxied, { signal: AbortSignal.timeout(timeout) });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res;
-  }
-
-  // ── pick a working instance ─────────────────────────────────────────
+  // ── pick "instance" — just validates the key works ─────────────────
   async function pickInstance(onStatus) {
     onStatus?.('connecting');
-    for (const inst of INSTANCES) {
-      try {
-        const r = await pfetch(`${inst}/api/v1/search?q=music&type=video&fields=videoId`);
-        if (r.ok) {
-          activeInstance = inst;
-          onStatus?.('ok', inst.replace('https://', ''));
-          return true;
-        }
-      } catch { /* try next */ }
+    try {
+      const url = `${YT_BASE}/search?` + new URLSearchParams({
+        part:           'id',
+        type:           'video',
+        videoEmbeddable: 'true',
+        maxResults:     '1',
+        q:              'music',
+        key:            YT_KEY,
+      });
+      const r = await fetch(url, { signal: AbortSignal.timeout(6000) });
+      if (r.ok) {
+        onStatus?.('ok', 'youtube.com');
+        return true;
+      }
+      const err = await r.json();
+      throw new Error(err?.error?.message || `HTTP ${r.status}`);
+    } catch (e) {
+      onStatus?.('error');
+      console.warn('[API] key check failed:', e.message);
+      return false;
     }
-    onStatus?.('error');
-    return false;
   }
 
   // ── search ──────────────────────────────────────────────────────────
   async function search(query, onStatus) {
-    if (!activeInstance) {
-      const ok = await pickInstance(onStatus);
-      if (!ok) throw new Error('No server available. Try refreshing.');
-    }
-
-    const url = `${activeInstance}/api/v1/search?` + new URLSearchParams({
-      q:      query,
-      type:   'video',
-      fields: FIELDS,
+    const url = `${YT_BASE}/search?` + new URLSearchParams({
+      part:            'snippet',
+      type:            'video',
+      videoEmbeddable: 'true',
+      maxResults:      String(MAX_RESULTS),
+      q:               query,
+      key:             YT_KEY,
     });
 
     let res;
     try {
-      res = await pfetch(url, 10000);
-    } catch {
-      // instance dropped — reset and retry once
-      activeInstance = null;
-      const ok = await pickInstance(onStatus);
-      if (!ok) throw new Error('Search failed. Try again.');
-      res = await pfetch(`${activeInstance}/api/v1/search?` + new URLSearchParams({ q: query, type: 'video', fields: FIELDS }), 10000);
+      res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+    } catch (e) {
+      throw new Error('Network error — check your connection.');
     }
 
-    const items = await res.json();
-    return items.map(mapItem).filter(Boolean);
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      const msg  = body?.error?.message || `HTTP ${res.status}`;
+      // quota exceeded — common issue
+      if (res.status === 403) throw new Error(`API quota exceeded or key invalid: ${msg}`);
+      throw new Error(msg);
+    }
+
+    const data = await res.json();
+    return (data.items || []).map(mapItem).filter(Boolean);
   }
 
-  // ── map raw API item to clean track object ───────────────────────────
-  function mapItem(v) {
-    if (!v?.videoId) return null;
+  // ── map YouTube API item → clean track object ───────────────────────
+  function mapItem(item) {
+    const id = item?.id?.videoId;
+    if (!id) return null;
+    const s = item.snippet || {};
     return {
-      id:    v.videoId,
-      title: v.title    || 'Unknown Title',
-      ch:    v.author   || 'Unknown Artist',
-      thumb: bestThumb(v.videoThumbnails),
-      dur:   v.lengthSeconds ?? 0,
+      id,
+      title: s.title                               || 'Unknown Title',
+      ch:    s.channelTitle                        || 'Unknown Artist',
+      thumb: s.thumbnails?.medium?.url
+          || s.thumbnails?.default?.url            || '',
+      dur:   0, // YT search doesn't return duration; use contentDetails if needed
     };
-  }
-
-  function bestThumb(arr) {
-    if (!arr?.length) return '';
-    for (const q of ['medium', 'high', 'default']) {
-      const t = arr.find(x => x.quality === q);
-      if (t?.url) return t.url;
-    }
-    return arr[0]?.url || '';
   }
 
   return { search, pickInstance };
@@ -98,3 +82,4 @@ const API = (() => {
 })();
 
 window.API = API;
+
