@@ -1,48 +1,36 @@
-// ── piped.js — Piped API with Invidious fallback for CORS safety ──
+// ── piped.js ──────────────────────────────────────────────────────────────
+//
+//  SEARCH  → Invidious only  (consistent CORS support, very reliable)
+//  STREAMS → Piped first     (direct audio URL)
+//            → YT embed URL  (fallback if Piped also has CORS issues)
+//
+// ─────────────────────────────────────────────────────────────────────────
 
-// Piped instances known to allow CORS from browser
-const PIPED_INSTANCES = [
-  'https://api.piped.yt',
-  'https://piped.adminforge.de',
-  'https://piped-api.garudalinux.org',
-  'https://pipedapi.kavin.rocks',
-  'https://pipedapi.in',
-];
-
-// Invidious instances as search fallback if all Piped fail
 const INVIDIOUS_INSTANCES = [
   'https://inv.nadeko.net',
   'https://invidious.fdn.fr',
   'https://yt.artemislena.eu',
   'https://invidious.nerdvpn.de',
   'https://iv.melmac.space',
+  'https://invidious.privacydev.net',
+];
+
+const PIPED_INSTANCES = [
+  'https://api.piped.yt',
+  'https://pipedapi.kavin.rocks',
+  'https://piped.adminforge.de',
+  'https://piped-api.garudalinux.org',
+  'https://pipedapi.in',
 ];
 
 const TIMEOUT_MS = 5000;
 
-let activePiped     = null;  // for streams
-let activeSearch    = null;  // for search (piped or invidious)
-let searchBackend   = null;  // 'piped' | 'invidious'
+let activeInvidious = null;  // search
+let activePiped     = null;  // streams (optional — falls back to YT embed)
 
-// ── instance pickers ─────────────────────────────────────────────────────
-
-async function pickPipedInstance(onStatus) {
-  for (const inst of PIPED_INSTANCES) {
-    try {
-      const r = await fetch(
-        `${inst}/search?q=music&filter=videos`,
-        { signal: AbortSignal.timeout(TIMEOUT_MS) }
-      );
-      if (r.ok) {
-        activePiped = inst;
-        return inst;
-      }
-    } catch { /* try next */ }
-  }
-  return null;
-}
-
-async function pickInvidiousInstance(onStatus) {
+// ── pick Invidious instance for search ───────────────────────────────────
+async function pickInstance(onStatus) {
+  onStatus?.('connecting');
   for (const inst of INVIDIOUS_INSTANCES) {
     try {
       const r = await fetch(
@@ -50,146 +38,106 @@ async function pickInvidiousInstance(onStatus) {
         { signal: AbortSignal.timeout(TIMEOUT_MS) }
       );
       if (r.ok) {
-        activeSearch  = inst;
-        searchBackend = 'invidious';
-        return inst;
+        activeInvidious = inst;
+        onStatus?.('ok', inst.replace('https://', ''));
+        // also try to grab a Piped instance in the background (non-blocking)
+        pickPipedQuietly();
+        return;
       }
     } catch { /* try next */ }
   }
-  return null;
-}
-
-async function pickInstance(onStatus) {
-  onStatus?.('connecting');
-
-  // Try Piped first for search
-  const piped = await pickPipedInstance(onStatus);
-  if (piped) {
-    activeSearch  = piped;
-    searchBackend = 'piped';
-    onStatus?.('ok', piped.replace('https://', '') + ' (Piped)');
-    return;
-  }
-
-  // Piped all failed — try Invidious for search
-  console.warn('[API] All Piped instances failed CORS, falling back to Invidious for search');
-  const inv = await pickInvidiousInstance(onStatus);
-  if (inv) {
-    onStatus?.('ok', inv.replace('https://', '') + ' (Invidious)');
-    return;
-  }
-
   onStatus?.('error');
-  throw new Error('All servers unreachable. Check your connection.');
+  throw new Error('All search servers unreachable. Check your connection.');
 }
 
-// ── search ────────────────────────────────────────────────────────────────
+// silently try to get a Piped instance — used only for streams
+async function pickPipedQuietly() {
+  for (const inst of PIPED_INSTANCES) {
+    try {
+      const r = await fetch(
+        `${inst}/streams/dQw4w9WgXcQ`,   // known video, quick probe
+        { signal: AbortSignal.timeout(TIMEOUT_MS) }
+      );
+      if (r.ok) { activePiped = inst; return; }
+    } catch { /* try next */ }
+  }
+  console.info('[Piped] No CORS-friendly Piped instance found — will use YT embed for playback');
+}
 
+// ── search via Invidious ──────────────────────────────────────────────────
 async function searchTracks(query, onStatus) {
-  if (!activeSearch) await pickInstance(onStatus);
+  if (!activeInvidious) await pickInstance(onStatus);
 
-  return searchBackend === 'invidious'
-    ? searchViaInvidious(query, onStatus)
-    : searchViaPiped(query, onStatus);
-}
+  const url = `${activeInvidious}/api/v1/search?` + new URLSearchParams({
+    q:      query,
+    type:   'video',
+    fields: 'videoId,title,author,videoThumbnails,lengthSeconds',
+  });
 
-async function searchViaPiped(query, onStatus) {
-  const url = `${activeSearch}/search?` + new URLSearchParams({ q: query, filter: 'music_songs' });
   let res;
   try {
     res = await fetch(url, { signal: AbortSignal.timeout(8000) });
   } catch {
-    // this instance dropped — retry with invidious
-    activeSearch  = null;
-    searchBackend = null;
-    activePiped   = null;
+    // instance dropped mid-session, re-pick
+    activeInvidious = null;
     await pickInstance(onStatus);
     return searchTracks(query, onStatus);
   }
 
-  if (!res.ok) throw new Error(`Piped search failed (HTTP ${res.status})`);
-  const data = await res.json();
-  return (data.items || []).map(mapPipedItem).filter(Boolean);
-}
+  if (!res.ok) throw new Error(`Search failed (HTTP ${res.status})`);
 
-async function searchViaInvidious(query, onStatus) {
-  const FIELDS = 'videoId,title,author,videoThumbnails,lengthSeconds';
-  const url = `${activeSearch}/api/v1/search?` + new URLSearchParams({ q: query, type: 'video', fields: FIELDS });
-  let res;
-  try {
-    res = await fetch(url, { signal: AbortSignal.timeout(8000) });
-  } catch {
-    activeSearch = null;
-    await pickInvidiousInstance(onStatus);
-    return searchViaInvidious(query, onStatus);
-  }
-
-  if (!res.ok) throw new Error(`Invidious search failed (HTTP ${res.status})`);
   const items = await res.json();
   return items.map(mapInvidiousItem).filter(Boolean);
 }
 
-// ── audio stream (Piped only) ─────────────────────────────────────────────
-
+// ── get audio stream ──────────────────────────────────────────────────────
+// Returns { url, type } where type is 'direct' or 'embed'
+// player.js handles both cases
 async function getAudioStream(videoId) {
-  // Make sure we have a Piped instance for streams
-  if (!activePiped) {
-    const piped = await pickPipedInstance();
-    if (!piped) throw new Error('No Piped instance available for streaming');
+  // Try Piped direct audio first
+  if (activePiped) {
+    try {
+      const res = await fetch(
+        `${activePiped}/streams/${videoId}`,
+        { signal: AbortSignal.timeout(10000) }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data.audioStreams?.length) {
+          const best = data.audioStreams
+            .filter(s => s.url)
+            .sort((a, b) => (b.bitrate ?? 0) - (a.bitrate ?? 0))[0];
+          if (best?.url) {
+            return { url: best.url, type: 'direct', mimeType: best.mimeType };
+          }
+        }
+      }
+    } catch {
+      activePiped = null;
+    }
   }
 
-  const res = await fetch(
-    `${activePiped}/streams/${videoId}`,
-    { signal: AbortSignal.timeout(10000) }
-  );
-
-  if (!res.ok) {
-    activePiped = null;
-    throw new Error(`Stream fetch failed (HTTP ${res.status})`);
-  }
-
-  const data = await res.json();
-  if (!data.audioStreams?.length) throw new Error('No audio streams available');
-
-  const best = data.audioStreams
-    .filter(s => s.url)
-    .sort((a, b) => (b.bitrate ?? 0) - (a.bitrate ?? 0))[0];
-
+  // Piped unavailable — return YT embed URL as fallback
+  console.info(`[Stream] Using YT embed fallback for ${videoId}`);
   return {
-    url:      best.url,
-    bitrate:  best.bitrate,
-    mimeType: best.mimeType,
-    thumb:    data.thumbnailUrl || '',
-    duration: data.duration     || 0,
+    url:  `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=0`,
+    type: 'embed',
   };
 }
 
-// ── mappers ───────────────────────────────────────────────────────────────
-
-function mapPipedItem(item) {
-  if (!item?.url) return null;
-  const id = new URLSearchParams(item.url.split('?')[1]).get('v');
-  if (!id) return null;
-  return {
-    id,
-    title:  item.title        || 'Unknown Title',
-    artist: item.uploaderName || 'Unknown Artist',
-    thumb:  item.thumbnail    || '',
-    dur:    item.duration     || 0,
-  };
-}
-
+// ── mapper ────────────────────────────────────────────────────────────────
 function mapInvidiousItem(item) {
   if (!item?.videoId) return null;
   const thumbs   = item.videoThumbnails || [];
   const priority = ['medium', 'high', 'default'];
-  const thumb    = priority.map(q => thumbs.find(t => t.quality === q)?.url).find(Boolean) || thumbs[0]?.url || '';
+  const thumb    = priority.map(q => thumbs.find(t => t.quality === q)?.url).find(Boolean)
+                   || thumbs[0]?.url || '';
   return {
     id:     item.videoId,
     title:  item.title  || 'Unknown Title',
     artist: item.author || 'Unknown Artist',
     thumb,
-    dur:    item.lengthSeconds ?? 0,
+    dur: item.lengthSeconds ?? 0,
   };
 }
 
