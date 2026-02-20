@@ -1,87 +1,83 @@
-// ── app.js — main orchestrator, state, event wiring ──
+// ── app.js — orchestrator: state, events, wires everything together ──
 
 const App = (() => {
-  // ── state ────────────────────────────────────────────────────────────
+
+  // ── state ────────────────────────────────────────────────────────
   let tracks     = [];
   let currentIdx = -1;
   let progTimer  = null;
 
-  // ── init ─────────────────────────────────────────────────────────────
+  // ── init ─────────────────────────────────────────────────────────
   function init() {
-    // restore volume
-    document.getElementById('volume-slider').value = Player.getVolume();
+    // restore saved volume
+    document.getElementById('vol').value = Player.getVolume();
 
-    // connect to Piped
-    Piped.pickInstance(UI.server.set.bind(UI.server));
+    // connect to server in background
+    API.pickInstance(UI.server.set.bind(UI.server));
 
     // wire search
-    const searchInput = document.getElementById('search-input');
-    const searchBtn   = document.getElementById('search-btn');
-    searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
-    searchBtn.addEventListener('click', doSearch);
+    document.getElementById('q')
+      .addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+    document.getElementById('go')
+      .addEventListener('click', doSearch);
 
     // wire player controls
-    document.getElementById('btn-play').addEventListener('click', () => Player.togglePlay());
-    document.getElementById('btn-prev').addEventListener('click', playPrev);
-    document.getElementById('btn-next').addEventListener('click', playNext);
+    document.getElementById('btn-play')
+      .addEventListener('click', () => Player.togglePlay());
+    document.getElementById('btn-prev')
+      .addEventListener('click', playPrev);
+    document.getElementById('btn-next')
+      .addEventListener('click', playNext);
 
-    // wire progress bar click
-    document.getElementById('progress-track').addEventListener('click', e => {
-      const rect = e.currentTarget.getBoundingClientRect();
-      Player.seekTo((e.clientX - rect.left) / rect.width);
-    });
+    // wire progress bar seek
+    document.getElementById('prog-track')
+      .addEventListener('click', e => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        Player.seekTo((e.clientX - rect.left) / rect.width);
+      });
 
     // wire volume
-    document.getElementById('volume-slider').addEventListener('input', e => {
-      Player.setVolume(+e.target.value);
-    });
+    document.getElementById('vol')
+      .addEventListener('input', e => Player.setVolume(+e.target.value));
 
     // keyboard shortcuts
     document.addEventListener('keydown', handleKey);
 
-    // player state changes — using STATE constants from player.js
+    // player state changes
     Player.onStateChange(state => {
-      const isPlaying = state === 1; // STATE.PLAYING
-      const isPaused  = state === 2; // STATE.PAUSED
-      const isEnded   = state === 0; // STATE.ENDED
-      const isLoading = state === 3; // STATE.LOADING
-
-      if (isPlaying) {
+      const S = Player.STATES;
+      if (state === S.PLAYING) {
         UI.playerBar.setPlaying(true);
         UI.nowPlaying.setPlaying(true);
         startProgress();
       }
-      if (isPaused) {
+      if (state === S.PAUSED) {
         UI.playerBar.setPlaying(false);
         UI.nowPlaying.setPlaying(false);
         stopProgress();
       }
-      if (isEnded) {
+      if (state === S.ENDED) {
         UI.playerBar.setPlaying(false);
         UI.nowPlaying.setPlaying(false);
         stopProgress();
         playNext();
       }
-      if (isLoading) {
-        UI.playerBar.setPlaying(false);
-      }
     });
 
-    // show idle state
+    // initial UI state
     UI.nowPlaying.showIdle();
     UI.trackList.showEmpty();
   }
 
-  // ── search ────────────────────────────────────────────────────────────
+  // ── search ───────────────────────────────────────────────────────
   async function doSearch() {
-    const q = document.getElementById('search-input').value.trim();
+    const q = document.getElementById('q').value.trim();
     if (!q) return;
 
     UI.trackList.showLoading();
-    document.getElementById('queue-count').textContent = '0';
 
     try {
-      tracks = await Piped.searchTracks(q, UI.server.set.bind(UI.server));
+      tracks = await API.search(q, UI.server.set.bind(UI.server));
       UI.trackList.render(tracks, currentIdx, playIdx);
       if (tracks.length) playIdx(0);
     } catch (err) {
@@ -89,7 +85,7 @@ const App = (() => {
     }
   }
 
-  // ── playback ──────────────────────────────────────────────────────────
+  // ── playback ─────────────────────────────────────────────────────
   function playIdx(i) {
     if (i < 0 || i >= tracks.length) return;
     currentIdx = i;
@@ -98,7 +94,6 @@ const App = (() => {
     UI.trackList.render(tracks, currentIdx, playIdx);
     UI.nowPlaying.setTrack(t);
     UI.playerBar.setTrack(t);
-    UI.ambient.setThumb(t.thumb);
 
     Player.load(t.id);
   }
@@ -110,6 +105,7 @@ const App = (() => {
 
   function playPrev() {
     if (!tracks.length) return;
+    // restart if >3s in, else go to previous
     if (Player.getCurrentTime() > 3) {
       Player.seekTo(0);
     } else {
@@ -117,13 +113,14 @@ const App = (() => {
     }
   }
 
-  // ── progress ticker ───────────────────────────────────────────────────
+  // ── progress ticker ──────────────────────────────────────────────
   function startProgress() {
     stopProgress();
     progTimer = setInterval(() => {
-      const cur = Player.getCurrentTime();
-      const dur = Player.getDuration();
-      UI.playerBar.setProgress(cur, dur);
+      UI.playerBar.setProgress(
+        Player.getCurrentTime(),
+        Player.getDuration()
+      );
     }, 1000);
   }
 
@@ -132,7 +129,7 @@ const App = (() => {
     progTimer = null;
   }
 
-  // ── keyboard shortcuts ────────────────────────────────────────────────
+  // ── keyboard shortcuts ───────────────────────────────────────────
   function handleKey(e) {
     if (e.target.tagName === 'INPUT') return;
     switch (e.code) {
@@ -143,6 +140,7 @@ const App = (() => {
   }
 
   return { init };
+
 })();
 
 document.addEventListener('DOMContentLoaded', App.init);

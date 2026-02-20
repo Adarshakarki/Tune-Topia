@@ -1,0 +1,162 @@
+/* ── playerbar.css ── */
+
+#bar {
+  grid-column: 1 / -1;
+  background: rgba(8, 8, 18, 0.8);
+  backdrop-filter: var(--blur-heavy);
+  -webkit-backdrop-filter: var(--blur-heavy);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 26px;
+  gap: 18px;
+}
+
+/* ── Left: current track info ── */
+.bar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 230px;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+#bar-img {
+  width: 50px; height: 50px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: var(--surface2);
+  box-shadow: 0 4px 14px rgba(0,0,0,.5);
+  flex-shrink: 0;
+  transition: box-shadow var(--transition);
+}
+#bar-img.lit { box-shadow: 0 4px 18px var(--purple-glow); }
+
+.bar-text { min-width: 0; }
+
+#bar-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#bar-ch {
+  font-size: 11.5px;
+  color: var(--text3);
+  margin-top: 2px;
+}
+
+/* ── Center: controls + progress ── */
+.bar-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  max-width: 560px;
+}
+
+.ctrl-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* icon buttons */
+.cbtn {
+  background: none;
+  border: none;
+  color: var(--text2);
+  padding: 6px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  transition: color var(--transition), transform var(--transition), background var(--transition);
+}
+.cbtn:hover { color: var(--text); background: var(--glass); transform: scale(1.08); }
+.cbtn svg   { width: 22px; height: 22px; fill: currentColor; }
+
+/* play/pause hero button */
+#btn-play {
+  width: 44px; height: 44px;
+  background: var(--text);
+  border: none; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 18px rgba(255,255,255,.15);
+  transition: transform var(--transition), box-shadow var(--transition);
+  flex-shrink: 0;
+}
+#btn-play:hover  { transform: scale(1.06); box-shadow: 0 6px 24px rgba(255,255,255,.25); }
+#btn-play:active { transform: scale(.96); }
+#btn-play svg    { width: 18px; height: 18px; fill: #0a0a0f; }
+
+/* progress bar */
+.prog-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+}
+
+.prog-time {
+  font-size: 10.5px;
+  color: var(--text3);
+  width: 32px;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.prog-time.r { text-align: right; }
+
+#prog-track {
+  flex: 1;
+  height: 4px;
+  background: var(--surface3);
+  border-radius: 99px;
+  cursor: pointer;
+  position: relative;
+  transition: height var(--transition);
+}
+#prog-track:hover { height: 6px; }
+
+#prog-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--purple), var(--purple-light));
+  border-radius: 99px;
+  width: 0%;
+  transition: width .9s linear;
+  pointer-events: none;
+}
+#prog-track:hover #prog-fill { box-shadow: 0 0 8px var(--purple-glow); }
+
+/* ── Right: volume ── */
+.bar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 140px;
+  flex-shrink: 0;
+  justify-content: flex-end;
+}
+
+.bar-right svg { width: 15px; height: 15px; fill: var(--text3); flex-shrink: 0; }
+
+#vol {
+  -webkit-appearance: none;
+  width: 88px; height: 4px;
+  background: var(--surface3);
+  border-radius: 99px;
+  outline: none;
+  cursor: pointer;
+  transition: height var(--transition);
+}
+#vol:hover { height: 6px; }
+#vol::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  background: var(--text);
+  cursor: pointer;
+  box-shadow: 0 0 4px rgba(255,255,255,.3);
+}

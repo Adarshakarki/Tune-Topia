@@ -3,163 +3,170 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Music — Now Playing</title>
+  <title>Tune Topia</title>
 
-  <!-- Stylesheets -->
+  <!-- Stylesheets — load order matters -->
   <link rel="stylesheet" href="css/base.css"/>
   <link rel="stylesheet" href="css/layout.css"/>
   <link rel="stylesheet" href="css/sidebar.css"/>
   <link rel="stylesheet" href="css/nowplaying.css"/>
-  <link rel="stylesheet" href="css/player.css"/>
+  <link rel="stylesheet" href="css/playerbar.css"/>
 </head>
 <body>
 
-<!-- ── Ambient Background Layer ── -->
-<div id="ambient-bg">
-  <div id="ambient-art"></div>
-</div>
+  <!-- Hidden YouTube IFrame (handles all playback, no CORS issues) -->
+  <div id="yt-wrap">
+    <div id="yt-player"></div>
+  </div>
 
-<!-- no hidden iframe needed — Piped gives us direct audio URLs -->
-<div id="embed-wrap" style="position:fixed;width:1px;height:1px;bottom:0;right:0;z-index:-1;overflow:hidden;"></div>
+  <!-- Ambient background orbs -->
+  <div id="ambient">
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb" id="art-orb"></div>
+  </div>
 
-<!-- ── App Shell ── -->
-<div id="app">
+  <!-- ═══════════════════════════════════════════════
+       APP SHELL
+  ═══════════════════════════════════════════════ -->
+  <div id="app">
 
-  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-       LEFT — Sidebar: search + queue
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
-  <aside id="sidebar">
+    <!-- ── SIDEBAR ── -->
+    <aside id="sidebar">
 
-    <div class="sidebar-header">
-      <!-- Brand -->
-      <div class="brand">
-        <div class="brand-icon">♪</div>
-        <div class="brand-name">Music</div>
-      </div>
-
-      <!-- Search -->
-      <div class="search-wrap">
-        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/>
-        </svg>
-        <input id="search-input" type="text" placeholder="Artists, songs, albums…" autocomplete="off" spellcheck="false"/>
-        <button id="search-btn" aria-label="Search">
-          <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- Queue header -->
-    <div class="queue-header">
-      <span class="queue-label">Queue</span>
-      <span class="queue-count" id="queue-count">0</span>
-    </div>
-
-    <!-- Track list -->
-    <div id="track-list"></div>
-
-    <!-- Server status -->
-    <div id="server-pill">
-      <div class="pill-dot"></div>
-      <span class="pill-text">Connecting…</span>
-    </div>
-
-  </aside>
-
-  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-       CENTER — Now Playing
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
-  <main id="now-playing">
-
-    <!-- Album art -->
-    <div class="art-container">
-      <div id="album-art">
-        <img id="art-img" src="" alt="Album art"/>
-        <div class="art-placeholder">
-          <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+      <div class="sb-head">
+        <!-- Brand -->
+        <div class="brand">
+          <div class="brand-icon">♪</div>
+          <div class="brand-name">Tune Topia</div>
         </div>
-      </div>
-    </div>
 
-    <!-- Track info -->
-    <div id="track-meta" style="display:none;">
-      <div id="track-title">—</div>
-      <div id="track-artist"></div>
-    </div>
-
-    <!-- Idle hint -->
-    <div id="idle-hint">
-      <div class="idle-icon">🎵</div>
-      <div class="idle-label">Nothing playing</div>
-      <div class="idle-sub">Search for a song to get started</div>
-    </div>
-
-  </main>
-
-  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-       BOTTOM — Player Bar
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
-  <footer id="player-bar">
-
-    <!-- Left: current track info -->
-    <div class="bar-info">
-      <img id="bar-thumb" src="" alt=""/>
-      <div class="bar-text">
-        <div id="bar-title">—</div>
-        <div id="bar-artist"></div>
-      </div>
-    </div>
-
-    <!-- Center: controls + progress -->
-    <div class="bar-controls">
-      <div class="ctrl-row">
-
-        <!-- Previous -->
-        <button class="ctrl-btn" id="btn-prev" aria-label="Previous">
-          <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
-        </button>
-
-        <!-- Play / Pause -->
-        <button id="btn-play" aria-label="Play">
-          <svg viewBox="0 0 24 24">
-            <path id="play-icon" d="M8 5v14l11-7z"/>
+        <!-- Search -->
+        <div class="search-wrap">
+          <svg class="si" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="7"/>
+            <line x1="16.5" y1="16.5" x2="22" y2="22"/>
           </svg>
-        </button>
-
-        <!-- Next -->
-        <button class="ctrl-btn" id="btn-next" aria-label="Next">
-          <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zm2.5-6 5.5 3.9V8.1L8.5 12zM16 6h2v12h-2z"/></svg>
-        </button>
-
-      </div>
-
-      <!-- Progress bar -->
-      <div class="progress-row">
-        <span class="time-label" id="t-cur">0:00</span>
-        <div class="progress-track" id="progress-track">
-          <div class="progress-fill" id="progress-fill"></div>
+          <input id="q" type="text"
+                 placeholder="Search songs, artists…"
+                 autocomplete="off" spellcheck="false"/>
+          <button id="go" aria-label="Search">
+            <svg viewBox="0 0 24 24">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </button>
         </div>
-        <span class="time-label end" id="t-end">0:00</span>
       </div>
-    </div>
 
-    <!-- Right: volume -->
-    <div class="bar-right">
-      <button class="vol-btn" aria-label="Volume">
-        <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
-      </button>
-      <input type="range" class="volume-slider" id="volume-slider" min="0" max="100" value="80"/>
-    </div>
+      <!-- Queue header -->
+      <div class="q-header">
+        <span class="q-label">Queue</span>
+        <span class="q-count" id="q-count">0</span>
+      </div>
 
-  </footer>
+      <!-- Track list -->
+      <div id="list"></div>
 
-</div>
+      <!-- Server status -->
+      <div id="pill">
+        <div class="dot" id="dot"></div>
+        <span id="pill-text">Connecting…</span>
+      </div>
 
-<!-- ── Scripts (order matters) ── -->
-<script src="js/piped.js"></script>
-<script src="js/player.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/app.js"></script>
+    </aside>
+
+    <!-- ── NOW PLAYING ── -->
+    <main id="now">
+
+      <!-- Album art with glow ring -->
+      <div id="art-ring">
+        <div id="art">
+          <img id="art-img" src="" alt="Album art"/>
+          <div class="art-ph">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Track info -->
+      <div id="meta">
+        <div id="meta-title"></div>
+        <div id="meta-ch"></div>
+      </div>
+
+      <!-- Idle hint -->
+      <div id="idle">
+        <div class="idle-icon">🎵</div>
+        <div class="idle-title">Nothing playing</div>
+        <div class="idle-sub">Search for a song to get started</div>
+      </div>
+
+    </main>
+
+    <!-- ── PLAYER BAR ── -->
+    <footer id="bar">
+
+      <!-- Left: current track -->
+      <div class="bar-left">
+        <img id="bar-img" src="" alt=""/>
+        <div class="bar-text">
+          <div id="bar-title">—</div>
+          <div id="bar-ch"></div>
+        </div>
+      </div>
+
+      <!-- Center: controls + progress -->
+      <div class="bar-center">
+        <div class="ctrl-row">
+          <button class="cbtn" id="btn-prev" aria-label="Previous">
+            <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+          </button>
+          <button id="btn-play" aria-label="Play / Pause">
+            <svg viewBox="0 0 24 24">
+              <path id="play-icon" d="M8 5v14l11-7z"/>
+            </svg>
+          </button>
+          <button class="cbtn" id="btn-next" aria-label="Next">
+            <svg viewBox="0 0 24 24">
+              <path d="M6 18l8.5-6L6 6v12zm2.5-6 5.5 3.9V8.1L8.5 12zM16 6h2v12h-2z"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="prog-row">
+          <span class="prog-time"    id="t-cur">0:00</span>
+          <div id="prog-track">
+            <div id="prog-fill"></div>
+          </div>
+          <span class="prog-time r"  id="t-end">0:00</span>
+        </div>
+      </div>
+
+      <!-- Right: volume -->
+      <div class="bar-right">
+        <svg viewBox="0 0 24 24">
+          <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+        </svg>
+        <input type="range" id="vol" min="0" max="100" value="80" aria-label="Volume"/>
+      </div>
+
+    </footer>
+
+  </div><!-- /#app -->
+
+  <!-- ═══════════════════════════════════════════════
+       SCRIPTS — order matters
+  ═══════════════════════════════════════════════ -->
+  <script src="js/api.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+
+  <!-- YouTube IFrame API — must load last -->
+  <script src="https://www.youtube.com/iframe_api"></script>
 
 </body>
 </html>

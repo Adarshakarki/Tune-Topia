@@ -1,100 +1,86 @@
-// ── player.js — plays direct audio (Piped) or YT embed (fallback) ──
+// ── player.js — YouTube IFrame API wrapper ──
+// Playback uses the hidden YT iframe — zero CORS issues.
 
-const _audio = new Audio();
-_audio.preload    = 'auto';
-_audio.crossOrigin = 'anonymous';
+const Player = (() => {
 
-let _onStateChange = null;
-let _mode          = 'audio'; // 'audio' | 'embed'
-let _embedIframe   = null;
+  let _player  = null;
+  let _ready   = false;
+  let _onState = null;   // external state-change callback
 
-const STATE = { PLAYING: 1, PAUSED: 2, ENDED: 0, LOADING: 3 };
+  // YT states for reference
+  const S = { ENDED: 0, PLAYING: 1, PAUSED: 2, BUFFERING: 3 };
 
-// wire audio element events
-_audio.addEventListener('play',    () => { if (_mode === 'audio') _onStateChange?.(STATE.PLAYING);  });
-_audio.addEventListener('pause',   () => { if (_mode === 'audio') _onStateChange?.(STATE.PAUSED);   });
-_audio.addEventListener('ended',   () => { if (_mode === 'audio') _onStateChange?.(STATE.ENDED);    });
-_audio.addEventListener('waiting', () => { if (_mode === 'audio') _onStateChange?.(STATE.LOADING);  });
+  // ── called by YouTube script ──────────────────────────────────────
+  function _init() {
+    _ready  = true;
+    _player = new YT.Player('yt-player', {
+      height:     '1',
+      width:      '1',
+      playerVars: { autoplay: 0, controls: 0, playsinline: 1, rel: 0 },
+      events: {
+        onStateChange: e => _onState?.(e.data),
+        onError:       e => console.warn('[Player] error', e.data),
+      },
+    });
+  }
 
-_audio.volume = (parseInt(localStorage.getItem('np_volume') ?? '80')) / 100;
+  // expose to global scope — required by YT script
+  window.onYouTubeIframeAPIReady = _init;
 
-// ── embed iframe helpers ──────────────────────────────────────────────────
-function createEmbed(videoId) {
-  destroyEmbed();
-  const wrap = document.getElementById('embed-wrap');
-  if (!wrap) return;
-  _embedIframe = document.createElement('iframe');
-  _embedIframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=0`;
-  _embedIframe.allow = 'autoplay';
-  _embedIframe.style.cssText = 'width:1px;height:1px;opacity:0;pointer-events:none;position:absolute;';
-  wrap.appendChild(_embedIframe);
-  // embed auto-plays so fire playing state after short delay
-  setTimeout(() => _onStateChange?.(STATE.PLAYING), 1500);
-}
+  // ── internal helpers ──────────────────────────────────────────────
+  function _whenReady(fn) {
+    if (_ready && _player) { fn(); return; }
+    const iv = setInterval(() => {
+      if (_ready && _player) { fn(); clearInterval(iv); }
+    }, 150);
+  }
 
-function destroyEmbed() {
-  if (_embedIframe) { _embedIframe.remove(); _embedIframe = null; }
-}
+  // ── public API ────────────────────────────────────────────────────
+  return {
 
-// ── public API ────────────────────────────────────────────────────────────
-const Player = {
-  onStateChange(fn) { _onStateChange = fn; },
+    onStateChange(fn) { _onState = fn; },
 
-  async load(videoId) {
-    // stop whatever is currently playing
-    _audio.pause();
-    destroyEmbed();
-    _onStateChange?.(STATE.LOADING);
+    load(videoId) {
+      _whenReady(() => {
+        _player.loadVideoById(videoId);
+        _player.setVolume(Player.getVolume());
+      });
+    },
 
-    try {
-      const stream = await Piped.getAudioStream(videoId);
+    play()  { _player?.playVideo();  },
+    pause() { _player?.pauseVideo(); },
 
-      if (stream.type === 'direct') {
-        _mode     = 'audio';
-        _audio.src = stream.url;
-        await _audio.play();
-      } else {
-        // embed fallback
-        _mode = 'embed';
-        createEmbed(videoId);
-      }
-    } catch (err) {
-      console.error('[Player] load error:', err);
-      _onStateChange?.(STATE.PAUSED);
-    }
-  },
+    togglePlay() {
+      if (!_player) return;
+      _player.getPlayerState() === YT.PlayerState.PLAYING
+        ? _player.pauseVideo()
+        : _player.playVideo();
+    },
 
-  play() {
-    if (_mode === 'audio') _audio.play();
-  },
-  pause() {
-    if (_mode === 'audio') _audio.pause();
-    // can't pause an embed, but we can destroy it
-    if (_mode === 'embed') { destroyEmbed(); _onStateChange?.(STATE.PAUSED); }
-  },
-  togglePlay() {
-    if (_mode === 'audio') {
-      _audio.paused ? _audio.play() : _audio.pause();
-    }
-  },
+    isPlaying() {
+      return _player?.getPlayerState() === YT.PlayerState.PLAYING;
+    },
 
-  isPlaying()      { return _mode === 'audio' ? !_audio.paused : !!_embedIframe; },
-  getCurrentTime() { return _mode === 'audio' ? (_audio.currentTime ?? 0) : 0; },
-  getDuration()    { return _mode === 'audio' ? (_audio.duration   ?? 0) : 0; },
+    getCurrentTime() { return _player?.getCurrentTime() ?? 0; },
+    getDuration()    { return _player?.getDuration()    ?? 0; },
 
-  seekTo(pct) {
-    if (_mode !== 'audio') return;
-    const dur = _audio.duration;
-    if (dur && isFinite(dur)) _audio.currentTime = dur * pct;
-  },
+    seekTo(pct) {
+      const dur = Player.getDuration();
+      if (dur) _player?.seekTo(dur * pct, true);
+    },
 
-  setVolume(v) {
-    _audio.volume = v / 100;
-    localStorage.setItem('np_volume', v);
-  },
-  getVolume() {
-    return parseInt(localStorage.getItem('np_volume') ?? '80');
-  },
-};
+    setVolume(v) {
+      _player?.setVolume(v);
+      localStorage.setItem('tt_volume', v);
+    },
+
+    getVolume() {
+      return parseInt(localStorage.getItem('tt_volume') ?? '80');
+    },
+
+    STATES: S,
+  };
+
+})();
 
 window.Player = Player;

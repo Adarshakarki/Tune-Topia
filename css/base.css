@@ -3,42 +3,35 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* Purple palette */
+  --bg:            #0a0a0f;
+  --surface:       #13131e;
+  --surface2:      #1c1c2e;
+  --surface3:      #242438;
+
   --purple:        #bf5af2;
   --purple-light:  #d07ef7;
-  --purple-dark:   #9b3de0;
+  --purple-dim:    rgba(191, 90, 242, 0.18);
   --purple-glow:   rgba(191, 90, 242, 0.35);
-  --purple-subtle: rgba(191, 90, 242, 0.12);
-  --purple-border: rgba(191, 90, 242, 0.25);
+  --purple-border: rgba(191, 90, 242, 0.28);
 
-  /* Dark base */
-  --bg:            #0a0a0f;
-  --bg2:           #0f0f18;
-  --bg3:           #13131e;
-
-  /* Glass surfaces */
   --glass:         rgba(255, 255, 255, 0.06);
-  --glass-hover:   rgba(255, 255, 255, 0.10);
-  --glass-active:  rgba(191, 90, 242, 0.15);
-  --glass-border:  rgba(255, 255, 255, 0.10);
-  --glass-strong:  rgba(255, 255, 255, 0.13);
+  --glass2:        rgba(255, 255, 255, 0.10);
+  --border:        rgba(255, 255, 255, 0.08);
 
-  /* Text */
   --text:          #ffffff;
-  --text-sec:      rgba(255, 255, 255, 0.65);
-  --text-ter:      rgba(255, 255, 255, 0.35);
-  --text-dim:      rgba(255, 255, 255, 0.18);
+  --text2:         rgba(255, 255, 255, 0.60);
+  --text3:         rgba(255, 255, 255, 0.30);
 
-  /* Misc */
-  --radius-sm:     10px;
-  --radius-md:     16px;
+  --bar-h:         88px;
+  --sidebar-w:     290px;
+
+  --radius-sm:     9px;
+  --radius-md:     14px;
   --radius-lg:     22px;
-  --radius-xl:     32px;
-  --blur:          blur(24px) saturate(1.6);
-  --blur-heavy:    blur(48px) saturate(1.8);
-  --transition:    0.22s cubic-bezier(0.4, 0, 0.2, 1);
-  --shadow:        0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3);
-  --shadow-glow:   0 0 40px rgba(191, 90, 242, 0.2), 0 8px 32px rgba(0,0,0,0.6);
+
+  --blur:          blur(28px) saturate(1.5);
+  --blur-heavy:    blur(32px) saturate(1.6);
+  --transition:    0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 *, *::before, *::after {
@@ -58,22 +51,13 @@ html, body {
   overflow: hidden;
 }
 
-/* scrollbar */
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: var(--purple-border); }
+::-webkit-scrollbar              { width: 3px; }
+::-webkit-scrollbar-track        { background: transparent; }
+::-webkit-scrollbar-thumb        { background: var(--surface3); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover  { background: var(--purple-border); }
 
-/* selection */
-::selection { background: var(--purple-subtle); color: var(--text); }
+::selection { background: var(--purple-dim); color: var(--text); }
 
-/* focus ring */
-:focus-visible {
-  outline: 2px solid var(--purple);
-  outline-offset: 2px;
-  border-radius: var(--radius-sm);
-}
-
-img { display: block; }
+img    { display: block; }
 button { font-family: inherit; cursor: pointer; }
-input { font-family: inherit; }
+input  { font-family: inherit; }

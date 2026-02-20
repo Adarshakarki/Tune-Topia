@@ -1,134 +1,104 @@
-/* ── nowplaying.css — center stage ── */
+/* ── nowplaying.css ── */
 
-#now-playing {
+#now {
   grid-row: 1;
-  grid-column: 2;
-  position: relative;
-  z-index: 5;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 28px;
+  gap: 26px;
   padding: 48px 40px 32px;
+  position: relative;
   overflow: hidden;
 }
 
-/* ── Album Art ── */
-.art-container {
+/* ── Album art ── */
+#art-ring {
   position: relative;
   flex-shrink: 0;
 }
 
-#album-art {
-  width: 220px; height: 220px;
-  border-radius: 24px;
-  overflow: hidden;
-  position: relative;
-  box-shadow: var(--shadow-glow);
-  transition: transform var(--transition), box-shadow var(--transition);
-}
-
-#album-art:hover { transform: scale(1.02); }
-
-#album-art.playing {
-  box-shadow: 0 0 60px var(--purple-glow), 0 20px 60px rgba(0,0,0,0.7);
-}
-
-#album-art img {
-  width: 100%; height: 100%;
-  object-fit: cover;
-  display: none;
-  transition: opacity 0.5s ease;
-}
-#album-art img.visible { display: block; }
-
-.art-placeholder {
-  width: 100%; height: 100%;
-  background: linear-gradient(135deg, var(--glass-strong), var(--glass));
-  display: flex; align-items: center; justify-content: center;
-  border: 1px solid var(--glass-border);
-  border-radius: 24px;
-}
-.art-placeholder svg {
-  width: 60px; height: 60px;
-  fill: var(--text-dim);
-}
-
-/* vinyl ring effect when playing */
-.art-container::after {
+/* animated glow ring */
+#art-ring::after {
   content: '';
   position: absolute;
-  inset: -6px;
+  inset: -8px;
   border-radius: 30px;
   border: 1.5px solid var(--purple-border);
   opacity: 0;
-  transition: opacity 0.6s ease;
+  transition: opacity .6s;
   animation: ring-pulse 3s ease-in-out infinite;
 }
-#album-art.playing ~ .art-ring { opacity: 1; }
+#art-ring.playing::after { opacity: 1; }
 
 @keyframes ring-pulse {
-  0%, 100% { opacity: 0.3; transform: scale(1); }
-  50%       { opacity: 0.7; transform: scale(1.01); }
+  0%, 100% { opacity: .3; transform: scale(1); }
+  50%       { opacity: .7; transform: scale(1.01); }
 }
+
+#art {
+  width: 220px; height: 220px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--surface2);
+  box-shadow: 0 20px 60px rgba(0,0,0,.7);
+  transition: box-shadow .5s, transform .3s;
+}
+#art:hover  { transform: scale(1.02); }
+#art.lit    { box-shadow: 0 0 60px var(--purple-glow), 0 20px 60px rgba(0,0,0,.7); }
+
+#art-img { width: 100%; height: 100%; object-fit: cover; display: none; }
+#art-img.show { display: block; }
+
+.art-ph {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+}
+.art-ph svg { width: 56px; height: 56px; fill: var(--text3); }
 
 /* ── Track metadata ── */
-#track-meta {
+#meta {
   text-align: center;
-  max-width: 400px;
+  max-width: 380px;
   width: 100%;
+  display: none;
 }
+#meta.show { display: block; }
 
-#track-title {
-  font-size: 22px;
+#meta-title {
+  font-size: 21px;
   font-weight: 700;
-  letter-spacing: -0.4px;
-  color: var(--text);
-  margin-bottom: 8px;
-  line-height: 1.2;
+  letter-spacing: -.3px;
+  margin-bottom: 7px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-#track-artist {
-  font-size: 15px;
+#meta-ch {
+  font-size: 14px;
   color: var(--purple-light);
-  font-weight: 400;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-/* ── Lyrics / idle section ── */
-#idle-hint {
+/* ── Idle screen ── */
+#idle {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  color: var(--text-ter);
-  text-align: center;
+  color: var(--text3);
 }
 
-#idle-hint .idle-icon {
-  font-size: 52px;
-  opacity: 0.12;
+.idle-icon {
+  font-size: 50px;
+  opacity: .1;
   animation: float 4s ease-in-out infinite;
-}
-
-#idle-hint .idle-label {
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--text-sec);
-}
-
-#idle-hint .idle-sub {
-  font-size: 14px;
-  color: var(--text-ter);
 }
 
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50%       { transform: translateY(-8px); }
 }
+
+.idle-title { font-size: 19px; font-weight: 600; color: var(--text2); }
+.idle-sub   { font-size: 13.5px; color: var(--text3); }
