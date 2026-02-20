@@ -5,8 +5,7 @@ let activeInstance = null;
 export async function pickInstance(pill) {
   for (const inst of INSTANCES) {
     try {
-      const r = await fetch(`${inst}/api/v1/search?q=test&type=video&fields=videoId`,
-        { signal: AbortSignal.timeout(4000) });
+      const r = await fetch(`${inst}/api/v1/search?q=test&type=video&fields=videoId`);
       if (r.ok) {
         activeInstance = inst;
         pill.textContent = '● ' + inst.replace('https://','');
@@ -22,8 +21,11 @@ export async function pickInstance(pill) {
 
 export async function search(query, pill) {
   if (!activeInstance) await pickInstance(pill);
-  const url = `${activeInstance}/api/v1/search?q=${encodeURIComponent(query)}&type=video`;
-  const r = await fetch(url);
+  if (!activeInstance) throw new Error('No server available');
+
+  const r = await fetch(
+    `${activeInstance}/api/v1/search?q=${encodeURIComponent(query)}&type=video`
+  );
   if (!r.ok) throw new Error('Search failed');
   return r.json();
 }
