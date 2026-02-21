@@ -1,32 +1,31 @@
 /* ═══════════════════════════════════════════════════════
    pages/home.js
-   Loads multiple chart sections in parallel.
-   Each section is independent — one failing won't
-   block the others.
+   Home charts loader with graceful fallback
    ═══════════════════════════════════════════════════════ */
 
 const PageHome = (() => {
 
-  // Chart sections to load. Each gets its own row.
   const SECTIONS = [
-    { id: 'todays-hits',  label: '🔥 Today\'s Hits',       query: 'today\'s hits playlist 2025' },
-    { id: 'hot-100',      label: '📊 Billboard Hot 100',   query: 'billboard hot 100 this week' },
-    { id: 'global-top',   label: '🌍 Global Top Songs',    query: 'global top songs chart 2025' },
-    { id: 'new-releases', label: '✨ New Releases',         query: 'new music releases 2025' },
-    { id: 'viral',        label: '📱 Viral Right Now',     query: 'viral songs tiktok 2025' },
+    { id: 'todays-hits',  label: '🔥 Today’s Hits',     query: 'top hits' },
+    { id: 'hot-100',      label: '📊 Hot Right Now',    query: 'trending music' },
+    { id: 'new-releases', label: '✨ New Releases',     query: 'new music' },
   ];
 
-  // All tracks across all sections, keyed by section id
   const sectionTracks = {};
 
+  /* ---------- Greeting ---------- */
   function setGreeting() {
-    const h  = new Date().getHours();
-    const g  = h < 12 ? 'Morning' : h < 17 ? 'Afternoon' : 'Evening';
+    const h = new Date().getHours();
+    const g = h < 12 ? 'Morning' : h < 17 ? 'Afternoon' : 'Evening';
     const el = document.getElementById('greeting-time');
-    if (el) el.textContent = ` ${g}`;
+    if (el) {
+      // Optional: add a name after greeting
+      const name = 'User'; 
+      el.textContent = ` ${g}, ${name}`; // note space before g
+    }
   }
 
-  // Build skeleton placeholder for a section
+  /* ---------- Skeleton ---------- */
   function skeletonSection(section) {
     return `
       <div class="section-header" style="margin-top:28px">
@@ -34,24 +33,31 @@ const PageHome = (() => {
       </div>
       <div class="results-grid" id="grid-${section.id}">
         ${Array(6).fill('<div class="result-card skeleton"></div>').join('')}
-      </div>`;
+      </div>
+    `;
   }
 
-  // Render a loaded section's cards
+  /* ---------- Render cards ---------- */
   function renderSection(section, tracks) {
     const grid = document.getElementById(`grid-${section.id}`);
     if (!grid) return;
 
     if (!tracks.length) {
-      grid.innerHTML = '<div class="msg" style="grid-column:1/-1;padding:20px">No results</div>';
+      grid.innerHTML = `
+        <div class="msg" style="grid-column:1/-1;padding:20px">
+          No results
+        </div>`;
       return;
     }
 
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion)').matches;
+
     grid.innerHTML = tracks.map((t, i) => `
-      <div class="result-card" data-section="${section.id}" data-i="${i}"
-           style="animation-delay:${i * 22}ms">
-        <img class="rc-thumb" src="${UI.esc(t.thumb)}" loading="lazy"
-             onerror="this.style.opacity='.15'"/>
+      <div class="result-card"
+           data-section="${section.id}"
+           data-i="${i}"
+           style="animation-delay:${reduceMotion ? 0 : i * 22}ms">
+        <img class="rc-thumb" src="${UI.esc(t.thumb)}" loading="lazy">
         <div class="rc-info">
           <div class="rc-title">${UI.esc(t.title)}</div>
           <div class="rc-ch">${UI.esc(t.ch)}</div>
@@ -60,13 +66,18 @@ const PageHome = (() => {
       </div>
     `).join('');
 
+    // image fallback
+    grid.querySelectorAll('.rc-thumb').forEach(img => {
+      img.onerror = () => img.style.opacity = '.15';
+    });
+
+    // click handlers
     grid.querySelectorAll('.result-card').forEach(el => {
       el.addEventListener('click', () => {
         const sid = el.dataset.section;
         const i   = +el.dataset.i;
 
-        // Set this section's tracks as the active queue
-        State.tracks     = sectionTracks[sid] || [];
+        State.tracks     = sectionTracks[sid];
         State.currentIdx = -1;
         UI.renderQueue();
 
@@ -76,32 +87,36 @@ const PageHome = (() => {
     });
   }
 
-  function highlightActive(sectionId, activeIdx) {
-    // Clear all highlights across all sections
-    document.querySelectorAll('.result-card.active').forEach(el =>
-      el.classList.remove('active'));
-    // Highlight the clicked one
-    const grid = document.getElementById(`grid-${sectionId}`);
-    grid?.querySelectorAll('.result-card')[activeIdx]?.classList.add('active');
+  /* ---------- Active highlight ---------- */
+  function highlightActive(sectionId, idx) {
+    document.querySelectorAll('.result-card.active')
+      .forEach(el => el.classList.remove('active'));
+
+    const grid  = document.getElementById(`grid-${sectionId}`);
+    const cards = grid?.querySelectorAll('.result-card');
+    cards && cards[idx]?.classList.add('active');
   }
 
-  // Load a single section asynchronously
+  /* ---------- API + fallback ---------- */
   async function loadSection(section) {
     try {
       const raw    = await API.search(section.query);
       const tracks = API.mapResults(raw);
+
+      if (!tracks.length) throw new Error('empty');
+
       sectionTracks[section.id] = tracks;
       renderSection(section, tracks);
-    } catch (err) {
-      const grid = document.getElementById(`grid-${section.id}`);
-      if (grid) grid.innerHTML = `
-        <div class="msg" style="grid-column:1/-1;padding:20px">
-          <span class="msg-icon" style="font-size:18px">⚠️</span>
-          ${UI.esc(err.message)}
-        </div>`;
+
+    } catch {
+      // fallback mock data (prevents empty home)
+      const fallback = API.mockTracks(section.query);
+      sectionTracks[section.id] = fallback;
+      renderSection(section, fallback);
     }
   }
 
+  /* ---------- Init ---------- */
   function init() {
     setGreeting();
 
@@ -109,21 +124,28 @@ const PageHome = (() => {
     const sub       = document.getElementById('home-sub');
     if (!container) return;
 
-    // Render all skeleton sections immediately
     container.innerHTML = SECTIONS.map(skeletonSection).join('');
     if (sub) sub.textContent = 'Loading charts…';
 
-    // Load all sections in parallel — they each update independently
-    Promise.all(SECTIONS.map(loadSection)).then(() => {
+    (async () => {
+      let loaded = 0;
+      for (const section of SECTIONS) {
+        await loadSection(section);
+        loaded++;
+        if (sub) sub.textContent = `Loading charts… ${loaded}/${SECTIONS.length}`;
+      }
       if (sub) sub.textContent = 'Charts loaded — click any song to play';
-    }).catch(() => {
-      if (sub) sub.textContent = 'Some sections failed to load';
-    });
+    })();
 
-    // Restore now-playing hero if a track is already active
-    const cur = State.tracks[State.currentIdx];
+    // restore hero if playing
+    const cur = State.tracks?.[State.currentIdx];
     if (cur) UI.updateHomeHero(cur);
   }
 
   return { init };
 })();
+
+/* ---------- Safe init after DOM ready ---------- */
+document.addEventListener('DOMContentLoaded', () => {
+  PageHome.init();
+});
