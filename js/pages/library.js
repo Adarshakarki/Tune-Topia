@@ -1,5 +1,7 @@
 /* ═══════════════════════════════════════
-   pages/library.js — Library page logic
+   pages/library.js
+   Renders State.library (saved to sessionStorage).
+   Clicking a card queues + plays that track.
    ═══════════════════════════════════════ */
 
 const PageLibrary = (() => {
@@ -8,31 +10,44 @@ const PageLibrary = (() => {
     const container = document.getElementById('library-content');
     if (!container) return;
 
-    if (!State.library.length) {
+    const lib = State.library || [];
+
+    if (!lib.length) {
       container.innerHTML = `
         <div class="library-empty">
           <div class="library-empty-icon">🎵</div>
           <div class="library-empty-title">Your library is empty</div>
           <div class="library-empty-sub">
-            Songs you play will appear here. 
-            <button class="empty-search-btn" id="go-search">Start searching</button>
+            Songs you play will appear here.
           </div>
+          <button class="empty-search-btn" id="go-search">Start searching</button>
         </div>`;
-      document.getElementById('go-search')?.addEventListener('click', () => {
-        Router.go('search');
-      });
+      document.getElementById('go-search')?.addEventListener('click', () => Router.go('search'));
       return;
     }
 
     container.innerHTML = `
       <div class="section-header">
-        <span class="section-title">Recently Played · ${State.library.length} track${State.library.length !== 1 ? 's' : ''}</span>
+        <span class="section-title">
+          Recently Played
+          <span style="font-size:13px;font-weight:500;color:var(--label-3);margin-left:8px">
+            ${lib.length} track${lib.length !== 1 ? 's' : ''}
+          </span>
+        </span>
+        <button class="lib-clear-btn" id="lib-clear">Clear</button>
       </div>
       <div class="library-grid">
-        ${State.library.map((t, i) => `
-          <div class="lib-card" data-id="${UI.esc(t.id)}" style="animation-delay:${i * 22}ms">
-            <img class="lib-thumb" src="${UI.esc(t.thumb)}" loading="lazy"
-                 onerror="this.style.background='var(--bg2)'"/>
+        ${lib.map((t, i) => `
+          <div class="lib-card" data-id="${UI.esc(t.id)}" style="animation-delay:${i * 20}ms">
+            <div class="lib-thumb-wrap">
+              <img class="lib-thumb" src="${UI.esc(t.thumb)}" loading="lazy"
+                   onerror="this.style.opacity='.15'"/>
+              <div class="lib-play-overlay">
+                <svg viewBox="0 0 24 24" fill="white" width="28" height="28">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+              </div>
+            </div>
             <div class="lib-info">
               <div class="lib-title">${UI.esc(t.title)}</div>
               <div class="lib-ch">${UI.esc(t.ch)}</div>
@@ -42,23 +57,30 @@ const PageLibrary = (() => {
         `).join('')}
       </div>`;
 
+    // Click card to play
     container.querySelectorAll('.lib-card').forEach(el => {
       el.addEventListener('click', () => {
-        const id = el.dataset.id;
-        // Find in current queue
+        const id    = el.dataset.id;
+        const track = lib.find(t => t.id === id);
+        if (!track) return;
+
+        // If already in current queue, just seek to it
         const qi = State.tracks.findIndex(t => t.id === id);
         if (qi !== -1) {
           App.playIdx(qi);
         } else {
-          // Add to front of queue and play
-          const track = State.library.find(t => t.id === id);
-          if (track) {
-            const newTracks = [track, ...State.tracks];
-            State.tracks = newTracks;
-            App.playIdx(0);
-          }
+          // Prepend to queue and play
+          State.tracks = [track, ...State.tracks];
+          App.playIdx(0);
         }
       });
+    });
+
+    // Clear library
+    document.getElementById('lib-clear')?.addEventListener('click', () => {
+      if (!confirm('Clear your recently played history?')) return;
+      State.library = [];
+      render();
     });
   }
 
@@ -66,5 +88,3 @@ const PageLibrary = (() => {
 
   return { init };
 })();
-
-PageLibrary.init();
