@@ -1,10 +1,10 @@
 <div class="page-home">
   <div class="view-header">
     <h1 class="view-title">Good<span id="greeting-time"></span></h1>
-    <p class="view-sub" id="home-sub">Loading trending music…</p>
+    <p class="view-sub" id="home-sub">Fetching charts…</p>
   </div>
 
-  <!-- Now playing hero (shown when a track is active) -->
+  <!-- Now playing hero -->
   <div class="now-playing-hero" id="now-playing-hero" style="display:none">
     <div class="home-art-ring" id="home-art-ring">
       <img id="home-art-img" src="" alt="" style="display:none"/>
@@ -16,19 +16,6 @@
     </div>
   </div>
 
-  <!-- Trending section -->
-  <div class="section-header">
-    <span class="section-title">🔥 Trending Now</span>
-  </div>
-  <div class="results-grid" id="trending-grid">
-    <!-- Skeleton cards while loading -->
-    <div class="result-card skeleton"></div>
-    <div class="result-card skeleton"></div>
-    <div class="result-card skeleton"></div>
-    <div class="result-card skeleton"></div>
-    <div class="result-card skeleton"></div>
-    <div class="result-card skeleton"></div>
-  </div>
+  <!-- Chart sections — each loads independently -->
+  <div id="home-sections"></div>
 </div>
-
-<script src="js/pages/home.js"></script>
