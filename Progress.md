@@ -5,9 +5,10 @@
 - Search on youtube/invidious api.
 - Pause/play, forward/prev and volume bar.
 - Mobile ui.
+- Added home placeholders
 
 ## To-do
-- Add top songs on home.
+- Add working home with refresh and song playing when clicked. 
 - Add working library.
 - Add authentication with database to store playlist and liked songs.
 - Actually good looking similar apple music ui.
@@ -17,7 +18,7 @@
 
 ## Work done images
 *Home Page*
-<img width="1179" height="2556" alt="IMG_2002" src="https://github.com/user-attachments/assets/20dd8d8b-0f84-47c8-adb1-75e3b056f09c" />
+<img width="1179" height="2556" alt="IMG_2006" src="https://github.com/user-attachments/assets/5a51a722-24ad-4b1a-906a-02fe403f5fe3" />
 
 *Search Page with Genre Placeholders*
 <img width="1179" height="2556" alt="IMG_2003" src="https://github.com/user-attachments/assets/94ec493a-0259-4f50-8872-3f7882a44784" />
