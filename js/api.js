@@ -10,80 +10,90 @@ const API = (() => {
   ];
 
   let activeInstance  = null;
-  let currentProxyIdx = 0;
+  let activeProxy     = 0;
+  let pickingPromise  = null;   // deduplicate concurrent pickInstance calls
 
-  // ── Update the pill element (text + ok/err class) ──
   function setPill(text, state) {
-    const pill     = document.getElementById('pill');
-    const pillText = document.getElementById('pill-text');
-    if (pillText) pillText.textContent = text;
-    if (pill)     pill.className = `server-pill${state ? ' ' + state : ''}`;
+    const pill = document.getElementById('pill');
+    const txt  = document.getElementById('pill-text');
+    if (txt)  txt.textContent  = text;
+    if (pill) pill.className   = `server-pill${state ? ' ' + state : ''}`;
   }
 
-  // ── Fetch through proxy chain, rotate on failure ──
-  async function fetchWithFallback(url) {
-    for (let i = 0; i < PROXIES.length; i++) {
-      try {
-        const proxiedUrl = PROXIES[currentProxyIdx](url);
-        const r = await fetch(proxiedUrl, { signal: AbortSignal.timeout(7000) });
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        const data = await r.json();
-        // allorigins wraps in .contents as a JSON string
-        return data.contents ? JSON.parse(data.contents) : data;
-      } catch (e) {
-        console.warn(`Proxy ${currentProxyIdx} failed (${e.message}), trying next…`);
-        currentProxyIdx = (currentProxyIdx + 1) % PROXIES.length;
-      }
-    }
-    throw new Error('All proxies are currently blocked or down.');
+  // Try ONE instance through ONE proxy
+  async function probe(inst, proxyIdx) {
+    const url = PROXIES[proxyIdx](`${inst}/api/v1/stats`);
+    const r   = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    return data.contents ? JSON.parse(data.contents) : data;
   }
 
-  // ── Find a live instance ──
-  async function pickInstance() {
+  // Race ALL instance+proxy combos simultaneously — fastest wins
+  function pickInstance() {
+    if (activeInstance) return Promise.resolve(true);
+    if (pickingPromise)  return pickingPromise;   // reuse in-flight pick
+
     setPill('connecting…', '');
 
+    const attempts = [];
     for (const inst of ALL_INSTANCES) {
-      try {
-        const data = await fetchWithFallback(`${inst}/api/v1/stats`);
-        if (data) {
-          activeInstance = inst;
-          const label = inst.replace('https://', '');
-          setPill('● ' + label, 'ok');
-          return true;
-        }
-      } catch { continue; }
+      for (let pi = 0; pi < PROXIES.length; pi++) {
+        attempts.push(
+          probe(inst, pi).then(() => ({ inst, pi }))
+        );
+      }
     }
 
-    setPill('✕ proxy error', 'err');
-    return false;
+    pickingPromise = Promise.any(attempts)
+      .then(({ inst, pi }) => {
+        activeInstance = inst;
+        activeProxy    = pi;
+        setPill('● ' + inst.replace('https://', ''), 'ok');
+        return true;
+      })
+      .catch(() => {
+        setPill('✕ no server', 'err');
+        return false;
+      })
+      .finally(() => { pickingPromise = null; });
+
+    return pickingPromise;
   }
 
-  // ── Search ──
+  async function fetchViaProxy(url) {
+    const proxied = PROXIES[activeProxy](url);
+    const r = await fetch(proxied, { signal: AbortSignal.timeout(8000) });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    return data.contents ? JSON.parse(data.contents) : data;
+  }
+
   async function search(query) {
     if (!activeInstance) {
       const ok = await pickInstance();
-      if (!ok) throw new Error('No Invidious server reachable');
+      if (!ok) throw new Error('No server reachable — try again');
     }
-    const url = `${activeInstance}/api/v1/search?q=${encodeURIComponent(query)}&type=video`;
-    const data = await fetchWithFallback(url);
-    if (!Array.isArray(data)) throw new Error('Unexpected response from server');
+    const url  = `${activeInstance}/api/v1/search?q=${encodeURIComponent(query)}&type=video`;
+    const data = await fetchViaProxy(url);
+    if (!Array.isArray(data)) throw new Error('Unexpected server response');
     return data;
   }
 
-  // ── Map raw API results to track objects ──
   function mapResults(data) {
     if (!Array.isArray(data)) return [];
     return data.map(v => ({
       id:    v.videoId,
-      title: v.title    || 'Unknown',
-      ch:    v.author   || 'Unknown',
+      title: v.title   || 'Unknown',
+      ch:    v.author  || 'Unknown',
       thumb: v.videoThumbnails?.find(t => t.quality === 'medium')?.url
           || v.videoThumbnails?.[0]?.url || '',
       dur:   v.lengthSeconds || 0,
     }));
   }
 
+  // Kick off immediately — by the time home/search page loads, instance is ready
+  pickInstance();
+
   return { search, mapResults, pickInstance };
 })();
-
-API.pickInstance();
