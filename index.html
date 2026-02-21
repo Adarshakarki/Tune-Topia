@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Music</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/styles.css"/>
+</head>
+<body>
+
+  <!-- Hidden YouTube player -->
+  <div id="yt-hidden"><div id="yt-player"></div></div>
+
+  <!-- Server status -->
+  <div class="server-pill" id="pill">⌛ connecting…</div>
+
+  <!-- App Shell -->
+  <div class="app">
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <circle cx="14" cy="14" r="14" fill="url(#lg)"/>
+          <path d="M10 8v8.5a3 3 0 1 0 2-2.83V11l6-1.5v3a3 3 0 1 0 2-2.83V8.5a1 1 0 0 0-1.24-.97L10.76 9A1 1 0 0 0 10 10V8Z" fill="white"/>
+          <defs>
+            <linearGradient id="lg" x1="0" y1="0" x2="28" y2="28">
+              <stop stop-color="#fc3c44"/>
+              <stop offset="1" stop-color="#ff6b6b"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <span>Music</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-btn active" data-view="home">
+          <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+          Home
+        </button>
+        <button class="nav-btn" data-view="search">
+          <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+          Search
+        </button>
+        <button class="nav-btn" data-view="library">
+          <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/></svg>
+          Library
+        </button>
+      </nav>
+
+      <div class="sidebar-divider"></div>
+
+      <div class="queue-label">Up Next</div>
+      <div class="track-list" id="list">
+        <div class="msg"><span class="msg-icon">🎵</span>Search to fill your queue</div>
+      </div>
+    </aside>
+
+    <!-- ── Main Content ── -->
+    <main class="main-content">
+
+      <!-- HOME VIEW -->
+      <section class="view active" id="view-home">
+        <div class="view-header">
+          <h1 class="view-title">Good<span id="greeting-time"> Evening</span></h1>
+          <p class="view-sub">Search for something to get started</p>
+        </div>
+        <div class="home-art-display">
+          <div class="home-art-ring" id="home-art-ring">
+            <img id="home-art-img" src="" alt="" style="display:none"/>
+            <div class="home-art-ph" id="home-art-ph">♪</div>
+          </div>
+          <div class="home-track-info">
+            <div class="home-track-title" id="home-title">No track playing</div>
+            <div class="home-track-ch" id="home-ch">—</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SEARCH VIEW -->
+      <section class="view" id="view-search">
+        <div class="view-header">
+          <h1 class="view-title">Search</h1>
+          <div class="search-bar">
+            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            <input id="q" type="text" placeholder="Artists, songs, or podcasts" autocomplete="off"/>
+            <button id="go" class="search-go">Search</button>
+          </div>
+        </div>
+        <div class="search-results" id="search-results">
+          <div class="search-hint">
+            <div class="hint-grid">
+              <div class="hint-card" style="--c:#fc3c44">🔥 Trending</div>
+              <div class="hint-card" style="--c:#2979ff">🎸 Rock</div>
+              <div class="hint-card" style="--c:#00897b">🎷 Jazz</div>
+              <div class="hint-card" style="--c:#f57c00">🎻 Classical</div>
+              <div class="hint-card" style="--c:#8e24aa">🎤 Pop</div>
+              <div class="hint-card" style="--c:#00acc1">🎧 Electronic</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- LIBRARY VIEW -->
+      <section class="view" id="view-library">
+        <div class="view-header">
+          <h1 class="view-title">Library</h1>
+          <p class="view-sub">Your recently played tracks</p>
+        </div>
+        <div class="library-grid" id="library-grid">
+          <div class="msg"><span class="msg-icon">📚</span>Play something to build your library</div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ── Now Playing Side Panel ── -->
+    <div class="now-playing-panel" id="now-panel">
+      <div class="np-art-wrap" id="np-art-wrap">
+        <img id="np-art" src="" alt="" style="display:none"/>
+        <div class="np-art-ph" id="np-art-ph">♪</div>
+      </div>
+      <div class="np-meta">
+        <div class="np-title" id="np-title">Nothing playing</div>
+        <div class="np-ch" id="np-ch">—</div>
+      </div>
+    </div>
+
+  </div><!-- /app -->
+
+  <!-- ── Player Bar ── -->
+  <footer class="player-bar" id="player-bar">
+    <div class="bar-left">
+      <img id="bar-thumb" src="" alt=""/>
+      <div class="bar-meta">
+        <div id="bar-title">—</div>
+        <div id="bar-ch"></div>
+      </div>
+    </div>
+
+    <div class="bar-center">
+      <div class="ctrl-btns">
+        <button class="ctrl-btn" id="btn-prev" title="Previous">
+          <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+        </button>
+        <button class="play-btn" id="btn-play">
+          <svg id="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <button class="ctrl-btn" id="btn-next" title="Next">
+          <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zm2.5-6 5.5 3.9V8.1L8.5 12zM16 6h2v12h-2z"/></svg>
+        </button>
+      </div>
+      <div class="progress-row">
+        <span id="t-cur">0:00</span>
+        <div class="prog-bar" id="prog-bar">
+          <div class="prog-fill" id="prog-fill"></div>
+          <div class="prog-thumb" id="prog-thumb"></div>
+        </div>
+        <span id="t-end">0:00</span>
+      </div>
+    </div>
+
+    <div class="bar-right">
+      <svg class="vol-icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+      <div class="vol-track">
+        <div class="vol-fill" id="vol-fill"></div>
+        <input type="range" id="vol" min="0" max="100" value="80"/>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts (order matters: api → player → ui [contains State] → app → yt) -->
+  <script src="js/api.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+  <script src="https://www.youtube.com/iframe_api"></script>
+</body>
+</html>
