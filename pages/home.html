@@ -1,0 +1,34 @@
+<div class="page-home">
+  <div class="view-header">
+    <h1 class="view-title">Good<span id="greeting-time"></span></h1>
+    <p class="view-sub" id="home-sub">Loading trending music…</p>
+  </div>
+
+  <!-- Now playing hero (shown when a track is active) -->
+  <div class="now-playing-hero" id="now-playing-hero" style="display:none">
+    <div class="home-art-ring" id="home-art-ring">
+      <img id="home-art-img" src="" alt="" style="display:none"/>
+      <div class="home-art-ph" id="home-art-ph">♪</div>
+    </div>
+    <div class="home-track-info">
+      <div class="home-track-title" id="home-title">—</div>
+      <div class="home-track-ch" id="home-ch">—</div>
+    </div>
+  </div>
+
+  <!-- Trending section -->
+  <div class="section-header">
+    <span class="section-title">🔥 Trending Now</span>
+  </div>
+  <div class="results-grid" id="trending-grid">
+    <!-- Skeleton cards while loading -->
+    <div class="result-card skeleton"></div>
+    <div class="result-card skeleton"></div>
+    <div class="result-card skeleton"></div>
+    <div class="result-card skeleton"></div>
+    <div class="result-card skeleton"></div>
+    <div class="result-card skeleton"></div>
+  </div>
+</div>
+
+<script src="js/pages/home.js"></script>
