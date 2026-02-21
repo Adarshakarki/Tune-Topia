@@ -1,64 +1,42 @@
-/* ═════════════════════════════════════
-   pages/search.js — Search page logic
-   ═════════════════════════════════════ */
-
-const PageSearch = (() => {
-
-  function bindEvents() {
+var PageSearch = (() => {
+  function init() {
     const input      = document.getElementById('q');
     const goBtn      = document.getElementById('go');
     const genreShelf = document.getElementById('genre-shelf');
     const resultsDiv = document.getElementById('search-results');
+    const grid       = document.getElementById('results-grid');
+    const label      = document.getElementById('results-label');
 
-    if (!input) return;
+    if (!input) { console.warn('PageSearch: #q not found'); return; }
 
-    // Search on Enter or button click
-    input.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
-    goBtn?.addEventListener('click', doSearch);
-
-    // Genre chip click
-    document.querySelectorAll('.hint-card').forEach(card => {
-      card.addEventListener('click', () => {
-        input.value = card.dataset.q || card.textContent.replace(/^.+?\s/, '').trim();
-        doSearch();
-      });
-    });
-
-    async function doSearch() {
+    const doSearch = async () => {
       const q = input.value.trim();
       if (!q) return;
 
-      // Show loading, hide genres
-      if (genreShelf)  genreShelf.style.display = 'none';
-      if (resultsDiv)  resultsDiv.style.display  = 'block';
-
-      const grid  = document.getElementById('results-grid');
-      const label = document.getElementById('results-label');
-      if (grid) grid.innerHTML = '<div class="spin" style="margin:40px auto"></div>';
+      // Show results container, hide genre shelf — never reverse this
+      if (genreShelf) genreShelf.style.display = 'none';
+      if (resultsDiv) resultsDiv.style.display  = 'block';
+      if (label)      label.textContent         = `Results for "${q}"`;
+      if (grid)       grid.innerHTML            = '<div class="spin" style="margin:40px auto"></div>';
 
       try {
-        const data   = await API.search(q);
-        const tracks = API.mapResults(data);
+        const raw    = await API.search(q);
+        const tracks = API.mapResults(raw);
 
-        // Replace queue with new results
         State.tracks     = tracks;
         State.currentIdx = -1;
         UI.renderQueue();
 
-        if (label) label.textContent = `Results for "${q}"`;
-
-        if (!grid) return;
-
         if (!tracks.length) {
-          grid.innerHTML = `<div class="msg" style="grid-column:1/-1">
-            <span class="msg-icon">🔍</span>No results found</div>`;
+          grid.innerHTML = '<div class="msg"><span class="msg-icon">🔍</span>No results found</div>';
           return;
         }
 
         grid.innerHTML = tracks.map((t, i) => `
           <div class="result-card" data-i="${i}" style="animation-delay:${i * 25}ms">
-            <img class="rc-thumb" src="${UI.esc(t.thumb)}" loading="lazy"
-                 onerror="this.style.background='var(--bg2)'"/>
+            <img class="rc-thumb" src="${UI.esc(t.thumb)}"
+                 loading="lazy"
+                 onerror="this.style.opacity='.15'"/>
             <div class="rc-info">
               <div class="rc-title">${UI.esc(t.title)}</div>
               <div class="rc-ch">${UI.esc(t.ch)}</div>
@@ -67,6 +45,7 @@ const PageSearch = (() => {
           </div>
         `).join('');
 
+        // Click to play
         grid.querySelectorAll('.result-card').forEach(el => {
           el.addEventListener('click', () => {
             const i = +el.dataset.i;
@@ -76,26 +55,34 @@ const PageSearch = (() => {
           });
         });
 
-        // Auto-play first result
+        // Auto-play first
         App.playIdx(0);
         grid.querySelector('.result-card')?.classList.add('active');
 
       } catch (err) {
-        if (grid) grid.innerHTML = `<div class="msg" style="grid-column:1/-1">
-          <span class="msg-icon">⚠️</span>${UI.esc(err.message)}</div>`;
-        // Show genres again on error
-        if (genreShelf) genreShelf.style.display = 'block';
+        // Show error INSIDE the results area — don't hide it
+        if (grid) grid.innerHTML = `
+          <div class="msg">
+            <span class="msg-icon">⚠️</span>
+            ${UI.esc(err.message)}<br>
+            <small style="font-size:11px;opacity:.7">Check the server status pill above</small>
+          </div>`;
+        console.error('Search error:', err);
       }
-    }
-  }
+    };
 
-  function init() {
-    bindEvents();
-    // Focus search input
-    setTimeout(() => document.getElementById('q')?.focus(), 100);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+    if (goBtn) goBtn.addEventListener('click', doSearch);
+
+    document.querySelectorAll('.hint-card').forEach(card => {
+      card.addEventListener('click', () => {
+        input.value = card.dataset.q || card.textContent.trim();
+        doSearch();
+      });
+    });
+
+    setTimeout(() => input.focus(), 80);
   }
 
   return { init };
 })();
-
-PageSearch.init();

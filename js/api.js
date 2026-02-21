@@ -1,138 +1,89 @@
-/* ════════════════════════════════════════════════════════════
-   api.js — Invidious search wrapper
-   Strategy: probe ALL known instances IN PARALLEL with a
-   lightweight /api/v1/stats call and race them — whichever
-   responds first (and passes CORS) wins. This is much faster
-   than the old serial fallback chain.
-   ════════════════════════════════════════════════════════════ */
-
 const API = (() => {
-
-  // Every known public Invidious instance as of 2025.
-  // Probed in parallel; first to respond wins.
   const ALL_INSTANCES = [
-    'https://yewtu.be',
-    'https://invidious.privacydev.net',
-    'https://inv.nadeko.net',
-    'https://inv.tux.pizza',
-    'https://invidious.protokolla.fi',
-    'https://invidious.private.coffee',
-    'https://yt.drgnz.club',
-    'https://iv.datura.network',
-    'https://invidious.perennialte.ch',
-    'https://invidious.drgns.space',
-    'https://invidious.jing.rocks',
-    'https://invidious.privacyredirect.com',
-    'https://invidious.reallyaweso.me',
-    'https://invidious.materialio.us',
-    'https://invidious.incogniweb.net',
-    'https://inv.us.projectsegfau.lt',
-    'https://inv.in.projectsegfau.lt',
-    'https://invidious.lunar.icu',
-    'https://iv.ggtyler.dev',
-    'https://inv.zzls.xyz',
-    'https://invidious.flokinet.to',
-    'https://invidious.projectsegfau.lt',
-    'https://inv.bp.projectsegfau.lt',
-    'https://invidious.slipfox.xyz',
-    'https://invidious.tiekoetter.com',
-    'https://vid.priv.au',
-    // User-specified instances
-    'https://inv.nadeko.net',
-    'https://invidious.fdn.fr',
-    'https://yt.artemislena.eu',
-    'https://invidious.nerdvpn.de',
     'https://iv.melmac.space',
   ];
 
+  const PROXIES = [
+    (url) => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+    (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    (url) => `https://thingproxy.freeboard.io/fetch/${url}`
+  ];
+
   let activeInstance  = null;
-  let pickingPromise  = null;  // deduplicate concurrent picks
+  let currentProxyIdx = 0;
 
-  const pill = () => document.getElementById('pill');
-
-  // ── Probe a single instance using an actual search request ──
-  // Stats endpoint can have different CORS settings than search,
-  // so we must probe with the exact endpoint we intend to use.
-  async function probe(inst) {
-    const r = await fetch(
-      `${inst}/api/v1/search?q=test&type=video&fields=videoId`,
-      { signal: AbortSignal.timeout(5000) }
-    );
-    if (!r.ok) throw new Error(`${inst} returned ${r.status}`);
-    return inst;
+  // ── Update the pill element (text + ok/err class) ──
+  function setPill(text, state) {
+    const pill     = document.getElementById('pill');
+    const pillText = document.getElementById('pill-text');
+    if (pillText) pillText.textContent = text;
+    if (pill)     pill.className = `server-pill${state ? ' ' + state : ''}`;
   }
 
-  // ── Race all instances; first healthy one wins ──
-  function pickInstance() {
-    // If a pick is already in flight, reuse it
-    if (pickingPromise) return pickingPromise;
+  // ── Fetch through proxy chain, rotate on failure ──
+  async function fetchWithFallback(url) {
+    for (let i = 0; i < PROXIES.length; i++) {
+      try {
+        const proxiedUrl = PROXIES[currentProxyIdx](url);
+        const r = await fetch(proxiedUrl, { signal: AbortSignal.timeout(7000) });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+        // allorigins wraps in .contents as a JSON string
+        return data.contents ? JSON.parse(data.contents) : data;
+      } catch (e) {
+        console.warn(`Proxy ${currentProxyIdx} failed (${e.message}), trying next…`);
+        currentProxyIdx = (currentProxyIdx + 1) % PROXIES.length;
+      }
+    }
+    throw new Error('All proxies are currently blocked or down.');
+  }
 
-    const p = pill();
-    if (p) { p.textContent = '⌛ finding server…'; p.className = 'server-pill'; }
+  // ── Find a live instance ──
+  async function pickInstance() {
+    setPill('connecting…', '');
 
-    pickingPromise = Promise.any(ALL_INSTANCES.map(probe))
-      .then(winner => {
-        activeInstance = winner;
-        const label = winner.replace('https://', '');
-        if (p) { p.textContent = '● ' + label; p.className = 'server-pill ok'; }
-        return true;
-      })
-      .catch(() => {
-        if (p) { p.textContent = '✕ No server available'; p.className = 'server-pill err'; }
-        return false;
-      })
-      .finally(() => { pickingPromise = null; });
+    for (const inst of ALL_INSTANCES) {
+      try {
+        const data = await fetchWithFallback(`${inst}/api/v1/stats`);
+        if (data) {
+          activeInstance = inst;
+          const label = inst.replace('https://', '');
+          setPill('● ' + label, 'ok');
+          return true;
+        }
+      } catch { continue; }
+    }
 
-    return pickingPromise;
+    setPill('✕ proxy error', 'err');
+    return false;
   }
 
   // ── Search ──
   async function search(query) {
     if (!activeInstance) {
       const ok = await pickInstance();
-      if (!ok) throw new Error('No reachable Invidious server found');
+      if (!ok) throw new Error('No Invidious server reachable');
     }
-
-    const url = `${activeInstance}/api/v1/search?q=${encodeURIComponent(query)}&type=video&fields=videoId,title,author,videoThumbnails,lengthSeconds`;
-    let r;
-    try {
-      r = await fetch(url, { signal: AbortSignal.timeout(10000) });
-    } catch {
-      activeInstance = null;
-      throw new Error('Connection lost — please try again');
-    }
-
-    if (!r.ok) {
-      activeInstance = null;
-      throw new Error(`Server error ${r.status} — try again`);
-    }
-
-    return r.json();
+    const url = `${activeInstance}/api/v1/search?q=${encodeURIComponent(query)}&type=video`;
+    const data = await fetchWithFallback(url);
+    if (!Array.isArray(data)) throw new Error('Unexpected response from server');
+    return data;
   }
 
-  // ── Helpers ──
-  function getBestThumb(thumbs) {
-    if (!thumbs?.length) return '';
-    const pref = ['medium', 'default', 'high', 'maxres'];
-    for (const q of pref) {
-      const t = thumbs.find(x => x.quality === q);
-      if (t?.url) return t.url;
-    }
-    return thumbs[0]?.url || '';
-  }
-
+  // ── Map raw API results to track objects ──
   function mapResults(data) {
+    if (!Array.isArray(data)) return [];
     return data.map(v => ({
       id:    v.videoId,
-      title: v.title,
-      ch:    v.author,
-      thumb: getBestThumb(v.videoThumbnails),
-      dur:   v.lengthSeconds,
+      title: v.title    || 'Unknown',
+      ch:    v.author   || 'Unknown',
+      thumb: v.videoThumbnails?.find(t => t.quality === 'medium')?.url
+          || v.videoThumbnails?.[0]?.url || '',
+      dur:   v.lengthSeconds || 0,
     }));
   }
 
-  // Kick off parallel probe immediately on page load
-  pickInstance();
-
-  return { search, mapResults };
+  return { search, mapResults, pickInstance };
 })();
+
+API.pickInstance();
