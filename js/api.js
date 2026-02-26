@@ -12,8 +12,28 @@ const API = (() => {
   // Only allorigins — the only proxy that actually works reliably.
   // REMOVED: corsproxy.io (530/523/502), thingproxy (dead DNS), codetabs (400 errors)
   const PROXIES = [
-    (url) => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
-    (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    {
+      name: 'allorigins',
+      wrap: (url) => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+      extract: (data) => {
+        if (typeof data.contents !== 'string') throw new Error('No contents');
+        if (data.contents.trimStart().startsWith('<')) throw new Error('Got HTML, not JSON');
+        return JSON.parse(data.contents);
+      },
+    },
+    {
+      name: 'allorigins/raw',
+      wrap: (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+      extract: (data) => {
+        // raw endpoint returns the response directly — data IS the parsed object
+        return data;
+      },
+    },
+    {
+      name: 'jsonproxy',
+      wrap: (url) => `https://jsonp.afeld.me/?url=${encodeURIComponent(url)}`,
+      extract: (data) => data,
+    },
   ];
 
   let activeInstance = null;
@@ -28,12 +48,13 @@ const API = (() => {
   }
 
   // Always use a proxy — no public Invidious instance allows CORS from github.io
-  async function probeViaProxy(inst, proxyIdx) {
-    const url = PROXIES[proxyIdx](`${inst}/api/v1/stats`);
-    const r   = await fetch(url, { signal: AbortSignal.timeout(6000) });
+  async function probeViaProxy(inst, pi) {
+    const proxy = PROXIES[pi];
+    const r     = await fetch(proxy.wrap(`${inst}/api/v1/stats`), { signal: AbortSignal.timeout(6000) });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const data = await r.json();
-    return data.contents ? JSON.parse(data.contents) : data;
+    const data  = await r.json();
+    proxy.extract(data); // throws if response is HTML/invalid
+    return true;
   }
 
   function pickInstance() {
@@ -42,7 +63,6 @@ const API = (() => {
 
     setPill('connecting…', '');
 
-    // Race ALL instance + proxy combos — fastest working combo wins
     const attempts = [];
     for (const inst of ALL_INSTANCES) {
       for (let pi = 0; pi < PROXIES.length; pi++) {
@@ -54,7 +74,7 @@ const API = (() => {
       .then(({ inst, pi }) => {
         activeInstance = inst;
         activeProxy    = pi;
-        setPill(`● ${inst.replace('https://', '')}`, 'ok');
+        setPill(`● ${inst.replace('https://', '')} (${PROXIES[pi].name})`, 'ok');
         return true;
       })
       .catch(() => {
@@ -67,11 +87,11 @@ const API = (() => {
   }
 
   async function fetchAPI(path) {
-    const proxied = PROXIES[activeProxy](`${activeInstance}${path}`);
-    const r = await fetch(proxied, { signal: AbortSignal.timeout(10000) });
+    const proxy   = PROXIES[activeProxy];
+    const r       = await fetch(proxy.wrap(`${activeInstance}${path}`), { signal: AbortSignal.timeout(10000) });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const data = await r.json();
-    return data.contents ? JSON.parse(data.contents) : data;
+    const raw     = await r.json();
+    return proxy.extract(raw);
   }
 
   async function search(query) {
