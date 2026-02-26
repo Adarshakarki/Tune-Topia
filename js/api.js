@@ -7,14 +7,16 @@ const API = (() => {
     'https://invidious.flokinet.to',
   ];
 
+  // REMOVED: thingproxy.freeboard.io — dead domain (ERR_NAME_NOT_RESOLVED)
+  // REMOVED: corsproxy.io — returning 530/523/502 Cloudflare errors
   const PROXIES = [
     (url) => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
-    (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-    (url) => `https://thingproxy.freeboard.io/fetch/${url}`
+    (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+    (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
   ];
 
   let activeInstance = null;
-  let activeProxy    = 0;
+  let activeProxy    = null;  // null = direct (no proxy needed)
   let pickingPromise = null;
 
   function setPill(text, state) {
@@ -24,9 +26,16 @@ const API = (() => {
     if (pill) pill.className  = `server-pill${state ? ' ' + state : ''}`;
   }
 
-  async function probe(inst, proxyIdx) {
+  // Try direct fetch first — some Invidious instances allow CORS natively
+  async function probeDirect(inst) {
+    const r = await fetch(`${inst}/api/v1/stats`, { signal: AbortSignal.timeout(4000) });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.json();
+  }
+
+  async function probeViaProxy(inst, proxyIdx) {
     const url = PROXIES[proxyIdx](`${inst}/api/v1/stats`);
-    const r   = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    const r   = await fetch(url, { signal: AbortSignal.timeout(6000) });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const data = await r.json();
     return data.contents ? JSON.parse(data.contents) : data;
@@ -40,22 +49,26 @@ const API = (() => {
 
     const attempts = [];
     for (const inst of ALL_INSTANCES) {
+      // Try direct first (fastest if CORS is supported)
+      attempts.push(probeDirect(inst).then(() => ({ inst, proxyIdx: null })));
+      // Try each proxy in parallel
       for (let pi = 0; pi < PROXIES.length; pi++) {
-        attempts.push(
-          probe(inst, pi).then(() => ({ inst, pi }))
-        );
+        attempts.push(probeViaProxy(inst, pi).then(() => ({ inst, proxyIdx: pi })));
       }
     }
 
     pickingPromise = Promise.any(attempts)
-      .then(({ inst, pi }) => {
+      .then(({ inst, proxyIdx }) => {
         activeInstance = inst;
-        activeProxy    = pi;
-        setPill('● ' + inst.replace('https://', ''), 'ok');
+        activeProxy    = proxyIdx;
+        const label    = proxyIdx === null
+          ? 'direct'
+          : ['allorigins', 'codetabs', 'allorigins/raw'][proxyIdx];
+        setPill(`● ${inst.replace('https://', '')} (${label})`, 'ok');
         return true;
       })
       .catch(() => {
-        setPill('✕ no server', 'err');
+        setPill('✕ no server reachable', 'err');
         return false;
       })
       .finally(() => { pickingPromise = null; });
@@ -63,9 +76,19 @@ const API = (() => {
     return pickingPromise;
   }
 
-  async function fetchViaProxy(url) {
-    const proxied = PROXIES[activeProxy](url);
-    const r = await fetch(proxied, { signal: AbortSignal.timeout(8000) });
+  async function fetchAPI(path) {
+    const fullUrl = `${activeInstance}${path}`;
+
+    if (activeProxy === null) {
+      // Direct — no proxy
+      const r = await fetch(fullUrl, { signal: AbortSignal.timeout(8000) });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    }
+
+    // Via proxy
+    const proxied = PROXIES[activeProxy](fullUrl);
+    const r = await fetch(proxied, { signal: AbortSignal.timeout(10000) });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const data = await r.json();
     return data.contents ? JSON.parse(data.contents) : data;
@@ -74,11 +97,10 @@ const API = (() => {
   async function search(query) {
     if (!activeInstance) {
       const ok = await pickInstance();
-      if (!ok) throw new Error('No server reachable — try again');
+      if (!ok) throw new Error('No server reachable — check your connection');
     }
-    const url  = `${activeInstance}/api/v1/search?q=${encodeURIComponent(query)}&type=video`;
-    const data = await fetchViaProxy(url);
-    if (!Array.isArray(data)) throw new Error('Unexpected server response');
+    const data = await fetchAPI(`/api/v1/search?q=${encodeURIComponent(query)}&type=video`);
+    if (!Array.isArray(data)) throw new Error('Unexpected response from server');
     return data;
   }
 
@@ -94,12 +116,7 @@ const API = (() => {
     }));
   }
 
-  // BUG FIX: mockTracks was called in home.js but never defined.
-  // Returns empty array so the section gracefully shows "no results"
-  // instead of crashing with TypeError.
-  function mockTracks() {
-    return [];
-  }
+  function mockTracks() { return []; }
 
   pickInstance();
 
