@@ -17,7 +17,7 @@ const API = (() => {
   ];
 
   let activeInstance = null;
-  let activeProxy    = null;  // null = direct (no proxy needed)
+  let activeProxy    = 0;
   let pickingPromise = null;
 
   function setPill(text, state) {
@@ -27,13 +27,7 @@ const API = (() => {
     if (pill) pill.className  = `server-pill${state ? ' ' + state : ''}`;
   }
 
-  // Try direct fetch first — some Invidious instances allow CORS natively
-  async function probeDirect(inst) {
-    const r = await fetch(`${inst}/api/v1/stats`, { signal: AbortSignal.timeout(4000) });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    return r.json();
-  }
-
+  // Always use a proxy — no public Invidious instance allows CORS from github.io
   async function probeViaProxy(inst, proxyIdx) {
     const url = PROXIES[proxyIdx](`${inst}/api/v1/stats`);
     const r   = await fetch(url, { signal: AbortSignal.timeout(6000) });
@@ -48,24 +42,19 @@ const API = (() => {
 
     setPill('connecting…', '');
 
+    // Race ALL instance + proxy combos — fastest working combo wins
     const attempts = [];
     for (const inst of ALL_INSTANCES) {
-      // Try direct first (fastest if CORS is supported)
-      attempts.push(probeDirect(inst).then(() => ({ inst, proxyIdx: null })));
-      // Try each proxy in parallel
       for (let pi = 0; pi < PROXIES.length; pi++) {
-        attempts.push(probeViaProxy(inst, pi).then(() => ({ inst, proxyIdx: pi })));
+        attempts.push(probeViaProxy(inst, pi).then(() => ({ inst, pi })));
       }
     }
 
     pickingPromise = Promise.any(attempts)
-      .then(({ inst, proxyIdx }) => {
+      .then(({ inst, pi }) => {
         activeInstance = inst;
-        activeProxy    = proxyIdx;
-        const label    = proxyIdx === null
-          ? 'direct'
-          : ['allorigins', 'codetabs', 'allorigins/raw'][proxyIdx];
-        setPill(`● ${inst.replace('https://', '')} (${label})`, 'ok');
+        activeProxy    = pi;
+        setPill(`● ${inst.replace('https://', '')}`, 'ok');
         return true;
       })
       .catch(() => {
@@ -78,17 +67,7 @@ const API = (() => {
   }
 
   async function fetchAPI(path) {
-    const fullUrl = `${activeInstance}${path}`;
-
-    if (activeProxy === null) {
-      // Direct — no proxy
-      const r = await fetch(fullUrl, { signal: AbortSignal.timeout(8000) });
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      return r.json();
-    }
-
-    // Via proxy
-    const proxied = PROXIES[activeProxy](fullUrl);
+    const proxied = PROXIES[activeProxy](`${activeInstance}${path}`);
     const r = await fetch(proxied, { signal: AbortSignal.timeout(10000) });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const data = await r.json();
