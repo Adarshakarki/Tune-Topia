@@ -6,9 +6,9 @@
 const PageHome = (() => {
 
   const SECTIONS = [
-    { id: 'todays-hits',  label: '🔥 Today’s Hits',     query: 'top hits' },
-    { id: 'hot-100',      label: '📊 Hot Right Now',    query: 'trending music' },
-    { id: 'new-releases', label: '✨ New Releases',     query: 'new music' },
+    { id: 'todays-hits',  label: '🔥 Today\'s Hits',   query: 'top hits' },
+    { id: 'hot-100',      label: '📊 Hot Right Now',   query: 'trending music' },
+    { id: 'new-releases', label: '✨ New Releases',    query: 'new music' },
   ];
 
   const sectionTracks = {};
@@ -18,11 +18,7 @@ const PageHome = (() => {
     const h = new Date().getHours();
     const g = h < 12 ? 'Morning' : h < 17 ? 'Afternoon' : 'Evening';
     const el = document.getElementById('greeting-time');
-    if (el) {
-      // Optional: add a name after greeting
-      const name = 'User'; 
-      el.textContent = ` ${g}, ${name}`; // note space before g
-    }
+    if (el) el.textContent = ` ${g}`;
   }
 
   /* ---------- Skeleton ---------- */
@@ -45,7 +41,7 @@ const PageHome = (() => {
     if (!tracks.length) {
       grid.innerHTML = `
         <div class="msg" style="grid-column:1/-1;padding:20px">
-          No results
+          Could not load — check server status
         </div>`;
       return;
     }
@@ -66,12 +62,10 @@ const PageHome = (() => {
       </div>
     `).join('');
 
-    // image fallback
     grid.querySelectorAll('.rc-thumb').forEach(img => {
       img.onerror = () => img.style.opacity = '.15';
     });
 
-    // click handlers
     grid.querySelectorAll('.result-card').forEach(el => {
       el.addEventListener('click', () => {
         const sid = el.dataset.section;
@@ -102,14 +96,13 @@ const PageHome = (() => {
     try {
       const raw    = await API.search(section.query);
       const tracks = API.mapResults(raw);
-
       if (!tracks.length) throw new Error('empty');
-
       sectionTracks[section.id] = tracks;
       renderSection(section, tracks);
-
     } catch {
-      // fallback mock data (prevents empty home)
+      // BUG FIX: API.mockTracks was called here but never existed.
+      // Now we use the fixed mockTracks() which returns [] and
+      // renderSection() handles the empty case gracefully.
       const fallback = API.mockTracks(section.query);
       sectionTracks[section.id] = fallback;
       renderSection(section, fallback);
@@ -137,15 +130,15 @@ const PageHome = (() => {
       if (sub) sub.textContent = 'Charts loaded — click any song to play';
     })();
 
-    // restore hero if playing
     const cur = State.tracks?.[State.currentIdx];
     if (cur) UI.updateHomeHero(cur);
   }
 
   return { init };
-})();
 
-/* ---------- Safe init after DOM ready ---------- */
-document.addEventListener('DOMContentLoaded', () => {
-  PageHome.init();
-});
+  // BUG FIX: Removed the DOMContentLoaded listener that was here before.
+  // It was calling PageHome.init() before home.html was injected into the DOM,
+  // meaning #home-sections didn't exist yet and init() silently failed.
+  // router.js already calls PageHome.init() at the right time — after the HTML
+  // is loaded — so the extra listener was causing a duplicate (broken) call.
+})();

@@ -1,6 +1,10 @@
 const API = (() => {
   const ALL_INSTANCES = [
     'https://iv.melmac.space',
+    'https://invidious.slipfox.xyz',
+    'https://invidious.privacydev.net',
+    'https://yt.cdaut.de',
+    'https://invidious.flokinet.to',
   ];
 
   const PROXIES = [
@@ -9,18 +13,17 @@ const API = (() => {
     (url) => `https://thingproxy.freeboard.io/fetch/${url}`
   ];
 
-  let activeInstance  = null;
-  let activeProxy     = 0;
-  let pickingPromise  = null;   // deduplicate concurrent pickInstance calls
+  let activeInstance = null;
+  let activeProxy    = 0;
+  let pickingPromise = null;
 
   function setPill(text, state) {
     const pill = document.getElementById('pill');
     const txt  = document.getElementById('pill-text');
-    if (txt)  txt.textContent  = text;
-    if (pill) pill.className   = `server-pill${state ? ' ' + state : ''}`;
+    if (txt)  txt.textContent = text;
+    if (pill) pill.className  = `server-pill${state ? ' ' + state : ''}`;
   }
 
-  // Try ONE instance through ONE proxy
   async function probe(inst, proxyIdx) {
     const url = PROXIES[proxyIdx](`${inst}/api/v1/stats`);
     const r   = await fetch(url, { signal: AbortSignal.timeout(5000) });
@@ -29,10 +32,9 @@ const API = (() => {
     return data.contents ? JSON.parse(data.contents) : data;
   }
 
-  // Race ALL instance+proxy combos simultaneously — fastest wins
   function pickInstance() {
     if (activeInstance) return Promise.resolve(true);
-    if (pickingPromise)  return pickingPromise;   // reuse in-flight pick
+    if (pickingPromise)  return pickingPromise;
 
     setPill('connecting…', '');
 
@@ -84,16 +86,22 @@ const API = (() => {
     if (!Array.isArray(data)) return [];
     return data.map(v => ({
       id:    v.videoId,
-      title: v.title   || 'Unknown',
-      ch:    v.author  || 'Unknown',
+      title: v.title  || 'Unknown',
+      ch:    v.author || 'Unknown',
       thumb: v.videoThumbnails?.find(t => t.quality === 'medium')?.url
           || v.videoThumbnails?.[0]?.url || '',
       dur:   v.lengthSeconds || 0,
     }));
   }
 
-  // Kick off immediately — by the time home/search page loads, instance is ready
+  // BUG FIX: mockTracks was called in home.js but never defined.
+  // Returns empty array so the section gracefully shows "no results"
+  // instead of crashing with TypeError.
+  function mockTracks() {
+    return [];
+  }
+
   pickInstance();
 
-  return { search, mapResults, pickInstance };
+  return { search, mapResults, pickInstance, mockTracks };
 })();

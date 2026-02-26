@@ -38,4 +38,7 @@
   </div>
 </div>
 
-<script src="js/pages/search.js"></script>
+<!-- BUG FIX: Removed <script src="js/pages/search.js"> that was here.
+     Scripts inserted via innerHTML DO NOT execute in browsers.
+     search.js is already loaded globally in index.html, so PageSearch
+     is available when router.js calls PageSearch.init(). -->

@@ -66,7 +66,16 @@
           <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
         </button>
         <button class="play-btn" id="btn-play">
-          <svg id="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          <!--
+            BUG FIX: id="play-icon" was on the <svg> element.
+            ui.js calls icon.setAttribute('d', '...') which sets the 'd'
+            attribute — but 'd' belongs to <path>, not <svg>.
+            Moving the id to <path> so setAttribute('d') actually works
+            and the icon correctly switches between play ▶ and pause ⏸.
+          -->
+          <svg viewBox="0 0 24 24">
+            <path id="play-icon" d="M8 5v14l11-7z"/>
+          </svg>
         </button>
         <button class="ctrl-btn" id="btn-next" title="Next">
           <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zm2.5-6 5.5 3.9V8.1L8.5 12zM16 6h2v12h-2z"/></svg>
@@ -76,7 +85,6 @@
         <span id="t-cur">0:00</span>
         <div class="prog-bar" id="prog-bar">
           <div class="prog-fill" id="prog-fill"></div>
-          <div class="prog-thumb" id="prog-thumb"></div>
         </div>
         <span id="t-end">0:00</span>
       </div>
