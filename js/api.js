@@ -1,17 +1,18 @@
 const API = (() => {
+  // Only the 3 officially maintained public Invidious instances (docs.invidious.io/instances)
+  // Plus nadeko's numbered backends for redundancy — all confirmed alive Feb 2026
   const ALL_INSTANCES = [
-    'https://iv.melmac.space',
-    'https://invidious.slipfox.xyz',
-    'https://invidious.privacydev.net',
-    'https://yt.cdaut.de',
-    'https://invidious.flokinet.to',
+    'https://inv.nadeko.net',
+    'https://yewtu.be',
+    'https://invidious.nerdvpn.de',
+    'https://inv1.nadeko.net',
+    'https://inv2.nadeko.net',
   ];
 
-  // REMOVED: thingproxy.freeboard.io — dead domain (ERR_NAME_NOT_RESOLVED)
-  // REMOVED: corsproxy.io — returning 530/523/502 Cloudflare errors
+  // Only allorigins — the only proxy that actually works reliably.
+  // REMOVED: corsproxy.io (530/523/502), thingproxy (dead DNS), codetabs (400 errors)
   const PROXIES = [
     (url) => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
-    (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
     (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
   ];
 
