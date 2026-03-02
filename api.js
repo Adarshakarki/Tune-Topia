@@ -44,14 +44,8 @@ const PROVIDERS = {
     urls: ['https://tidal-api.binimum.org'],
     type: 'hifi',
   },
-  invidious: {
-    label: 'Invidious (YT)',
-    urls: ['https://iv.melmac.space'],
-    type: 'invidious',
-  },
 };
 
-// build a flat ordered list of all hifi bases, then invidious last
 const ALL_HIFI_BASES = Object.values(PROVIDERS)
   .filter(p => p.type === 'hifi')
   .flatMap(p => p.urls);
@@ -62,17 +56,16 @@ const IV_BASE = 'https://iv.melmac.space';
 
 function tidalCover(coverId, size = 320) {
   if (!coverId) return '';
-  const path = coverId.replace(/-/g, '/');
-  return `https://resources.tidal.com/images/${path}/${size}x${size}.jpg`;
+  return `https://resources.tidal.com/images/${coverId.replace(/-/g, '/')}/${size}x${size}.jpg`;
 }
 
-function ivThumb(videoId) {
-  return `${IV_BASE}/vi/${videoId}/mqdefault.jpg`;
+function ivThumb(videoId, q = 'mqdefault') {
+  return `${IV_BASE}/vi/${videoId}/${q}.jpg`;
 }
 
-// http utils //
+// http //
 
-async function fetchJSON(url, timeout = 8000) {
+async function fetchJSON(url, timeout = 9000) {
   const ctrl = new AbortController();
   const tid = setTimeout(() => ctrl.abort(), timeout);
   try {
@@ -87,19 +80,19 @@ async function fetchJSON(url, timeout = 8000) {
 }
 
 async function tryBases(bases, path) {
-  const errors = [];
+  const errs = [];
   for (const base of bases) {
     try {
       const data = await fetchJSON(`${base}${path}`);
       return { data, base };
     } catch (e) {
-      errors.push(`${base}: ${e.message}`);
+      errs.push(`${base}: ${e.message}`);
     }
   }
-  throw new Error('All providers failed:\n' + errors.join('\n'));
+  throw new Error('All providers failed:\n' + errs.join('\n'));
 }
 
-// hifi api //
+// hifi search //
 
 async function hifiSearch(query, bases = ALL_HIFI_BASES) {
   const { data } = await tryBases(bases, `/search/?s=${encodeURIComponent(query)}`);
@@ -109,31 +102,43 @@ async function hifiSearch(query, bases = ALL_HIFI_BASES) {
 
 async function hifiSearchArtist(query, bases = ALL_HIFI_BASES) {
   const { data } = await tryBases(bases, `/search/?a=${encodeURIComponent(query)}`);
-  const items = data?.data?.artists?.items || [];
+  const items = data?.data?.artists?.items || data?.artists?.items || [];
   return items.map(a => ({
     id: String(a.id),
     name: a.name,
-    cover: tidalCover(a.picture),
+    cover: tidalCover(a.picture, 320),
+    popularity: a.popularity || 0,
     type: 'artist',
   }));
 }
 
+async function hifiSearchAlbums(query, bases = ALL_HIFI_BASES) {
+  const { data } = await tryBases(bases, `/search/?s=${encodeURIComponent(query)}`);
+  const items = data?.data?.items || data?.items || [];
+  const seen = new Set();
+  return items
+    .filter(t => t.album && t.album.cover && !seen.has(t.album.id) && seen.add(t.album.id))
+    .slice(0, 20)
+    .map(t => ({
+      id: String(t.album.id),
+      title: t.album.title,
+      artist: (t.artists || [t.artist]).filter(Boolean).map(a => a.name).join(', '),
+      cover: tidalCover(t.album.cover, 640),
+      coverSmall: tidalCover(t.album.cover, 320),
+      type: 'album',
+    }));
+}
+
+// hifi stream //
+
 async function hifiGetStream(trackId, quality = 'LOSSLESS', bases = ALL_HIFI_BASES) {
-  const { data, base } = await tryBases(
-    bases,
-    `/track/?id=${trackId}&quality=${quality}`
-  );
+  const { data } = await tryBases(bases, `/track/?id=${trackId}&quality=${quality}`);
   const payload = data?.data || data;
-  if (!payload?.manifest) throw new Error('No manifest in response');
-  return decodeManifest(payload, base);
+  if (!payload?.manifest) throw new Error('No manifest');
+  return decodeManifest(payload);
 }
 
-async function hifiGetInfo(trackId, bases = ALL_HIFI_BASES) {
-  const { data } = await tryBases(bases, `/info/?id=${trackId}`);
-  return data?.data || data;
-}
-
-function decodeManifest(payload, base) {
+function decodeManifest(payload) {
   const raw = atob(payload.manifest);
   const mime = payload.manifestMimeType || '';
 
@@ -160,16 +165,15 @@ function decodeManifest(payload, base) {
     };
   }
 
-  throw new Error('Unknown manifest type: ' + mime);
+  throw new Error('Unknown manifest: ' + mime);
 }
 
 function normalizeHifiTrack(t) {
   const artists = (t.artists || [t.artist]).filter(Boolean);
-  const artistName = artists.map(a => a.name).join(', ') || '';
   return {
     id: String(t.id),
     title: t.title || 'Unknown',
-    artist: artistName,
+    artist: artists.map(a => a.name).join(', '),
     album: t.album?.title || '',
     cover: tidalCover(t.album?.cover, 640),
     coverSmall: tidalCover(t.album?.cover, 160),
@@ -182,7 +186,7 @@ function normalizeHifiTrack(t) {
   };
 }
 
-// invidious api //
+// invidious //
 
 async function ivSearch(query) {
   const data = await fetchJSON(
@@ -193,24 +197,21 @@ async function ivSearch(query) {
 
 async function ivGetStream(videoId) {
   const data = await fetchJSON(`${IV_BASE}/api/v1/videos/${videoId}?local=true`);
-  const audioFmts = (data.adaptiveFormats || []).filter(f =>
-    f.type?.startsWith('audio/')
-  );
-  audioFmts.sort((a, b) => {
+  const audio = (data.adaptiveFormats || []).filter(f => f.type?.startsWith('audio/'));
+  audio.sort((a, b) => {
     const aOp = a.type.includes('opus') ? 1 : 0;
     const bOp = b.type.includes('opus') ? 1 : 0;
     if (aOp !== bOp) return bOp - aOp;
     return (b.bitrate || 0) - (a.bitrate || 0);
   });
   const url =
-    audioFmts[0]?.url ||
+    audio[0]?.url ||
     data.formatStreams?.[data.formatStreams.length - 1]?.url ||
     `${IV_BASE}/videoplayback?id=${videoId}&itag=140&local=true`;
-
   return {
     type: 'direct',
     url,
-    mimeType: audioFmts[0]?.type?.split(';')[0] || 'audio/webm',
+    mimeType: audio[0]?.type?.split(';')[0] || 'audio/webm',
   };
 }
 
@@ -220,8 +221,8 @@ function normalizeIvTrack(v) {
     title: v.title || 'Unknown',
     artist: v.author || '',
     album: '',
-    cover: `${IV_BASE}/vi/${v.videoId}/maxresdefault.jpg`,
-    coverSmall: `${IV_BASE}/vi/${v.videoId}/mqdefault.jpg`,
+    cover: ivThumb(v.videoId, 'maxresdefault'),
+    coverSmall: ivThumb(v.videoId, 'mqdefault'),
     duration: v.lengthSeconds || 0,
     dur: fmtDur(v.lengthSeconds),
     quality: 'YT',
@@ -230,15 +231,13 @@ function normalizeIvTrack(v) {
   };
 }
 
-// unified search //
+// unified //
 
-async function search(query, mode = 'auto') {
-  if (mode === 'youtube') return ivSearch(query);
-
+async function search(query) {
   try {
     const tracks = await hifiSearch(query);
-    if (tracks.length > 0) return tracks;
-    throw new Error('No TIDAL results');
+    if (tracks.length) return tracks;
+    throw new Error('No results');
   } catch {
     return ivSearch(query);
   }
@@ -246,21 +245,13 @@ async function search(query, mode = 'auto') {
 
 async function getStream(track) {
   if (track.source === 'youtube') return ivGetStream(track.id);
-
-  // try lossless first, then hi-res
-  const qualities = ['LOSSLESS', 'HI_RES_LOSSLESS', 'HIGH'];
-  for (const q of qualities) {
-    try {
-      return await hifiGetStream(track.id, q);
-    } catch { /* try next */ }
+  for (const q of ['LOSSLESS', 'HI_RES_LOSSLESS', 'HIGH']) {
+    try { return await hifiGetStream(track.id, q); } catch {}
   }
-
-  // fallback to youtube search
   try {
     const ytResults = await ivSearch(`${track.title} ${track.artist} audio`);
     if (ytResults.length) return ivGetStream(ytResults[0].id);
-  } catch { /* nothing */ }
-
+  } catch {}
   throw new Error('Stream unavailable from all providers');
 }
 
@@ -268,25 +259,17 @@ async function getStream(track) {
 
 function fmtDur(s) {
   if (!s || isNaN(s)) return '';
-  const m = Math.floor(s / 60);
-  const sec = Math.floor(s % 60);
-  return `${m}:${sec.toString().padStart(2, '0')}`;
+  return `${Math.floor(s / 60)}:${Math.floor(s % 60).toString().padStart(2, '0')}`;
 }
 
 function fmtTime(s) {
   if (!s || isNaN(s)) return '0:00';
-  const m = Math.floor(s / 60);
-  const sec = Math.floor(s % 60);
-  return `${m}:${sec.toString().padStart(2, '0')}`;
+  return `${Math.floor(s / 60)}:${Math.floor(s % 60).toString().padStart(2, '0')}`;
 }
 
 function escHtml(s) {
   if (!s) return '';
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 function qualityBadge(track) {

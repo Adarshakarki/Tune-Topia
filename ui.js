@@ -1,225 +1,280 @@
-// dom refs //
-
+// refs //
 const $ = id => document.getElementById(id);
 
 const UI = (() => {
 
   // toast //
-
   let toastTimer;
   function toast(msg) {
     const el = $('toast');
     el.textContent = msg;
     el.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
   }
 
-  // track info //
-
+  // set track info (mobile player) //
   function setTrackInfo(track) {
-    const title = track.title || '—';
+    const title  = track.title  || '—';
     const artist = track.artist || '—';
-    const art = track.cover || track.coverSmall || '';
+    const art    = track.cover  || track.coverSmall || '';
 
-    $('mini-title').textContent = title;
+    $('mini-title').textContent  = title;
     $('mini-artist').textContent = artist;
     $('mini-art').src = art;
     $('mini-player').classList.remove('hidden');
 
-    $('np-title').textContent = title;
+    $('np-title').textContent  = title;
     $('np-artist').textContent = artist;
     $('np-art').src = art;
     $('np-bg').style.backgroundImage = `url('${art}')`;
+    if ($('np-source-label')) $('np-source-label').textContent = track.source === 'youtube' ? 'YouTube' : 'TIDAL';
 
     const badge = qualityBadge(track);
-    $('np-quality-badge').style.display = badge ? 'inline-flex' : 'none';
-    if (badge) {
-      $('np-quality-badge').textContent = badge.label;
-      $('np-quality-badge').className = `quality-badge ${badge.cls}`;
-    }
-
-    extractColor(art);
+    const badgeEl = $('np-quality-badge');
+    badgeEl.style.display = badge ? 'inline-flex' : 'none';
+    if (badge) { badgeEl.textContent = badge.label; badgeEl.className = `quality-badge ${badge.cls}`; }
   }
 
   // play state //
-
   function setPlayState(playing) {
-    const pausePath = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
-    const playPath = '<path d="M8 5v14l11-7z"/>';
-    const path = playing ? pausePath : playPath;
-    $('np-play-icon').innerHTML = path;
-    $('mini-play-icon').innerHTML = path;
+    const pause = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+    const play  = '<path d="M8 5v14l11-7z"/>';
+    $('np-play-icon').innerHTML   = playing ? pause : play;
+    $('mini-play-icon').innerHTML = playing ? pause : play;
     $('np-art').classList.toggle('playing', playing);
   }
 
-  function setLoadingState(loading) {
-    $('np-play-btn').style.opacity = loading ? '0.5' : '1';
-  }
-
   // progress //
-
   function updateProgress(pct, cur, dur) {
-    $('np-progress-fill').style.width = pct + '%';
-    $('mini-progress').style.width = pct + '%';
+    $('np-progress-fill').style.width   = pct + '%';
+    $('mini-progress-fill').style.width = pct + '%';
     $('np-time-cur').textContent = fmtTime(cur);
     $('np-time-tot').textContent = fmtTime(dur);
   }
 
   // volume //
-
-  function updateVolume(v) {
-    $('vol-fill').style.width = (v * 100) + '%';
-  }
+  function updateVolume(v) { $('vol-fill').style.width = (v * 100) + '%'; }
 
   // shuffle / repeat //
-
   function setShuffle(on) {
     const el = $('shuffle-icon');
-    el.style.opacity = on ? '1' : '0.35';
-    el.style.color = on ? 'var(--dynamic)' : 'currentColor';
+    el.style.opacity = on ? '1' : '0.3';
+    el.style.color   = on ? 'var(--red)' : '#fff';
   }
-
   function setRepeat(on) {
     const el = $('repeat-icon');
-    el.style.opacity = on ? '1' : '0.35';
-    el.style.color = on ? 'var(--dynamic)' : 'currentColor';
+    el.style.opacity = on ? '1' : '0.3';
+    el.style.color   = on ? 'var(--red)' : '#fff';
   }
+  function setLoved(on) { $('np-love-btn').classList.toggle('active', on); }
 
   // queue //
-
   function renderQueue(queue, activeIdx) {
     const list = $('np-queue-list');
     if (!queue.length) { list.innerHTML = ''; return; }
     list.innerHTML = queue.map((t, i) => `
       <div class="npq-item ${i === activeIdx ? 'active' : ''}" onclick="Player.playFromQueue(${i})">
-        <img class="npq-art" src="${escHtml(t.coverSmall || t.cover || '')}" 
-             onerror="this.src=''" alt="" />
+        <img class="npq-art" src="${escHtml(t.coverSmall || t.cover || '')}" onerror="this.src=''" alt=""/>
         <div class="npq-info">
           <div class="npq-title ${i === activeIdx ? 'active' : ''}">${escHtml(t.title)}</div>
           <div class="npq-artist">${escHtml(t.artist || '')}</div>
         </div>
         ${i === activeIdx
           ? `<div class="eq-bars"><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div></div>`
-          : `<span class="npq-dur">${t.dur || ''}</span>`
-        }
+          : `<span class="npq-dur">${t.dur || ''}</span>`}
       </div>
     `).join('');
   }
 
-  // track cards //
-
+  // skeletons //
   function skeletons(n = 10) {
     return Array(n).fill(0).map(() => `
       <div class="skel-card">
         <div class="skeleton skel-thumb"></div>
         <div class="skel-lines">
-          <div class="skeleton skel-line" style="width:${55 + Math.random() * 35}%"></div>
-          <div class="skeleton skel-line" style="width:${25 + Math.random() * 30}%"></div>
+          <div class="skeleton skel-line" style="width:${50+Math.random()*40}%"></div>
+          <div class="skeleton skel-line" style="width:${25+Math.random()*30}%"></div>
         </div>
       </div>
     `).join('');
   }
 
-  function renderTracks(tracks, containerId, currentId) {
-    const el = $(containerId);
-    if (!el) return;
+  function skeletonsGrid(n = 6) {
+    return `<div class="skel-grid">${Array(n).fill(0).map(() => `
+      <div>
+        <div class="skeleton skel-square"></div>
+        <div class="skeleton skel-block" style="width:80%"></div>
+        <div class="skeleton skel-block" style="width:55%;margin-top:5px"></div>
+      </div>
+    `).join('')}</div>`;
+  }
+
+  // track list (Apple Music iOS style rows) //
+  function renderTracks(tracks, container, currentId) {
     if (!tracks.length) {
-      el.innerHTML = '<div class="empty"><p>No results found</p></div>';
+      container.innerHTML = emptyState('No results', 'Try a different search');
       return;
     }
-    el.innerHTML = tracks.map((t, i) => {
-      const badge = qualityBadge(t);
+    container.className = 'track-list';
+    container.innerHTML = tracks.map((t, i) => {
+      const badge    = qualityBadge(t);
       const isActive = t.id === currentId;
+      const isVideo  = t.source === 'youtube';
       return `
-        <div class="track-card ${isActive ? 'playing' : ''}" 
-             data-index="${i}" data-container="${containerId}">
-          <img class="track-thumb" 
-               src="${escHtml(t.coverSmall || t.cover || '')}" 
-               alt=""
-               onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2252%22 height=%2252%22><rect width=%2252%22 height=%2252%22 fill=%22%231a1a28%22/></svg>'" />
-          <div class="track-info">
-            <div class="track-name ${isActive ? 'playing' : ''}">${escHtml(t.title)}</div>
-            <div class="track-meta">
-              ${escHtml(t.artist || '')}
-              ${t.album ? `<span class="dot">·</span> ${escHtml(t.album)}` : ''}
+        <div class="track-card-wrap" data-index="${i}">
+          <div class="swipe-actions">
+            <div class="swipe-action-right">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+              Next
+            </div>
+            <div class="swipe-action-left">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+              Remove
             </div>
           </div>
-          <div class="track-right">
-            ${badge ? `<span class="quality-badge ${badge.cls}">${badge.label}</span>` : ''}
-            <span class="track-dur">${t.dur || ''}</span>
+          <div class="track-card ${isActive ? 'playing' : ''}">
+            <img class="${isVideo ? 'track-thumb-video' : 'track-thumb'}"
+                 src="${escHtml(t.coverSmall || t.cover || '')}"
+                 onerror="this.src=''" alt=""/>
+            <div class="track-info">
+              <div class="track-name ${isActive ? 'playing' : ''}">${escHtml(t.title)}</div>
+              <div class="track-meta">${escHtml(t.artist || '')}${t.album ? ` · ${escHtml(t.album)}` : ''}</div>
+            </div>
+            <div class="track-right">
+              ${isActive
+                ? `<div class="eq-bars"><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div></div>`
+                : badge
+                  ? `<span class="quality-badge ${badge.cls}">${badge.label}</span>`
+                  : ''}
+              <span class="track-dur">${t.dur || ''}</span>
+            </div>
           </div>
         </div>
       `;
     }).join('');
-    el._tracks = tracks;
 
-    el.querySelectorAll('.track-card').forEach(card => {
+    container._tracks = tracks;
+    attachTrackEvents(container);
+  }
+
+  function attachTrackEvents(container) {
+    container.querySelectorAll('.track-card-wrap').forEach(wrap => {
+      const card = wrap.querySelector('.track-card');
+      const idx  = parseInt(wrap.dataset.index);
+
+      // tap //
+      card.addEventListener('click', () => App.onTrackClick(container._tracks, idx));
+
+      // swipe //
+      let startX = 0, startY = 0, dragging = false, dx = 0;
+
+      card.addEventListener('touchstart', e => {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        dragging = false; dx = 0;
+      }, { passive: true });
+
+      card.addEventListener('touchmove', e => {
+        const mx = e.touches[0].clientX - startX;
+        const my = e.touches[0].clientY - startY;
+        if (!dragging && Math.abs(my) > Math.abs(mx)) return;
+        dragging = true;
+        dx = Math.max(-90, Math.min(90, mx));
+        card.style.transform = `translateX(${dx}px)`;
+      }, { passive: true });
+
+      card.addEventListener('touchend', () => {
+        if (!dragging) return;
+        if (dx > 55)  { App.playNext(container._tracks, idx); toast('▶ Play Next added'); }
+        if (dx < -55) { App.removeTrack(container, idx); }
+        card.style.transition = 'transform 0.3s var(--spring)';
+        card.style.transform  = '';
+        setTimeout(() => card.style.transition = '', 350);
+      });
+
+      // long-press //
+      let lpt;
+      card.addEventListener('touchstart', () => { lpt = setTimeout(() => App.showTrackMenu(container._tracks[idx]), 520); }, { passive: true });
+      card.addEventListener('touchend',  () => clearTimeout(lpt));
+      card.addEventListener('touchmove', () => clearTimeout(lpt));
+    });
+  }
+
+  // album grid //
+  function renderAlbums(albums, container) {
+    if (!albums.length) { container.innerHTML = emptyState('No albums found'); return; }
+    container.className = 'album-grid';
+    container.innerHTML = albums.map((a, i) => `
+      <div class="album-card" data-index="${i}">
+        <img class="album-art" src="${escHtml(a.cover || '')}" onerror="this.src=''" alt=""/>
+        <div class="album-title">${escHtml(a.title || a.name || '')}</div>
+        <div class="album-artist">${escHtml(a.artist || '')}</div>
+      </div>
+    `).join('');
+    container._albums = albums;
+    container.querySelectorAll('.album-card').forEach(card => {
+      card.addEventListener('click', () => toast(`Album: ${albums[parseInt(card.dataset.index)].title}`));
+    });
+  }
+
+  // artist list //
+  function renderArtists(artists, container) {
+    if (!artists.length) { container.innerHTML = emptyState('No artists found'); return; }
+    container.className = 'artist-list';
+    container.innerHTML = artists.map((a, i) => `
+      <div class="artist-card" data-index="${i}">
+        <img class="artist-avatar" src="${escHtml(a.cover || '')}" onerror="this.src=''" alt=""/>
+        <div>
+          <div class="artist-name">${escHtml(a.name)}</div>
+          <div class="artist-label">Artist</div>
+        </div>
+        <svg class="artist-chevron" width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+      </div>
+    `).join('');
+    container._artists = artists;
+    container.querySelectorAll('.artist-card').forEach(card => {
       card.addEventListener('click', () => {
-        const idx = parseInt(card.dataset.index);
-        const all = el._tracks || [];
-        App.onTrackClick(all, idx);
+        const a = artists[parseInt(card.dataset.index)];
+        App.searchArtistTracks(a.name);
       });
     });
   }
 
-  // now playing panel //
-
-  function openPlayer() {
-    $('now-playing').classList.add('open');
-    document.body.style.overflow = 'hidden';
-  }
-
-  function closePlayer() {
-    $('now-playing').classList.remove('open');
-    document.body.style.overflow = '';
-  }
+  // now playing open/close //
+  function openPlayer()  { $('now-playing').classList.add('open'); }
+  function closePlayer() { $('now-playing').classList.remove('open'); }
 
   // page nav //
-
   function showPage(name) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     const page = $('page-' + name);
-    const btn = document.querySelector(`.nav-btn[data-page="${name}"]`);
+    const btn  = document.querySelector(`.nav-btn[data-page="${name}"]`);
     if (page) page.classList.add('active');
-    if (btn) btn.classList.add('active');
+    if (btn)  btn.classList.add('active');
   }
 
-  // dynamic color //
+  function setProviderStatus(label) {
+    const el = $('provider-label');
+    if (el) el.textContent = label;
+  }
 
-  function extractColor(imgUrl) {
-    if (!imgUrl) return;
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      try {
-        const c = document.createElement('canvas');
-        c.width = 40; c.height = 40;
-        const ctx = c.getContext('2d');
-        ctx.drawImage(img, 0, 0, 40, 40);
-        const d = ctx.getImageData(0, 0, 40, 40).data;
-        let r = 0, g = 0, b = 0, n = 0;
-        for (let i = 0; i < d.length; i += 16) {
-          r += d[i]; g += d[i + 1]; b += d[i + 2]; n++;
-        }
-        r = Math.round(r / n); g = Math.round(g / n); b = Math.round(b / n);
-        const avg = (r + g + b) / 3;
-        const boost = v => Math.min(255, Math.round(avg + (v - avg) * 2));
-        r = boost(r); g = boost(g); b = boost(b);
-        const lum = 0.299 * r + 0.587 * g + 0.114 * b;
-        if (lum > 170) { r = Math.round(r * 0.65); g = Math.round(g * 0.65); b = Math.round(b * 0.65); }
-        document.documentElement.style.setProperty('--dynamic', `rgb(${r},${g},${b})`);
-        document.documentElement.style.setProperty('--dynamic2', `rgb(${Math.min(255, r + 35)},${g},${Math.min(255, b + 50)})`);
-      } catch {}
-    };
-    img.src = imgUrl;
+  // empty state //
+  function emptyState(msg, sub = '') {
+    return `<div class="empty">
+      <svg width="52" height="52" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.4">
+        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+      </svg>
+      <p>${escHtml(msg)}</p>
+      ${sub ? `<small>${escHtml(sub)}</small>` : ''}
+    </div>`;
   }
 
   return {
-    toast, setTrackInfo, setPlayState, setLoadingState,
-    updateProgress, updateVolume, setShuffle, setRepeat,
-    renderQueue, renderTracks, skeletons,
-    openPlayer, closePlayer, showPage, extractColor,
+    toast, setTrackInfo, setPlayState, updateProgress, updateVolume,
+    setShuffle, setRepeat, setLoved, renderQueue,
+    skeletons, skeletonsGrid, renderTracks, renderAlbums, renderArtists,
+    openPlayer, closePlayer, showPage, setProviderStatus, emptyState,
   };
 })();
