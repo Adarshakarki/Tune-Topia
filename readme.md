@@ -125,6 +125,6 @@ Its just history for desktop and has to be made
 
 2. *Phone*
 
-| Home | Search | Library |
-| ------------- | ------------- | ------------- |
-| ![Home](assets/screenshots/mobilehome.png)  | ![Search](assets/screenshots/mobilesearch.png) | ![library](assets/screenshots/mobilelibrary.png)  |
+| Home | Search | Library | Now Playing |
+| ------------- | ------------- | ------------- |------------- |
+| ![Home](assets/screenshots/mobilehome.png)  | ![Search](assets/screenshots/mobilesearch.png) | ![library](assets/screenshots/mobilelibrary.png)  | ![now playing](assets/screenshots/mobilenowplayingfull.png) |
