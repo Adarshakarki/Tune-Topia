@@ -1,5 +1,5 @@
 const GENRES = [
-  { label:'🔥 Trending', q:'trending music 2025' },
+  { label:'Trending', q:'trending music 2025' },
   { label:'New',         q:'new music releases 2025' },
   { label:'Lo-Fi',       q:'lo-fi hip hop chill' },
   { label:'Pop',         q:'pop hits 2025' },

@@ -589,6 +589,8 @@ i[data-lucide] svg { width:100%; height:100%; }
     display:flex; flex-direction:column; overflow:hidden;
     transition:width 0.28s var(--ease);
     z-index:10;
+    border-radius: 10px;
+    margin: 5px;
   }
   #desktop-sidebar.sidebar-collapsed { width:var(--sb-w-collapsed); }
 
@@ -825,6 +827,7 @@ i[data-lucide] svg { width:100%; height:100%; }
     height:var(--dt-bar-h); flex-shrink:0;
     position:relative; overflow:hidden;
     border-top:1px solid var(--border);
+    border-radius: 10px;
   }
   #dt-mini-bar-bg {
     position:absolute; inset:0; z-index:0;
