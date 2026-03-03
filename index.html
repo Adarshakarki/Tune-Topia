@@ -3,28 +3,35 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
-<meta name="theme-color" content="#ffffff"/>
+<meta name="theme-color" content="#ffffff" id="theme-color-meta"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <title>Tune Topia</title>
 <link rel="icon" href="assets/circularlogo.png" type="image/x-icon">
 <link href="https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&f[]=cabinet-grotesk@400,500,600,700,800&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
 
-<!-- MOBILE -->
+<!-- MOBILE APP -->
 <div id="app">
   <div id="main">
 
-    <!-- HOME -->
+    <!-- ── HOME ── -->
     <div id="page-home" class="page active">
       <div class="ios-navbar" id="home-navbar">
         <div class="ios-navbar-inner">
-          <span class="ios-large-title">TuneTopia</span>
+          <div class="home-title-group">
+            <span class="home-greeting" id="home-greeting">Good morning</span>
+            <span class="ios-large-title">TuneTopia</span>
+          </div>
           <div class="ios-navbar-actions">
-            <button class="ios-icon-btn" id="home-search-btn">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <button class="ios-icon-btn" id="home-search-btn" aria-label="Search">
+              <i data-lucide="search"></i>
+            </button>
+            <button class="ios-icon-btn" id="home-account-btn" aria-label="Account">
+              <i data-lucide="user-circle"></i>
             </button>
           </div>
         </div>
@@ -32,46 +39,49 @@
       <div class="ios-chips-row"><div class="ios-chips" id="genre-chips"></div></div>
       <div id="provider-status"><div class="status-dot"></div><span id="provider-label">Connecting…</span></div>
       <div class="ios-page-body">
-        <!-- hero card -->
-        <div class="ios-featured" id="home-featured">
-          <div class="ios-feat-inner" id="home-hero">
-            <div class="ios-feat-bg" id="home-hero-bg"></div>
-            <div class="ios-feat-overlay"></div>
-            <div class="ios-feat-content">
-              <div class="ios-feat-eyebrow">FEATURED</div>
-              <div class="ios-feat-title" id="home-hero-title">TuneTopia</div>
-              <div class="ios-feat-sub" id="home-hero-artist">TIDAL HiFi · HiRes Lossless · YouTube</div>
-            </div>
+        <!-- What's New horizontal scroll -->
+        <div class="ios-section">
+          <div class="ios-section-header">
+            <span class="ios-section-title">What's New</span>
+            <button class="ios-see-all">See All</button>
           </div>
+          <div class="horiz-scroll"><div class="horiz-scroll-inner" id="home-new-row"></div></div>
         </div>
-        <!-- top tracks -->
+        <!-- Recently Played horizontal scroll (hidden until history exists) -->
+        <div class="ios-section" id="home-recent-section" style="display:none">
+          <div class="ios-section-header">
+            <span class="ios-section-title">Recently Played</span>
+          </div>
+          <div class="horiz-scroll"><div class="horiz-scroll-inner" id="home-recent-row"></div></div>
+        </div>
+        <!-- Top Tracks list -->
         <div class="ios-section">
           <div class="ios-section-header">
             <span class="ios-section-title">Top Tracks</span>
-            <button class="ios-see-all">See All</button>
           </div>
-          <div class="track-list" id="home-tracks"></div>
+          <div id="home-tracks"></div>
         </div>
       </div>
     </div>
 
-    <!-- SEARCH -->
+    <!-- ── SEARCH ── -->
     <div id="page-search" class="page">
       <div class="ios-navbar ios-navbar-search">
         <div class="ios-navbar-inner"><span class="ios-large-title">Search</span></div>
         <div class="ios-search-bar-wrap">
           <div class="ios-search-bar">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-3);flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <i data-lucide="search" style="color:var(--text-3);flex-shrink:0;width:15px;height:15px"></i>
             <input id="search-input" type="search" placeholder="Artists, songs, albums…" autocomplete="off" spellcheck="false"/>
             <button id="search-clear" class="search-clear-btn">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <i data-lucide="x"></i>
             </button>
           </div>
         </div>
       </div>
-      <div class="ios-seg-wrap">
+      <!-- Segment control — only shown when actively searching -->
+      <div class="ios-seg-wrap" id="search-seg-wrap" style="display:none">
         <div class="ios-seg">
-          <button class="ios-seg-btn active" data-tab="music">Music</button>
+          <button class="ios-seg-btn active" data-tab="music">Songs</button>
           <button class="ios-seg-btn" data-tab="video">Video</button>
           <button class="ios-seg-btn" data-tab="albums">Albums</button>
           <button class="ios-seg-btn" data-tab="artists">Artists</button>
@@ -79,89 +89,123 @@
         </div>
       </div>
       <div class="ios-page-body" id="search-body">
+        <!-- Empty state: 3-col mood grid -->
         <div id="search-empty-state">
-          <div class="ios-section">
-            <div class="ios-section-header"><span class="ios-section-title">Browse</span></div>
-            <div class="ios-cat-grid">
-              <div class="ios-cat-tile" style="--cat:#fa243c">Pop</div>
-              <div class="ios-cat-tile" style="--cat:#5856d6">Hip-Hop</div>
-              <div class="ios-cat-tile" style="--cat:#ff9500">R&amp;B / Soul</div>
-              <div class="ios-cat-tile" style="--cat:#34c759">Indie</div>
-              <div class="ios-cat-tile" style="--cat:#00c7be">Electronic</div>
-              <div class="ios-cat-tile" style="--cat:#af52de">K-Pop</div>
-              <div class="ios-cat-tile" style="--cat:#ff2d55">Rock</div>
-              <div class="ios-cat-tile" style="--cat:#007aff">Jazz</div>
-              <div class="ios-cat-tile" style="--cat:#8b5cf6">Classical</div>
-              <div class="ios-cat-tile" style="--cat:#f59e0b">Lo-Fi</div>
-            </div>
+          <div class="ios-mood-grid">
+            <div class="ios-mood-tile" style="--c1:#fa243c;--c2:#9b0a1a" data-q="pop hits 2025">Pop</div>
+            <div class="ios-mood-tile" style="--c1:#5856d6;--c2:#2d2c8e" data-q="hip hop rap 2025">Hip-Hop</div>
+            <div class="ios-mood-tile" style="--c1:#ff9500;--c2:#a85e00" data-q="rnb soul 2025">R&amp;B</div>
+            <div class="ios-mood-tile" style="--c1:#34c759;--c2:#1a7a30" data-q="indie alternative 2025">Indie</div>
+            <div class="ios-mood-tile" style="--c1:#00c7be;--c2:#007a77" data-q="electronic dance 2025">EDM</div>
+            <div class="ios-mood-tile" style="--c1:#af52de;--c2:#6e2a9b" data-q="kpop 2025">K-Pop</div>
+            <div class="ios-mood-tile" style="--c1:#ff2d55;--c2:#a50020" data-q="metal rock 2025">Rock</div>
+            <div class="ios-mood-tile" style="--c1:#007aff;--c2:#004aad" data-q="jazz chill">Jazz</div>
+            <div class="ios-mood-tile" style="--c1:#6d28d9;--c2:#3b0f8a" data-q="classical piano">Classical</div>
           </div>
         </div>
         <div id="search-results" style="display:none"></div>
       </div>
     </div>
 
-    <!-- LIBRARY -->
+    <!-- ── LIBRARY ── -->
     <div id="page-library" class="page">
       <div class="ios-navbar">
         <div class="ios-navbar-inner">
           <span class="ios-large-title">Library</span>
           <div class="ios-navbar-actions">
-            <button class="ios-icon-btn" id="lib-create-btn">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <button class="ios-icon-btn ios-icon-btn-pill" id="lib-create-btn">
+              <i data-lucide="plus"></i>
+              <span>Create</span>
             </button>
           </div>
         </div>
       </div>
-      <div class="ios-lib-menu">
-        <div class="ios-lib-item" id="lib-liked">
-          <div class="lib-icon-wrap" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-          </div>
-          <span>Liked Songs</span>
-          <svg class="lib-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
-        <div class="ios-lib-item" id="lib-albums">
-          <div class="lib-icon-wrap" style="background:linear-gradient(135deg,#7c3aed,#4f46e5)">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
-          </div>
-          <span>Albums</span>
-          <svg class="lib-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
-        <div class="ios-lib-item" id="lib-artists">
-          <div class="lib-icon-wrap" style="background:linear-gradient(135deg,#a78bfa,#8b5cf6)">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          </div>
-          <span>Artists</span>
-          <svg class="lib-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
-        <div class="ios-lib-item" id="lib-songs">
-          <div class="lib-icon-wrap" style="background:linear-gradient(135deg,#6d28d9,#5b21b6)">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-          </div>
-          <span>Songs</span>
-          <svg class="lib-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
-        <div class="ios-lib-item" id="lib-history">
-          <div class="lib-icon-wrap" style="background:linear-gradient(135deg,#c4b5fd,#8b5cf6)">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          </div>
-          <span>History</span>
-          <svg class="lib-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
-      </div>
       <div class="ios-page-body">
-        <div class="ios-section">
+        <!-- Recently played horizontal scroll -->
+        <div class="ios-section" id="lib-recent-section">
           <div class="ios-section-header">
             <span class="ios-section-title">Recently Played</span>
           </div>
-          <div class="track-list" id="library-tracks"></div>
+          <div class="horiz-scroll"><div class="horiz-scroll-inner" id="lib-recent-row"></div></div>
+        </div>
+        <!-- Menu items -->
+        <div class="ios-lib-menu">
+          <div class="ios-lib-item" id="lib-liked">
+            <div class="lib-icon-wrap" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)">
+              <i data-lucide="heart" style="color:#fff;width:14px;height:14px;fill:#fff"></i>
+            </div>
+            <div class="lib-item-body">
+              <span class="lib-item-name">Liked Songs</span>
+              <span class="lib-item-sub" id="liked-count-label">0 songs</span>
+            </div>
+            <i data-lucide="chevron-right" class="lib-chevron"></i>
+          </div>
+          <div class="ios-lib-item" id="lib-albums">
+            <div class="lib-icon-wrap" style="background:linear-gradient(135deg,#7c3aed,#4f46e5)">
+              <i data-lucide="disc-3" style="color:#fff;width:14px;height:14px"></i>
+            </div>
+            <span class="lib-item-name">Albums</span>
+            <i data-lucide="chevron-right" class="lib-chevron"></i>
+          </div>
+          <div class="ios-lib-item" id="lib-artists">
+            <div class="lib-icon-wrap" style="background:linear-gradient(135deg,#a78bfa,#8b5cf6)">
+              <i data-lucide="users" style="color:#fff;width:14px;height:14px"></i>
+            </div>
+            <span class="lib-item-name">Artists</span>
+            <i data-lucide="chevron-right" class="lib-chevron"></i>
+          </div>
+          <div class="ios-lib-item" id="lib-history">
+            <div class="lib-icon-wrap" style="background:linear-gradient(135deg,#c4b5fd,#8b5cf6)">
+              <i data-lucide="history" style="color:#fff;width:14px;height:14px"></i>
+            </div>
+            <span class="lib-item-name">History</span>
+            <i data-lucide="chevron-right" class="lib-chevron"></i>
+          </div>
         </div>
       </div>
     </div>
 
+    <!-- ── LIKED SONGS DRILLDOWN ── -->
+    <div id="page-liked" class="page">
+      <div class="ios-navbar">
+        <div class="ios-navbar-inner">
+          <button class="ios-back-btn" id="liked-back-btn">
+            <i data-lucide="chevron-left"></i> Library
+          </button>
+          <div class="ios-navbar-actions">
+            <button class="ios-icon-btn" id="liked-sort-btn">
+              <i data-lucide="arrow-up-down"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- Hero -->
+      <div class="liked-hero">
+        <div class="liked-hero-icon">
+          <i data-lucide="heart" style="fill:#fff;color:#fff;width:36px;height:36px"></i>
+        </div>
+        <div class="liked-hero-info">
+          <div class="liked-hero-title">Liked Songs</div>
+          <div class="liked-hero-sub" id="liked-hero-sub">0 songs</div>
+        </div>
+        <button class="liked-play-btn" id="liked-play-all">
+          <i data-lucide="play" style="fill:currentColor"></i>
+        </button>
+      </div>
+      <!-- Search within liked -->
+      <div class="liked-search-row">
+        <div class="liked-search-bar">
+          <i data-lucide="search" style="width:13px;height:13px;color:var(--text-3)"></i>
+          <input id="liked-filter-input" type="search" placeholder="Find in liked songs…" autocomplete="off"/>
+        </div>
+        <div class="liked-sort-badge" id="liked-sort-label">Recent</div>
+      </div>
+      <div id="liked-tracks"></div>
+    </div>
+
   </div><!-- /main -->
 
-  <!-- MINI PLAYER -->
+  <!-- ── MINI PLAYER ── -->
   <div id="mini-player" class="hidden">
     <div id="mini-player-inner">
       <img id="mini-art" src="" alt=""/>
@@ -169,117 +213,97 @@
         <div id="mini-title">Not Playing</div>
         <div id="mini-artist-time">—</div>
       </div>
+      <span class="explicit-tag" id="mini-explicit" style="display:none">E</span>
       <div id="mini-controls">
-        <button class="mini-ctrl" id="mini-prev-btn">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="4" x2="5" y2="20"/></svg>
-        </button>
-        <button class="mini-ctrl" id="mini-play-btn">
-          <svg id="mini-play-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        </button>
-        <button class="mini-ctrl" id="mini-next-btn">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="4" x2="19" y2="20"/></svg>
-        </button>
+        <button class="mini-ctrl" id="mini-prev-btn"><i data-lucide="skip-back"></i></button>
+        <button class="mini-ctrl mini-play-ctrl" id="mini-play-btn"><i id="mini-play-icon" data-lucide="play"></i></button>
+        <button class="mini-ctrl" id="mini-next-btn"><i data-lucide="skip-forward"></i></button>
       </div>
     </div>
     <div id="mini-progress"><div id="mini-progress-fill"></div></div>
   </div>
 
-  <!-- TAB BAR -->
+  <!-- ── TAB BAR ── -->
   <nav id="navbar">
     <button class="nav-btn active" data-page="home">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <i data-lucide="house"></i>
       <span>Home</span>
     </button>
     <button class="nav-btn" data-page="search">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <i data-lucide="search"></i>
       <span>Search</span>
     </button>
     <button class="nav-btn" data-page="library">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      <i data-lucide="music-2"></i>
       <span>Library</span>
     </button>
   </nav>
-</div>
+</div><!-- /app -->
 
 <!-- NOW PLAYING — full screen immersive -->
 <div id="now-playing">
-  <!-- bg layers -->
   <img id="np-bg-art" src="" alt=""/>
   <div id="np-bg-blur"></div>
   <div id="np-bg-gradient"></div>
 
-  <!-- main content -->
   <div id="np-content">
     <div id="np-topbar">
-      <button class="np-icon-btn" id="np-close-btn">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-      </button>
-      <button class="np-icon-btn" id="np-more-btn">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="5" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="19" r="1" fill="currentColor"/></svg>
-      </button>
+      <button class="np-icon-btn" id="np-close-btn"><i data-lucide="chevron-down"></i></button>
+      <span class="np-topbar-title">Now Playing</span>
+      <button class="np-icon-btn" id="np-more-btn"><i data-lucide="ellipsis"></i></button>
     </div>
 
-    <!-- spacer - artwork shows through here -->
     <div id="np-spacer"></div>
 
-    <!-- info + like -->
+    <!-- Track info + like -->
     <div id="np-info">
       <div id="np-info-left">
-        <div id="np-title">—</div>
+        <div id="np-title-row">
+          <div id="np-title">—</div>
+          <span class="explicit-tag np-explicit" id="np-explicit-tag" style="display:none">E</span>
+        </div>
         <div id="np-artist">—</div>
       </div>
       <button class="np-love-btn" id="np-love-btn">
-        <svg id="np-love-icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        <i data-lucide="heart" id="np-love-icon"></i>
       </button>
     </div>
 
-    <!-- progress -->
+    <!-- Progress -->
     <div id="np-progress-wrap">
-      <div id="np-progress-bar"><div id="np-progress-fill"></div></div>
+      <div id="np-progress-bar"><div id="np-progress-fill"></div><div id="np-progress-thumb"></div></div>
       <div class="np-times">
         <span id="np-time-cur">0:00</span>
         <span id="np-time-tot">0:00</span>
       </div>
     </div>
 
-    <!-- main controls: prev repeat play shuffle next -->
+    <!-- Main controls -->
     <div id="np-controls">
-      <button class="np-ctrl" id="np-prev-btn">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="4" x2="5" y2="20"/></svg>
-      </button>
-      <button class="np-ctrl np-ctrl-sm" id="repeat-btn">
-        <svg id="repeat-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-      </button>
-      <button class="np-play-btn" id="np-play-btn">
-        <svg id="np-play-icon" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-      </button>
-      <button class="np-ctrl np-ctrl-sm" id="shuffle-btn">
-        <svg id="shuffle-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
-      </button>
-      <button class="np-ctrl" id="np-next-btn">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="4" x2="19" y2="20"/></svg>
-      </button>
+      <button class="np-ctrl" id="np-prev-btn"><i data-lucide="skip-back"></i></button>
+      <button class="np-ctrl np-ctrl-sm" id="repeat-btn"><i data-lucide="repeat" id="repeat-icon"></i></button>
+      <button class="np-play-btn" id="np-play-btn"><i data-lucide="play" id="np-play-icon"></i></button>
+      <button class="np-ctrl np-ctrl-sm" id="shuffle-btn"><i data-lucide="shuffle" id="shuffle-icon"></i></button>
+      <button class="np-ctrl" id="np-next-btn"><i data-lucide="skip-forward"></i></button>
     </div>
 
-    <!-- volume -->
+    <!-- Volume -->
     <div id="np-volume">
-      <svg class="vol-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/></svg>
+      <i data-lucide="volume-1" class="vol-icon"></i>
       <div id="vol-bar"><div id="vol-fill"></div></div>
-      <svg class="vol-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+      <i data-lucide="volume-2" class="vol-icon"></i>
     </div>
 
-    <!-- secondary row -->
+    <!-- Secondary row: Lyrics | Queue -->
     <div id="np-secondary">
       <button class="np-sec-btn" id="np-lyrics-btn">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        Lyrics
+        <i data-lucide="mic-2"></i> Lyrics
       </button>
       <button class="np-sec-btn" id="np-queue-toggle-btn">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-        Queue
+        <i data-lucide="list-music"></i> Queue
       </button>
     </div>
-  </div>
+  </div><!-- /np-content -->
 
   <!-- LYRICS PANEL -->
   <div id="np-lyrics-panel" class="np-panel">
@@ -287,28 +311,27 @@
     <div class="np-panel-blur"></div>
     <div class="np-panel-gradient"></div>
     <div class="np-panel-content">
-      <button class="np-panel-back" id="np-lyrics-back">
-        <div id="np-lyrics-track-name">Song Title</div>
-        <div id="np-lyrics-track-artist">Artist</div>
-      </button>
+      <div class="np-panel-topbar">
+        <button class="np-panel-back-btn" id="np-lyrics-back"><i data-lucide="chevron-left"></i></button>
+        <div class="np-panel-track-info">
+          <div id="np-lyrics-track-name">Song Title</div>
+          <div id="np-lyrics-track-artist">Artist</div>
+        </div>
+        <button class="np-love-btn" id="np-lyrics-love-btn"><i data-lucide="heart"></i></button>
+      </div>
       <div id="np-lyrics-body">
         <div class="np-lyrics-placeholder">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <i data-lucide="mic-2" style="width:40px;height:40px;opacity:0.3"></i>
           <p>Lyrics not available</p>
+          <small>We couldn't find lyrics for this track</small>
         </div>
       </div>
       <div class="np-panel-mini-ctrl">
         <div id="np-lyrics-mini-bar"><div id="np-lyrics-mini-fill"></div></div>
         <div class="np-panel-ctrl-row">
-          <button class="np-panel-ctrl-btn" id="np-lyrics-prev">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="4" x2="5" y2="20"/></svg>
-          </button>
-          <button class="np-panel-ctrl-btn np-panel-play" id="np-lyrics-play">
-            <svg id="np-lyrics-play-icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-          </button>
-          <button class="np-panel-ctrl-btn" id="np-lyrics-next">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="4" x2="19" y2="20"/></svg>
-          </button>
+          <button class="np-panel-ctrl-btn" id="np-lyrics-prev"><i data-lucide="skip-back"></i></button>
+          <button class="np-panel-ctrl-btn np-panel-play" id="np-lyrics-play"><i data-lucide="play" id="np-lyrics-play-icon"></i></button>
+          <button class="np-panel-ctrl-btn" id="np-lyrics-next"><i data-lucide="skip-forward"></i></button>
         </div>
       </div>
     </div>
@@ -320,162 +343,279 @@
     <div class="np-panel-blur"></div>
     <div class="np-panel-gradient"></div>
     <div class="np-panel-content">
-      <button class="np-panel-back" id="np-queue-back">
-        <div id="np-queue-track-name">Song Title</div>
-        <div id="np-queue-track-artist">Artist</div>
-      </button>
+      <div class="np-panel-topbar">
+        <button class="np-panel-back-btn" id="np-queue-back"><i data-lucide="chevron-left"></i></button>
+        <div class="np-panel-track-info">
+          <div id="np-queue-track-name">Song Title</div>
+          <div id="np-queue-track-artist">Artist</div>
+        </div>
+        <button class="np-love-btn" id="np-queue-love-btn"><i data-lucide="heart"></i></button>
+      </div>
       <div class="np-panel-label">Up Next</div>
       <div id="np-queue-list"></div>
       <div class="np-panel-mini-ctrl">
         <div id="np-queue-mini-bar"><div id="np-queue-mini-fill"></div></div>
         <div class="np-panel-ctrl-row">
-          <button class="np-panel-ctrl-btn" id="np-queue-prev">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="4" x2="5" y2="20"/></svg>
-          </button>
-          <button class="np-panel-ctrl-btn np-panel-play" id="np-queue-play">
-            <svg id="np-queue-play-icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-          </button>
-          <button class="np-panel-ctrl-btn" id="np-queue-next">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="4" x2="19" y2="20"/></svg>
-          </button>
+          <button class="np-panel-ctrl-btn" id="np-queue-prev"><i data-lucide="skip-back"></i></button>
+          <button class="np-panel-ctrl-btn np-panel-play" id="np-queue-play"><i data-lucide="play" id="np-queue-play-icon"></i></button>
+          <button class="np-panel-ctrl-btn" id="np-queue-next"><i data-lucide="skip-forward"></i></button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MORE OPTIONS SHEET -->
+  <div id="np-more-sheet" class="bottom-sheet">
+    <div class="bottom-sheet-overlay" id="np-more-sheet-overlay"></div>
+    <div class="bottom-sheet-card">
+      <div class="bottom-sheet-handle"></div>
+      <div class="bottom-sheet-track-row" id="sheet-track-preview"></div>
+      <div class="bottom-sheet-actions">
+        <button class="sheet-action" id="sheet-add-queue"><i data-lucide="list-end"></i> Add to Queue</button>
+        <button class="sheet-action" id="sheet-share"><i data-lucide="share-2"></i> Share</button>
+        <button class="sheet-action" id="sheet-open-source"><i data-lucide="external-link"></i> Open on Tidal / YouTube</button>
       </div>
     </div>
   </div>
 
 </div><!-- /now-playing -->
 
-<!--DESKTOP -->
+<!-- DESKTOP SHELL -->
 <div id="desktop-shell">
-  <div id="desktop-topbar">
-    <div id="desktop-topbar-left">
+
+  <!-- Collapsible sidebar -->
+  <div id="desktop-sidebar" class="sidebar-expanded">
+    <div id="sb-toggle-wrap">
       <div class="tb-logo">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-        TuneTopia
+        <i data-lucide="music-2"></i>
+        <span class="sb-logo-text">TuneTopia</span>
       </div>
+      <button id="sb-collapse-btn" title="Collapse sidebar">
+        <i data-lucide="panel-left-close" id="sb-collapse-icon"></i>
+      </button>
     </div>
-    <div id="desktop-topbar-center">
-      <button class="tb-ctrl" id="dt-shuffle-btn" title="Shuffle">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
-      </button>
-      <button class="tb-ctrl" id="dt-prev-btn" title="Previous">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="4" x2="5" y2="20"/></svg>
-      </button>
-      <button class="tb-play-btn" id="dt-play-btn">
-        <svg id="dt-play-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-      </button>
-      <button class="tb-ctrl" id="dt-next-btn" title="Next">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="4" x2="19" y2="20"/></svg>
-      </button>
-      <button class="tb-ctrl" id="dt-repeat-btn" title="Repeat">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-      </button>
-      <div id="tb-track-info">
-        <img id="tb-art" src="" alt=""/>
-        <div id="tb-meta">
-          <div id="tb-title">Not Playing</div>
-          <div id="tb-artist">—</div>
-        </div>
-      </div>
-      <div id="tb-progress-wrap">
-        <div id="tb-progress-bar"><div id="tb-progress-fill" style="width:0%"></div></div>
-        <div class="tb-times"><span id="tb-time-cur">0:00</span><span id="tb-time-tot">0:00</span></div>
-      </div>
-    </div>
-    <div id="desktop-topbar-right">
-      <div id="tb-vol-wrap">
-        <svg class="tb-vol-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/></svg>
-        <div id="tb-vol-bar"><div id="tb-vol-fill"></div></div>
-        <svg class="tb-vol-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
-      </div>
-    </div>
-  </div>
-  <div id="desktop-body">
-    <div id="desktop-sidebar">
+
+    <div class="sb-search-wrap">
       <div class="sb-search">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color:var(--text-3);flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <i data-lucide="search" style="width:13px;height:13px;color:var(--text-3);flex-shrink:0"></i>
         <input id="dt-search-input" type="text" placeholder="Search" autocomplete="off" spellcheck="false"/>
       </div>
+    </div>
+
+    <nav class="sb-nav">
       <div class="sb-item active" data-dtpage="home">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home
+        <i data-lucide="house"></i><span>Home</span>
       </div>
       <div class="sb-item" data-dtpage="new">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>New
+        <i data-lucide="sparkles"></i><span>New Releases</span>
       </div>
       <div class="sb-section-label">Library</div>
       <div class="sb-item" data-dtpage="recently-added">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Recently Added
+        <i data-lucide="clock"></i><span>Recently Played</span>
       </div>
       <div class="sb-item" data-dtpage="artists">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Artists
+        <i data-lucide="users"></i><span>Artists</span>
       </div>
       <div class="sb-item" data-dtpage="albums">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>Albums
+        <i data-lucide="disc-3"></i><span>Albums</span>
       </div>
       <div class="sb-item" data-dtpage="songs">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>Songs
+        <i data-lucide="music"></i><span>Songs</span>
       </div>
       <div class="sb-item" data-dtpage="history">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>History
+        <i data-lucide="history"></i><span>History</span>
       </div>
       <div class="sb-section-label">Playlists</div>
       <div class="sb-item" data-dtpage="liked-songs">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Liked Songs
+        <i data-lucide="heart"></i><span>Liked Songs</span>
       </div>
-    </div>
-    <div id="desktop-content">
-      <div id="dt-page-home" class="dt-page active">
-        <div class="dt-content-header">
-          <div class="dt-page-title">Home</div>
-          <div id="dt-genre-chips" style="display:flex;gap:6px;overflow-x:auto;max-width:500px;padding-bottom:2px"></div>
-        </div>
-        <div class="dt-content-body"><div id="dt-home-grid"></div></div>
-      </div>
-      <div id="dt-page-albums" class="dt-page">
-        <div class="dt-content-header"><div class="dt-page-title">Albums</div></div>
-        <div class="dt-content-body"><div id="dt-albums-grid" class="dt-album-grid"></div></div>
-      </div>
-      <div id="dt-page-songs" class="dt-page">
-        <div class="dt-content-header"><div class="dt-page-title">Songs</div></div>
-        <div id="dt-songs-header" class="dt-list-header"><span>#</span><span>Title</span><span>Album</span><span>Quality</span><span>Time</span></div>
-        <div class="dt-content-body" style="padding-top:8px"><div id="dt-songs-list" class="dt-track-list"></div></div>
-      </div>
-      <div id="dt-page-artists" class="dt-page">
-        <div class="dt-content-header"><div class="dt-page-title">Artists</div></div>
-        <div class="dt-content-body"><div id="dt-artists-grid" class="dt-artist-grid"></div></div>
-      </div>
-      <div id="dt-page-recently-added" class="dt-page">
-        <div class="dt-content-header"><div class="dt-page-title">Recently Added</div></div>
-        <div class="dt-content-body"><div id="dt-recent-grid" class="dt-album-grid"></div></div>
-      </div>
-      <div id="dt-page-history" class="dt-page">
-        <div class="dt-content-header"><div class="dt-page-title">History</div></div>
-        <div id="dt-history-songs-header" class="dt-list-header"><span>#</span><span>Title</span><span>Album</span><span>Quality</span><span>Time</span></div>
-        <div class="dt-content-body" style="padding-top:8px"><div id="dt-history-list" class="dt-track-list"></div></div>
-      </div>
-      <div id="dt-page-search" class="dt-page">
-        <div class="dt-content-header" style="display:block;padding:14px 24px 0">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><div class="dt-page-title">Search</div></div>
-          <div class="dt-search-tabs">
-            <div class="dt-search-tab active" data-dttab="music">Music</div>
-            <div class="dt-search-tab" data-dttab="video">Video</div>
-            <div class="dt-search-tab" data-dttab="albums">Albums</div>
-            <div class="dt-search-tab" data-dttab="artists">Artists</div>
-          </div>
-        </div>
-        <div class="dt-content-body"><div id="dt-search-results"></div></div>
-      </div>
-      <div id="dt-page-new" class="dt-page">
-        <div class="dt-content-header"><div class="dt-page-title">New</div></div>
-        <div class="dt-content-body"><div id="dt-new-grid" class="dt-album-grid"></div></div>
-      </div>
-      <div id="dt-page-liked-songs" class="dt-page">
-        <div class="dt-content-header"><div class="dt-page-title">Liked Songs</div></div>
-        <div class="dt-content-body"><div class="dt-empty"><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><h3>No Liked Songs</h3><p>Heart songs to save them here.</p></div></div>
-      </div>
+    </nav>
+
+    <div class="sb-user-section">
+      <button class="sb-user-btn" id="sb-user-btn">
+        <i data-lucide="user-circle"></i>
+        <span>Account & Settings</span>
+      </button>
     </div>
   </div>
-</div>
+
+  <!-- Main content area -->
+  <div id="desktop-main">
+
+    <!-- Pages -->
+    <div id="desktop-content">
+
+      <!-- HOME -->
+      <div id="dt-page-home" class="dt-page active">
+        <div class="dt-page-header">
+          <div>
+            <div class="dt-greeting" id="dt-greeting">Good morning</div>
+            <div class="dt-page-title">Home</div>
+          </div>
+          <div id="dt-genre-chips" class="dt-genre-chips"></div>
+          <button class="dt-icon-btn" id="dt-account-btn"><i data-lucide="user-circle"></i></button>
+        </div>
+        <div class="dt-content-body">
+          <div class="dt-section">
+            <div class="dt-section-header"><span class="dt-section-title">What's New</span></div>
+            <div class="dt-album-grid" id="dt-home-new-grid"></div>
+          </div>
+          <div class="dt-section" id="dt-home-recent-section" style="display:none">
+            <div class="dt-section-header"><span class="dt-section-title">Recently Played</span></div>
+            <div class="dt-album-grid" id="dt-home-recent-grid"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NEW RELEASES -->
+      <div id="dt-page-new" class="dt-page">
+        <div class="dt-page-header"><div class="dt-page-title">New Releases</div></div>
+        <div class="dt-content-body">
+          <div class="dt-album-grid" id="dt-new-grid"></div>
+        </div>
+      </div>
+
+      <!-- ALBUMS -->
+      <div id="dt-page-albums" class="dt-page">
+        <div class="dt-page-header"><div class="dt-page-title">Albums</div></div>
+        <div class="dt-content-body">
+          <div class="dt-album-grid" id="dt-albums-grid"></div>
+        </div>
+      </div>
+
+      <!-- SONGS -->
+      <div id="dt-page-songs" class="dt-page">
+        <div class="dt-page-header"><div class="dt-page-title">Songs</div></div>
+        <div class="dt-list-header">
+          <span>#</span><span>Title</span><span>Album</span><span></span><span>Time</span>
+        </div>
+        <div class="dt-content-body" style="padding-top:4px">
+          <div id="dt-songs-list"></div>
+        </div>
+      </div>
+
+      <!-- ARTISTS -->
+      <div id="dt-page-artists" class="dt-page">
+        <div class="dt-page-header"><div class="dt-page-title">Artists</div></div>
+        <div class="dt-content-body">
+          <div class="dt-artist-grid" id="dt-artists-grid"></div>
+        </div>
+      </div>
+
+      <!-- RECENTLY PLAYED -->
+      <div id="dt-page-recently-added" class="dt-page">
+        <div class="dt-page-header"><div class="dt-page-title">Recently Played</div></div>
+        <div class="dt-content-body">
+          <div class="dt-album-grid" id="dt-recent-grid"></div>
+        </div>
+      </div>
+
+      <!-- HISTORY -->
+      <div id="dt-page-history" class="dt-page">
+        <div class="dt-page-header"><div class="dt-page-title">History</div></div>
+        <div class="dt-list-header">
+          <span>#</span><span>Title</span><span>Album</span><span></span><span>Time</span>
+        </div>
+        <div class="dt-content-body" style="padding-top:4px">
+          <div id="dt-history-list"></div>
+        </div>
+      </div>
+
+      <!-- SEARCH -->
+      <div id="dt-page-search" class="dt-page">
+        <div class="dt-page-header"><div class="dt-page-title">Search</div></div>
+        <div class="dt-search-tabs-bar">
+          <div class="dt-search-tab active" data-dttab="music">Songs</div>
+          <div class="dt-search-tab" data-dttab="video">Video</div>
+          <div class="dt-search-tab" data-dttab="albums">Albums</div>
+          <div class="dt-search-tab" data-dttab="artists">Artists</div>
+        </div>
+        <div class="dt-content-body">
+          <div id="dt-search-results">
+            <div class="dt-empty">
+              <i data-lucide="search" style="width:52px;height:52px;opacity:0.15"></i>
+              <h3>Search for anything</h3>
+              <p>Use the search bar on the left to find music</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIKED SONGS -->
+      <div id="dt-page-liked-songs" class="dt-page">
+        <div class="dt-liked-hero">
+          <div class="dt-liked-icon"><i data-lucide="heart" style="fill:#fff;color:#fff;width:52px;height:52px"></i></div>
+          <div class="dt-liked-info">
+            <div class="dt-liked-label">Playlist</div>
+            <div class="dt-liked-title">Liked Songs</div>
+            <div class="dt-liked-sub" id="dt-liked-sub">0 songs</div>
+          </div>
+        </div>
+        <div class="dt-liked-actions">
+          <button class="dt-liked-play-btn" id="dt-liked-play-all">
+            <i data-lucide="play" style="fill:currentColor"></i> Play All
+          </button>
+          <div class="dt-liked-search-bar">
+            <i data-lucide="search" style="width:13px;height:13px;color:var(--text-3)"></i>
+            <input id="dt-liked-filter" type="search" placeholder="Find in liked songs…" autocomplete="off"/>
+          </div>
+          <div class="dt-sort-btn" id="dt-liked-sort-btn">
+            <i data-lucide="arrow-up-down"></i> <span id="dt-liked-sort-label">Recent</span>
+          </div>
+        </div>
+        <div class="dt-list-header">
+          <span>#</span><span>Title</span><span>Album</span><span></span><span>Time</span>
+        </div>
+        <div class="dt-content-body" style="padding-top:4px">
+          <div id="dt-liked-list"></div>
+        </div>
+      </div>
+
+    </div><!-- /desktop-content -->
+
+    <!-- BOTTOM MINI PLAYER BAR -->
+    <div id="dt-mini-bar">
+      <div id="dt-mini-bar-bg"></div>
+      <div id="dt-mini-bar-inner">
+        <!-- Left: art + info -->
+        <div id="dt-bar-left">
+          <img id="dt-bar-art" src="" alt=""/>
+          <div id="dt-bar-info">
+            <div id="dt-bar-title">Not Playing</div>
+            <div id="dt-bar-artist">—</div>
+          </div>
+          <span class="explicit-tag" id="dt-bar-explicit" style="display:none">E</span>
+          <button class="dt-bar-like-btn" id="dt-bar-like-btn">
+            <i data-lucide="heart" id="dt-bar-like-icon"></i>
+          </button>
+        </div>
+        <!-- Center: controls + progress -->
+        <div id="dt-bar-center">
+          <div id="dt-bar-controls">
+            <button class="dt-bar-ctrl" id="dt-shuffle-btn" title="Shuffle"><i data-lucide="shuffle"></i></button>
+            <button class="dt-bar-ctrl" id="dt-prev-btn" title="Previous"><i data-lucide="skip-back"></i></button>
+            <button class="dt-bar-play-btn" id="dt-play-btn"><i data-lucide="play" id="dt-play-icon"></i></button>
+            <button class="dt-bar-ctrl" id="dt-next-btn" title="Next"><i data-lucide="skip-forward"></i></button>
+            <button class="dt-bar-ctrl" id="dt-repeat-btn" title="Repeat"><i data-lucide="repeat"></i></button>
+          </div>
+          <div id="dt-bar-progress-wrap">
+            <span id="dt-bar-time-cur">0:00</span>
+            <div id="dt-bar-progress-bar"><div id="dt-bar-progress-fill"></div></div>
+            <span id="dt-bar-time-tot">0:00</span>
+          </div>
+        </div>
+        <!-- Right: volume -->
+        <div id="dt-bar-right">
+          <button class="dt-bar-ctrl" id="dt-queue-btn" title="Queue"><i data-lucide="list-music"></i></button>
+          <i data-lucide="volume-1" class="dt-vol-icon"></i>
+          <div id="dt-vol-bar"><div id="dt-vol-fill"></div></div>
+          <i data-lucide="volume-2" class="dt-vol-icon"></i>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /desktop-main -->
+</div><!-- /desktop-shell -->
 
 <div id="toast"></div>
 <audio id="audio"></audio>
@@ -483,5 +623,6 @@
 <script src="ui.js"></script>
 <script src="player.js"></script>
 <script src="app.js"></script>
+<script>lucide.createIcons();</script>
 </body>
 </html>
