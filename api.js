@@ -1,5 +1,3 @@
-// providers //
-
 const PROVIDERS = {
   monochrome: {
     label: 'Monochrome',

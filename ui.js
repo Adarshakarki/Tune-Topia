@@ -1,4 +1,3 @@
-// refs
 const $ = id => document.getElementById(id);
 
 const UI = (() => {

@@ -1,5 +1,3 @@
-// ── MOBILE APP ──
-
 const App = (() => {
   let currentId = null;
   let currentSearchTab = 'music';

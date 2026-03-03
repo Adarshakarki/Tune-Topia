@@ -1,5 +1,3 @@
-// player //
-
 const Player = (() => {
 
   let queue     = [];
