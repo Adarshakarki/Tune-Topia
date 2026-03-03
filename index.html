@@ -3,63 +3,49 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
-<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)"/>
+<meta name="theme-color" content="#ffffff"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <title>TuneTopia</title>
+<link href="https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&f[]=cabinet-grotesk@400,500,600,700,800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════
-     MOBILE — Apple Music iOS style
-══════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════
+     MOBILE
+══════════════════════════════════════ -->
 <div id="app">
   <div id="main">
 
     <!-- HOME -->
     <div id="page-home" class="page active">
-
-      <!-- sticky large-title nav bar -->
       <div class="ios-navbar" id="home-navbar">
         <div class="ios-navbar-inner">
-          <span class="ios-large-title" id="home-large-title">TuneTopia</span>
+          <span class="ios-large-title">TuneTopia</span>
           <div class="ios-navbar-actions">
-            <button class="ios-icon-btn" id="home-cast-btn">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm18-7H5c-1.1 0-2 .9-2 2v3h2v-3h14v10h-5v2h5c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2z"/></svg>
-            </button>
             <button class="ios-icon-btn" id="home-search-btn">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             </button>
           </div>
         </div>
       </div>
-
-      <!-- genre chips -->
-      <div class="ios-chips-row">
-        <div class="ios-chips" id="genre-chips"></div>
-      </div>
-
-      <!-- provider status pill -->
-      <div id="provider-status">
-        <div class="status-dot"></div>
-        <span id="provider-label">Connecting to providers…</span>
-      </div>
-
-      <!-- content -->
+      <div class="ios-chips-row"><div class="ios-chips" id="genre-chips"></div></div>
+      <div id="provider-status"><div class="status-dot"></div><span id="provider-label">Connecting…</span></div>
       <div class="ios-page-body">
-
-        <!-- featured hero card -->
+        <!-- hero card -->
         <div class="ios-featured" id="home-featured">
-          <div class="ios-featured-placeholder">
-            <div class="ios-feat-bg"></div>
-            <div class="ios-feat-label">FEATURED</div>
-            <div class="ios-feat-title">TuneTopia</div>
-            <div class="ios-feat-sub">TIDAL HiFi · HiRes Lossless · YouTube</div>
+          <div class="ios-feat-inner" id="home-hero">
+            <div class="ios-feat-bg" id="home-hero-bg"></div>
+            <div class="ios-feat-overlay"></div>
+            <div class="ios-feat-content">
+              <div class="ios-feat-eyebrow">FEATURED</div>
+              <div class="ios-feat-title" id="home-hero-title">TuneTopia</div>
+              <div class="ios-feat-sub" id="home-hero-artist">TIDAL HiFi · HiRes Lossless · YouTube</div>
+            </div>
           </div>
         </div>
-
-        <!-- section: tracks -->
+        <!-- top tracks -->
         <div class="ios-section">
           <div class="ios-section-header">
             <span class="ios-section-title">Top Tracks</span>
@@ -67,45 +53,36 @@
           </div>
           <div class="track-list" id="home-tracks"></div>
         </div>
-
       </div>
     </div>
 
     <!-- SEARCH -->
     <div id="page-search" class="page">
-
       <div class="ios-navbar ios-navbar-search">
-        <div class="ios-navbar-inner">
-          <span class="ios-large-title">Search</span>
-        </div>
+        <div class="ios-navbar-inner"><span class="ios-large-title">Search</span></div>
         <div class="ios-search-bar-wrap">
           <div class="ios-search-bar">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--text-3);flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-3);flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input id="search-input" type="search" placeholder="Artists, songs, albums…" autocomplete="off" spellcheck="false"/>
             <button id="search-clear" class="search-clear-btn">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="opacity:0.4"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
         </div>
       </div>
-
-      <!-- segmented tabs -->
-      <div class="ios-seg-wrap" id="search-tabs-wrap">
+      <div class="ios-seg-wrap">
         <div class="ios-seg">
           <button class="ios-seg-btn active" data-tab="music">Music</button>
           <button class="ios-seg-btn" data-tab="video">Video</button>
           <button class="ios-seg-btn" data-tab="albums">Albums</button>
           <button class="ios-seg-btn" data-tab="artists">Artists</button>
+          <button class="ios-seg-btn" data-tab="playlists">Playlists</button>
         </div>
       </div>
-
       <div class="ios-page-body" id="search-body">
-        <!-- empty state: browse categories -->
         <div id="search-empty-state">
           <div class="ios-section">
-            <div class="ios-section-header">
-              <span class="ios-section-title">Browse Categories</span>
-            </div>
+            <div class="ios-section-header"><span class="ios-section-title">Browse</span></div>
             <div class="ios-cat-grid">
               <div class="ios-cat-tile" style="--cat:#fa243c">Pop</div>
               <div class="ios-cat-tile" style="--cat:#5856d6">Hip-Hop</div>
@@ -115,60 +92,64 @@
               <div class="ios-cat-tile" style="--cat:#af52de">K-Pop</div>
               <div class="ios-cat-tile" style="--cat:#ff2d55">Rock</div>
               <div class="ios-cat-tile" style="--cat:#007aff">Jazz</div>
-              <div class="ios-cat-tile" style="--cat:#8e8e93">Classical</div>
-              <div class="ios-cat-tile" style="--cat:#ff6b6b">Lo-Fi</div>
+              <div class="ios-cat-tile" style="--cat:#8b5cf6">Classical</div>
+              <div class="ios-cat-tile" style="--cat:#f59e0b">Lo-Fi</div>
             </div>
           </div>
         </div>
-
         <div id="search-results" style="display:none"></div>
       </div>
     </div>
 
     <!-- LIBRARY -->
     <div id="page-library" class="page">
-
       <div class="ios-navbar">
         <div class="ios-navbar-inner">
           <span class="ios-large-title">Library</span>
           <div class="ios-navbar-actions">
-            <button class="ios-icon-btn">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+            <button class="ios-icon-btn" id="lib-create-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             </button>
           </div>
         </div>
       </div>
-
-      <!-- library nav items -->
       <div class="ios-lib-menu">
-        <div class="ios-lib-item" id="lib-recently-added">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="color:#fa243c"><path d="M13 3a9 9 0 1 0 9 9h-2a7 7 0 1 1-7-7v4l5-5-5-5v4z"/></svg>
-          <span>Recently Added</span>
-          <svg class="lib-chevron" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+        <div class="ios-lib-item" id="lib-liked">
+          <div class="lib-icon-wrap" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </div>
+          <span>Liked Songs</span>
+          <svg class="lib-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
         <div class="ios-lib-item" id="lib-albums">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="color:#fa243c"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-5.5c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg>
+          <div class="lib-icon-wrap" style="background:linear-gradient(135deg,#7c3aed,#4f46e5)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+          </div>
           <span>Albums</span>
-          <svg class="lib-chevron" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+          <svg class="lib-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
         <div class="ios-lib-item" id="lib-artists">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="color:#fa243c"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          <div class="lib-icon-wrap" style="background:linear-gradient(135deg,#a78bfa,#8b5cf6)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
           <span>Artists</span>
-          <svg class="lib-chevron" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+          <svg class="lib-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
         <div class="ios-lib-item" id="lib-songs">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="color:#fa243c"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+          <div class="lib-icon-wrap" style="background:linear-gradient(135deg,#6d28d9,#5b21b6)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          </div>
           <span>Songs</span>
-          <svg class="lib-chevron" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+          <svg class="lib-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
         <div class="ios-lib-item" id="lib-history">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="color:#fa243c"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
+          <div class="lib-icon-wrap" style="background:linear-gradient(135deg,#c4b5fd,#8b5cf6)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
           <span>History</span>
-          <svg class="lib-chevron" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+          <svg class="lib-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
       </div>
-
-      <!-- tracks below -->
       <div class="ios-page-body">
         <div class="ios-section">
           <div class="ios-section-header">
@@ -181,153 +162,219 @@
 
   </div><!-- /main -->
 
-  <!-- MINI PLAYER — above tab bar -->
+  <!-- MINI PLAYER -->
   <div id="mini-player" class="hidden">
     <div id="mini-player-inner">
       <img id="mini-art" src="" alt=""/>
       <div id="mini-info">
         <div id="mini-title">Not Playing</div>
-        <div id="mini-artist">—</div>
+        <div id="mini-artist-time">—</div>
       </div>
       <div id="mini-controls">
+        <button class="mini-ctrl" id="mini-prev-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="4" x2="5" y2="20"/></svg>
+        </button>
         <button class="mini-ctrl" id="mini-play-btn">
-          <svg id="mini-play-icon" width="26" height="26" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          <svg id="mini-play-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         </button>
         <button class="mini-ctrl" id="mini-next-btn">
-          <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6h2v12h-2z"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="4" x2="19" y2="20"/></svg>
         </button>
       </div>
     </div>
     <div id="mini-progress"><div id="mini-progress-fill"></div></div>
   </div>
 
-  <!-- TAB BAR — real iOS style -->
+  <!-- TAB BAR -->
   <nav id="navbar">
     <button class="nav-btn active" data-page="home">
-      <svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       <span>Home</span>
     </button>
     <button class="nav-btn" data-page="search">
-      <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <span>Search</span>
     </button>
     <button class="nav-btn" data-page="library">
-      <svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
       <span>Library</span>
     </button>
   </nav>
-</div><!-- /app -->
+</div>
 
-<!-- NOW PLAYING — full screen dark immersive -->
+<!-- ══════════════════════════════════════
+     NOW PLAYING — full screen immersive
+══════════════════════════════════════ -->
 <div id="now-playing">
-  <div id="np-bg"></div>
-  <div id="np-overlay"></div>
+  <!-- bg layers -->
+  <img id="np-bg-art" src="" alt=""/>
+  <div id="np-bg-blur"></div>
+  <div id="np-bg-gradient"></div>
+
+  <!-- main content -->
   <div id="np-content">
-
-    <!-- drag handle -->
-    <div id="np-handle-row">
-      <div id="np-handle"></div>
-    </div>
-
-    <!-- top row -->
     <div id="np-topbar">
-      <button class="np-topbar-btn" id="np-close-btn">
-        <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+      <button class="np-icon-btn" id="np-close-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
-      <div class="np-context">
-        <div class="np-ctx-label">Playing from</div>
-        <div class="np-ctx-source" id="np-source-label">TuneTopia</div>
-      </div>
-      <button class="np-topbar-btn" id="np-share-btn">
-        <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1L8 5h3v9h2V5h3L12 1zm-7 14c-.55 0-1 .45-1 1v3c0 .55.45 1 1 1h14c.55 0 1-.45 1-1v-3c0-.55-.45-1-1-1h-4v2h3v1H5v-1h3v-2H5z"/></svg>
+      <button class="np-icon-btn" id="np-more-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="5" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="19" r="1" fill="currentColor"/></svg>
       </button>
     </div>
 
-    <!-- artwork -->
-    <div id="np-art-wrap">
-      <img id="np-art" src="" alt=""/>
-    </div>
+    <!-- spacer - artwork shows through here -->
+    <div id="np-spacer"></div>
 
-    <!-- title + love -->
+    <!-- info + like -->
     <div id="np-info">
       <div id="np-info-left">
         <div id="np-title">—</div>
         <div id="np-artist">—</div>
       </div>
       <button class="np-love-btn" id="np-love-btn">
-        <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24" id="np-love-icon"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        <svg id="np-love-icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
       </button>
-    </div>
-
-    <!-- quality badge row -->
-    <div id="np-badge-row">
-      <span id="np-quality-badge" class="quality-badge" style="display:none"></span>
     </div>
 
     <!-- progress -->
     <div id="np-progress-wrap">
-      <div id="np-progress-bar">
-        <div id="np-progress-fill" style="width:0%"></div>
-      </div>
+      <div id="np-progress-bar"><div id="np-progress-fill"></div></div>
       <div class="np-times">
         <span id="np-time-cur">0:00</span>
         <span id="np-time-tot">0:00</span>
       </div>
     </div>
 
-    <!-- controls -->
+    <!-- main controls: prev repeat play shuffle next -->
     <div id="np-controls">
-      <button class="ctrl-btn" id="shuffle-btn">
-        <svg id="shuffle-icon" width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
+      <button class="np-ctrl" id="np-prev-btn">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="4" x2="5" y2="20"/></svg>
       </button>
-      <button class="ctrl-btn" id="np-prev-btn">
-        <svg width="36" height="36" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+      <button class="np-ctrl np-ctrl-sm" id="repeat-btn">
+        <svg id="repeat-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
       </button>
-      <button id="np-play-btn">
-        <svg id="np-play-icon" width="36" height="36" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+      <button class="np-play-btn" id="np-play-btn">
+        <svg id="np-play-icon" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
       </button>
-      <button class="ctrl-btn" id="np-next-btn">
-        <svg width="36" height="36" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6h2v12h-2z"/></svg>
+      <button class="np-ctrl np-ctrl-sm" id="shuffle-btn">
+        <svg id="shuffle-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
       </button>
-      <button class="ctrl-btn" id="repeat-btn">
-        <svg id="repeat-icon" width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
+      <button class="np-ctrl" id="np-next-btn">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="4" x2="19" y2="20"/></svg>
       </button>
     </div>
 
     <!-- volume -->
     <div id="np-volume">
-      <svg class="vol-icon" width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M7 9v6h4l5 5V4l-5 5H7z"/></svg>
+      <svg class="vol-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/></svg>
       <div id="vol-bar"><div id="vol-fill"></div></div>
-      <svg class="vol-icon" width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+      <svg class="vol-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
     </div>
 
-    <!-- queue -->
-    <div id="np-queue-wrap">
-      <div class="np-queue-label">Up Next</div>
+    <!-- secondary row -->
+    <div id="np-secondary">
+      <button class="np-sec-btn" id="np-lyrics-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Lyrics
+      </button>
+      <button class="np-sec-btn" id="np-queue-toggle-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        Queue
+      </button>
+    </div>
+  </div>
+
+  <!-- LYRICS PANEL -->
+  <div id="np-lyrics-panel" class="np-panel">
+    <img id="np-lyrics-bg-art" src="" alt=""/>
+    <div class="np-panel-blur"></div>
+    <div class="np-panel-gradient"></div>
+    <div class="np-panel-content">
+      <button class="np-panel-back" id="np-lyrics-back">
+        <div id="np-lyrics-track-name">Song Title</div>
+        <div id="np-lyrics-track-artist">Artist</div>
+      </button>
+      <div id="np-lyrics-body">
+        <div class="np-lyrics-placeholder">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <p>Lyrics not available</p>
+        </div>
+      </div>
+      <div class="np-panel-mini-ctrl">
+        <div id="np-lyrics-mini-bar"><div id="np-lyrics-mini-fill"></div></div>
+        <div class="np-panel-ctrl-row">
+          <button class="np-panel-ctrl-btn" id="np-lyrics-prev">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="4" x2="5" y2="20"/></svg>
+          </button>
+          <button class="np-panel-ctrl-btn np-panel-play" id="np-lyrics-play">
+            <svg id="np-lyrics-play-icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </button>
+          <button class="np-panel-ctrl-btn" id="np-lyrics-next">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="4" x2="19" y2="20"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUEUE PANEL -->
+  <div id="np-queue-panel" class="np-panel">
+    <img id="np-queue-bg-art" src="" alt=""/>
+    <div class="np-panel-blur"></div>
+    <div class="np-panel-gradient"></div>
+    <div class="np-panel-content">
+      <button class="np-panel-back" id="np-queue-back">
+        <div id="np-queue-track-name">Song Title</div>
+        <div id="np-queue-track-artist">Artist</div>
+      </button>
+      <div class="np-panel-label">Up Next</div>
       <div id="np-queue-list"></div>
+      <div class="np-panel-mini-ctrl">
+        <div id="np-queue-mini-bar"><div id="np-queue-mini-fill"></div></div>
+        <div class="np-panel-ctrl-row">
+          <button class="np-panel-ctrl-btn" id="np-queue-prev">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="4" x2="5" y2="20"/></svg>
+          </button>
+          <button class="np-panel-ctrl-btn np-panel-play" id="np-queue-play">
+            <svg id="np-queue-play-icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </button>
+          <button class="np-panel-ctrl-btn" id="np-queue-next">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="4" x2="19" y2="20"/></svg>
+          </button>
+        </div>
+      </div>
     </div>
+  </div>
 
-  </div><!-- /np-content -->
 </div><!-- /now-playing -->
 
-<!-- ══════════════════════════════════════════
-     DESKTOP — macOS Apple Music Web
-══════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════
+     DESKTOP
+══════════════════════════════════════ -->
 <div id="desktop-shell">
-
   <div id="desktop-topbar">
     <div id="desktop-topbar-left">
       <div class="tb-logo">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
         TuneTopia
       </div>
     </div>
     <div id="desktop-topbar-center">
-      <button class="tb-ctrl" id="dt-shuffle-btn" title="Shuffle"><svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg></button>
-      <button class="tb-ctrl" id="dt-prev-btn" title="Previous"><svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg></button>
-      <button class="tb-play-btn" id="dt-play-btn"><svg id="dt-play-icon" width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
-      <button class="tb-ctrl" id="dt-next-btn" title="Next"><svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6h2v12h-2z"/></svg></button>
-      <button class="tb-ctrl" id="dt-repeat-btn" title="Repeat"><svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg></button>
+      <button class="tb-ctrl" id="dt-shuffle-btn" title="Shuffle">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+      </button>
+      <button class="tb-ctrl" id="dt-prev-btn" title="Previous">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="4" x2="5" y2="20"/></svg>
+      </button>
+      <button class="tb-play-btn" id="dt-play-btn">
+        <svg id="dt-play-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </button>
+      <button class="tb-ctrl" id="dt-next-btn" title="Next">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="4" x2="19" y2="20"/></svg>
+      </button>
+      <button class="tb-ctrl" id="dt-repeat-btn" title="Repeat">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+      </button>
       <div id="tb-track-info">
         <img id="tb-art" src="" alt=""/>
         <div id="tb-meta">
@@ -342,49 +389,59 @@
     </div>
     <div id="desktop-topbar-right">
       <div id="tb-vol-wrap">
-        <svg class="tb-vol-icon" width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M7 9v6h4l5 5V4l-5 5H7z"/></svg>
+        <svg class="tb-vol-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/></svg>
         <div id="tb-vol-bar"><div id="tb-vol-fill"></div></div>
-        <svg class="tb-vol-icon" width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+        <svg class="tb-vol-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
       </div>
-      <button class="tb-icon-btn" id="dt-queue-btn" title="Queue"><svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/></svg></button>
     </div>
   </div>
-
   <div id="desktop-body">
     <div id="desktop-sidebar">
       <div class="sb-search">
-        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="color:var(--text-3);flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color:var(--text-3);flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input id="dt-search-input" type="text" placeholder="Search" autocomplete="off" spellcheck="false"/>
       </div>
-      <div class="sb-item active" data-dtpage="home"><svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>Home</div>
-      <div class="sb-item" data-dtpage="new"><svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>New</div>
-      <div class="sb-item" data-dtpage="radio"><svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M3.24 6.15C2.51 6.43 2 7.17 2 8v12c0 1.1.89 2 2 2h16c1.11 0 2-.9 2-2V8c0-1.11-.89-2-2-2H6.3l8.26-3.34L13.65 1 3.24 6.15z"/></svg>Radio</div>
+      <div class="sb-item active" data-dtpage="home">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home
+      </div>
+      <div class="sb-item" data-dtpage="new">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>New
+      </div>
       <div class="sb-section-label">Library</div>
-      <div class="sb-item" data-dtpage="recently-added"><svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M13 3a9 9 0 1 0 9 9h-2a7 7 0 1 1-7-7v4l5-5-5-5v4z"/></svg>Recently Added</div>
-      <div class="sb-item" data-dtpage="artists"><svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>Artists</div>
-      <div class="sb-item" data-dtpage="albums"><svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-5.5c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/></svg>Albums</div>
-      <div class="sb-item" data-dtpage="songs"><svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>Songs</div>
-      <div class="sb-item" data-dtpage="made-for-you"><svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>Made for You</div>
+      <div class="sb-item" data-dtpage="recently-added">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Recently Added
+      </div>
+      <div class="sb-item" data-dtpage="artists">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Artists
+      </div>
+      <div class="sb-item" data-dtpage="albums">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>Albums
+      </div>
+      <div class="sb-item" data-dtpage="songs">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>Songs
+      </div>
+      <div class="sb-item" data-dtpage="history">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>History
+      </div>
       <div class="sb-section-label">Playlists</div>
-      <div class="sb-item" data-dtpage="all-playlists"><div class="sb-playlist-dot" style="background:linear-gradient(135deg,#fa243c,#ff6930)"></div>All Playlists</div>
-      <div class="sb-item" data-dtpage="favorites"><div class="sb-playlist-dot" style="background:#fa243c"></div>Favorite Songs</div>
-      <div class="sb-item" data-dtpage="history"><div class="sb-playlist-dot" style="background:#30d158"></div>History</div>
+      <div class="sb-item" data-dtpage="liked-songs">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Liked Songs
+      </div>
     </div>
-
     <div id="desktop-content">
       <div id="dt-page-home" class="dt-page active">
         <div class="dt-content-header">
           <div class="dt-page-title">Home</div>
-          <div id="dt-genre-chips" style="display:flex;gap:6px;overflow-x:auto;max-width:500px"></div>
+          <div id="dt-genre-chips" style="display:flex;gap:6px;overflow-x:auto;max-width:500px;padding-bottom:2px"></div>
         </div>
         <div class="dt-content-body"><div id="dt-home-grid"></div></div>
       </div>
       <div id="dt-page-albums" class="dt-page">
-        <div class="dt-content-header"><div class="dt-page-title">Albums</div><div class="dt-sort-btn"><svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/></svg>Sort</div></div>
+        <div class="dt-content-header"><div class="dt-page-title">Albums</div></div>
         <div class="dt-content-body"><div id="dt-albums-grid" class="dt-album-grid"></div></div>
       </div>
       <div id="dt-page-songs" class="dt-page">
-        <div class="dt-content-header"><div class="dt-page-title">Songs</div><div class="dt-sort-btn"><svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/></svg>Sort</div></div>
+        <div class="dt-content-header"><div class="dt-page-title">Songs</div></div>
         <div id="dt-songs-header" class="dt-list-header"><span>#</span><span>Title</span><span>Album</span><span>Quality</span><span>Time</span></div>
         <div class="dt-content-body" style="padding-top:8px"><div id="dt-songs-list" class="dt-track-list"></div></div>
       </div>
@@ -417,10 +474,10 @@
         <div class="dt-content-header"><div class="dt-page-title">New</div></div>
         <div class="dt-content-body"><div id="dt-new-grid" class="dt-album-grid"></div></div>
       </div>
-      <div id="dt-page-radio" class="dt-page"><div class="dt-content-header"><div class="dt-page-title">Radio</div></div><div class="dt-content-body"><div class="dt-empty"><svg width="56" height="56" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2"><path d="M3.24 6.15C2.51 6.43 2 7.17 2 8v12c0 1.1.89 2 2 2h16c1.11 0 2-.9 2-2V8c0-1.11-.89-2-2-2H6.3l8.26-3.34L13.65 1 3.24 6.15z"/></svg><h3>Radio</h3><p>Live and on-demand radio coming soon.</p></div></div></div>
-      <div id="dt-page-made-for-you" class="dt-page"><div class="dt-content-header"><div class="dt-page-title">Made for You</div></div><div class="dt-content-body"><div class="dt-empty"><svg width="56" height="56" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg><h3>Made for You</h3><p>Personalised mixes appear here as you listen.</p></div></div></div>
-      <div id="dt-page-all-playlists" class="dt-page"><div class="dt-content-header"><div class="dt-page-title">All Playlists</div></div><div class="dt-content-body"><div class="dt-empty"><svg width="56" height="56" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg><h3>No Playlists</h3><p>Playlists you create will appear here.</p></div></div></div>
-      <div id="dt-page-favorites" class="dt-page"><div class="dt-content-header"><div class="dt-page-title">Favorite Songs</div></div><div class="dt-content-body"><div class="dt-empty"><svg width="56" height="56" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg><h3>No Favorites Yet</h3><p>Heart songs to save them here.</p></div></div></div>
+      <div id="dt-page-liked-songs" class="dt-page">
+        <div class="dt-content-header"><div class="dt-page-title">Liked Songs</div></div>
+        <div class="dt-content-body"><div class="dt-empty"><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><h3>No Liked Songs</h3><p>Heart songs to save them here.</p></div></div>
+      </div>
     </div>
   </div>
 </div>
