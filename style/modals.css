@@ -1,0 +1,254 @@
+/* style/modals.css — playlist modal, picker sheet, playlists page grid */
+
+/* ── CREATE PLAYLIST MODAL ── */
+.pl-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-player);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s5);
+}
+.pl-modal {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--r-xl);
+  width: 100%;
+  max-width: 420px;
+  padding: var(--s5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35);
+  animation: pl-modal-in 0.22s var(--spring);
+}
+@keyframes pl-modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.pl-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--s1);
+}
+.pl-modal-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+}
+.pl-modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-full);
+  background: var(--surface-2);
+  color: var(--text-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.14s;
+}
+.pl-modal-close:hover {
+  background: var(--surface-3);
+}
+.pl-modal-close .bi {
+  font-size: 14px;
+}
+.pl-modal-cover-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+.pl-modal-cover {
+  width: 72px;
+  height: 72px;
+  border-radius: var(--r-md);
+  background: linear-gradient(135deg, #6d28d9, #4f46e5);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 26px;
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+}
+.pl-modal-actions {
+  display: flex;
+  gap: var(--s2);
+  justify-content: flex-end;
+  margin-top: var(--s1);
+}
+.pl-modal-btn {
+  padding: 9px var(--s4);
+  border-radius: var(--r-sm);
+  font-size: 14px;
+  font-weight: 700;
+  transition:
+    opacity 0.15s,
+    transform 0.15s var(--spring);
+}
+.pl-modal-btn:active {
+  opacity: 0.75;
+  transform: scale(0.96);
+}
+.pl-modal-cancel {
+  background: var(--surface-2);
+  color: var(--text-2);
+}
+.pl-modal-cancel:hover {
+  background: var(--surface-3);
+}
+.pl-modal-create {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ── PLAYLIST PICKER ── */
+.pl-picker-header {
+  padding: var(--s2) var(--s5) var(--s3);
+  border-bottom: 0.5px solid var(--border);
+}
+.pl-picker-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+}
+.pl-picker-empty {
+  padding: var(--s4) var(--s5);
+  font-size: 14px;
+  color: var(--text-3);
+  text-align: center;
+}
+.pl-picker-item {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+.pl-picker-cover {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-sm);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-2);
+  font-size: 18px;
+  background-size: cover;
+  background-position: center;
+}
+.pl-picker-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+.pl-picker-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+.pl-picker-sub {
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+/* ── PLAYLISTS PAGE GRID ── */
+.pl-page-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--s4);
+  padding: var(--s4) var(--s5);
+}
+.pl-page-card {
+  cursor: pointer;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--surface-2);
+  transition:
+    transform 0.15s var(--spring),
+    box-shadow 0.15s;
+}
+.pl-page-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.pl-page-card:active {
+  transform: scale(0.97);
+}
+.pl-page-art {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: linear-gradient(135deg, #5b21b6, #7c3aed);
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 36px;
+}
+.pl-page-delete {
+  position: absolute;
+  top: var(--s1);
+  right: var(--s1);
+  opacity: 0;
+  transition: opacity 0.15s;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: var(--r-full);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pl-page-card:hover .pl-page-delete {
+  opacity: 1;
+}
+.pl-page-info {
+  padding: var(--s2) var(--s3) var(--s3);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pl-page-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pl-page-sub {
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+@media (min-width: 500px) {
+  .pl-page-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (min-width: 900px) {
+  .pl-page-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    padding: var(--s4) 28px;
+  }
+}
+/* ── SHEET DANGER ACTION ── */
+.sheet-action-danger {
+  color: #e05252 !important;
+}

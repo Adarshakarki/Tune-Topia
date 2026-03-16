@@ -1,0 +1,519 @@
+/* components.css */
+
+/* ── TRACK CARD ── */
+.track-card {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: 10px var(--s5);
+  background: var(--surface);
+  border-bottom: 0.5px solid var(--border);
+  cursor: pointer;
+  transition: background 0.12s;
+  user-select: none;
+}
+.track-card:active {
+  background: var(--surface-2);
+}
+.track-card.playing {
+  background: var(--accent-soft);
+}
+
+.track-thumb {
+  width: 46px;
+  height: 46px;
+  border-radius: var(--r-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--surface-2);
+}
+.track-thumb-video {
+  width: 72px;
+  height: 42px;
+  border-radius: var(--r-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--surface-2);
+}
+
+.track-info {
+  flex: 1;
+  min-width: 0;
+}
+.track-name-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.track-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text);
+}
+.track-name.playing {
+  color: var(--accent);
+}
+.track-meta {
+  font-size: 12px;
+  color: var(--text-2);
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.track-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.track-dur {
+  font-size: 12px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.track-like-btn {
+  padding: 4px;
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  transition:
+    color 0.15s,
+    transform 0.15s var(--spring);
+}
+.track-like-btn:active {
+  transform: scale(0.75);
+}
+.track-like-btn.liked {
+  color: var(--accent);
+}
+.track-like-btn.liked .bi {
+  color: var(--accent);
+}
+.track-like-btn .bi {
+  font-size: 15px;
+}
+
+/* ── DESKTOP TRACK ROW ── */
+.dt-track-row {
+  display: grid;
+  grid-template-columns: 36px 1fr 180px 80px 60px;
+  align-items: center;
+  gap: var(--s3);
+  padding: 6px 28px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.dt-track-row:hover {
+  background: var(--surface-2);
+}
+.dt-track-row:hover .dt-track-like {
+  opacity: 1;
+}
+.dt-track-row.playing {
+  background: var(--accent-soft);
+}
+
+.dt-track-num {
+  font-size: 13px;
+  color: var(--text-3);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+.dt-track-row.playing .dt-track-num {
+  color: var(--accent);
+}
+
+.dt-track-main {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  min-width: 0;
+}
+.dt-track-thumb {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-xs);
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--surface-2);
+}
+.dt-track-info {
+  min-width: 0;
+}
+.dt-track-name-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.dt-track-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text);
+}
+.dt-track-row.playing .dt-track-name {
+  color: var(--accent);
+}
+.dt-track-sub {
+  font-size: 12px;
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+.dt-track-album {
+  font-size: 12px;
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dt-track-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s2);
+}
+.dt-track-like {
+  opacity: 0;
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  transition:
+    opacity 0.15s,
+    color 0.15s;
+  cursor: pointer;
+}
+.dt-track-like.liked {
+  opacity: 1;
+  color: var(--accent);
+}
+.dt-track-like.liked .bi {
+  color: var(--accent);
+}
+.dt-track-like .bi {
+  font-size: 14px;
+}
+.dt-track-dur {
+  font-size: 13px;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── QUEUE ITEMS ── */
+.queue-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.28);
+  padding: 12px var(--s2) 5px;
+}
+.npq-item {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: 9px var(--s2);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.npq-item:active {
+  background: rgba(255, 255, 255, 0.07);
+}
+.npq-item.active {
+  background: rgba(255, 255, 255, 0.07);
+}
+.npq-item.played {
+  opacity: 0.35;
+}
+.npq-art {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--r-xs);
+  object-fit: cover;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.08);
+}
+.npq-info {
+  flex: 1;
+  min-width: 0;
+}
+.npq-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #fff;
+}
+.npq-title.active {
+  color: var(--accent);
+}
+.npq-artist {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 2px;
+}
+.npq-dur {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.25);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+/* ── SKELETONS ── */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--surface-2) 25%,
+    var(--surface-3) 50%,
+    var(--surface-2) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease infinite;
+  border-radius: var(--r-sm);
+}
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skel-card {
+  display: flex;
+  gap: var(--s3);
+  padding: 10px var(--s5);
+  background: var(--surface);
+  border-bottom: 0.5px solid var(--border);
+}
+.skel-thumb {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+}
+.skel-lines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  justify-content: center;
+}
+.skel-line {
+  height: 13px;
+}
+.skel-line-sm {
+  height: 11px;
+  width: 65%;
+}
+.skel-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px var(--s4);
+  padding: var(--s4) var(--s5);
+}
+.skel-square {
+  aspect-ratio: 1;
+}
+.skel-bar {
+  height: 12px;
+  margin-top: 7px;
+}
+.skel-bar-sm {
+  height: 10px;
+  margin-top: 5px;
+  width: 60%;
+}
+
+/* ── BOTTOM SHEET ── */
+.bottom-sheet {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-player);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.22s;
+}
+.bottom-sheet.open {
+  pointer-events: all;
+  opacity: 1;
+}
+.bottom-sheet-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.bottom-sheet-card {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(26, 20, 16, 0.97);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  padding: 8px 0 max(env(safe-area-inset-bottom, 0px), var(--s4));
+  transform: translateY(100%);
+  transition: transform 0.32s var(--spring);
+  box-shadow: var(--highlight);
+}
+.bottom-sheet.open .bottom-sheet-card {
+  transform: translateY(0);
+}
+
+.bottom-sheet-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: var(--r-full);
+  background: rgba(255, 255, 255, 0.18);
+  margin: 0 auto var(--s4);
+}
+
+.bottom-sheet-track-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s2) var(--s5) var(--s4);
+  border-bottom: 0.5px solid rgba(255, 255, 255, 0.07);
+  margin-bottom: var(--s1);
+}
+.bottom-sheet-track-row img {
+  width: 46px;
+  height: 46px;
+  border-radius: var(--r-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.bs-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bs-artist {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.42);
+  margin-top: 2px;
+}
+
+.sheet-action {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+  width: 100%;
+  padding: 14px var(--s5);
+  font-size: 15px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+  transition: background 0.12s;
+}
+.sheet-action:active {
+  background: rgba(255, 255, 255, 0.07);
+}
+.sheet-action .bi {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.38);
+}
+
+/* ── PLAYLIST PICKER — centered popup (not bottom sheet) ── */
+#playlist-picker-sheet {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s4);
+  z-index: var(--z-player);
+}
+#playlist-picker-sheet .bottom-sheet-card {
+  position: relative !important;
+  top: unset !important;
+  bottom: unset !important;
+  left: unset !important;
+  right: unset !important;
+  transform: scale(0.92) !important;
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  border: 0.5px solid var(--border-mid);
+  box-shadow: var(--shadow-lg);
+  padding: var(--s2) 0 var(--s4);
+  opacity: 0;
+  transition:
+    transform 0.28s var(--spring),
+    opacity 0.22s var(--ease);
+  margin-bottom: var(--bar-h-mobile);
+}
+#playlist-picker-sheet.open .bottom-sheet-card {
+  transform: scale(1) !important;
+  opacity: 1;
+}
+#playlist-picker-sheet .bottom-sheet-handle {
+  display: none;
+}
+#playlist-picker-sheet .bottom-sheet-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: var(--blur-sm);
+  -webkit-backdrop-filter: var(--blur-sm);
+  z-index: var(--z-player);
+}
+
+/* sheet-action inside picker should use theme tokens */
+#playlist-picker-sheet .sheet-action {
+  color: var(--text);
+}
+#playlist-picker-sheet .sheet-action .bi {
+  color: var(--text-3);
+}
+#playlist-picker-sheet .sheet-action:active {
+  background: var(--surface-2);
+}
+
+/* ── DESKTOP ── */
+@media (min-width: 900px) {
+  .track-card {
+    padding: 8px 28px;
+  }
+  .track-card:hover {
+    background: var(--surface-2);
+  }
+  .skel-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    padding: var(--s4) 28px;
+  }
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+}

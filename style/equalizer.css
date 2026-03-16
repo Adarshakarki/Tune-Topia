@@ -1,0 +1,188 @@
+/* equalizer.css */
+
+.eq-card {
+  padding: var(--s3) var(--s4) var(--s3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  overflow: hidden;
+}
+
+/* presets */
+.eq-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+
+.eq-preset-btn {
+  padding: 4px var(--s3);
+  border-radius: var(--r-full);
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--surface-2);
+  color: var(--text-2);
+  border: 0.5px solid var(--border);
+  cursor: pointer;
+  transition:
+    background 0.14s,
+    color 0.14s;
+  white-space: nowrap;
+}
+.eq-preset-btn:hover {
+  background: var(--surface-3);
+  color: var(--text);
+}
+.eq-preset-btn:active {
+  opacity: 0.7;
+}
+.eq-preset-btn.active {
+  background: var(--accent-dim);
+  color: var(--accent);
+  border-color: transparent;
+}
+
+/* sliders */
+.eq-sliders {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s1);
+  height: 180px;
+}
+
+.eq-band {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  height: 100%;
+}
+
+.eq-db-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--accent);
+  min-height: 12px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.eq-slider-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  overflow: hidden;
+}
+
+.eq-slider {
+  -webkit-appearance: slider-vertical;
+  appearance: slider-vertical;
+  writing-mode: vertical-lr;
+  direction: rtl;
+  width: 20px;
+  height: 140px;
+  cursor: pointer;
+  accent-color: var(--accent);
+  background: transparent;
+}
+
+.eq-freq-label {
+  font-size: 9px;
+  color: var(--text-3);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* reset */
+.eq-reset-btn {
+  align-self: center;
+  padding: 5px var(--s4);
+  border-radius: var(--r-full);
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--surface-2);
+  color: var(--text-2);
+  border: 0.5px solid var(--border);
+  cursor: pointer;
+  transition:
+    background 0.14s,
+    color 0.14s;
+}
+.eq-reset-btn:hover {
+  background: var(--surface-3);
+  color: var(--text);
+}
+.eq-reset-btn:active {
+  opacity: 0.7;
+}
+
+/* loading state */
+.eq-loading {
+  font-size: 13px;
+  color: var(--text-3);
+  text-align: center;
+  padding: var(--s3) 0;
+}
+
+/* desktop — slightly taller is fine since there's more room */
+@media (min-width: 900px) {
+  .eq-sliders {
+    height: 200px;
+  }
+  .eq-slider {
+    height: 160px;
+  }
+}
+
+/* quality selector */
+.quality-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s2);
+  padding: var(--s2) var(--s4) var(--s3);
+}
+
+.quality-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: var(--s2) var(--s3);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition:
+    background 0.14s,
+    border-color 0.14s;
+  text-align: left;
+}
+.quality-btn:hover {
+  background: var(--surface-3);
+}
+.quality-btn:active {
+  opacity: 0.7;
+}
+.quality-btn.active {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+}
+
+.quality-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+.quality-btn.active .quality-label {
+  color: var(--accent);
+}
+
+.quality-desc {
+  font-size: 11px;
+  color: var(--text-3);
+  line-height: 1.3;
+}

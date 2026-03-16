@@ -1,0 +1,331 @@
+/* style/library.css — library page, liked songs, card grids */
+
+/* ── LIBRARY MENU ── */
+.lib-menu {
+  background: var(--surface);
+  border-top: 0.5px solid var(--border);
+  border-bottom: 0.5px solid var(--border);
+  margin-top: var(--s4);
+}
+.lib-item {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+  padding: 13px var(--s5);
+  border-bottom: 0.5px solid var(--border);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.lib-item:last-child {
+  border-bottom: none;
+}
+.lib-item:active {
+  background: var(--surface-2);
+}
+.lib-item-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-sm);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+.lib-item-icon .bi {
+  font-size: 14px;
+}
+.lib-item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.lib-item-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text);
+}
+.lib-item-sub {
+  font-size: 12px;
+  color: var(--text-3);
+}
+.lib-chevron {
+  font-size: 13px;
+  color: var(--text-3);
+  flex-shrink: 0;
+}
+
+/* ── LIKED PAGE ── */
+.liked-hero {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+  padding: var(--s5);
+  background: var(--surface);
+  border-bottom: 0.5px solid var(--border);
+}
+.liked-hero-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--r-md);
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: 0 6px 20px rgba(109, 40, 217, 0.3);
+}
+.liked-hero-icon .bi {
+  font-size: 26px;
+}
+.liked-hero-info {
+  flex: 1;
+  min-width: 0;
+}
+.liked-hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 700;
+}
+.liked-hero-sub {
+  font-size: 13px;
+  color: var(--text-2);
+  margin-top: 3px;
+}
+
+.liked-filter-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s3) var(--s5);
+  background: var(--surface);
+  border-bottom: 0.5px solid var(--border);
+}
+.filter-bar {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  background: var(--surface-2);
+  border-radius: var(--r-sm);
+  padding: 8px var(--s3);
+}
+.filter-bar input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  color: var(--text);
+}
+.filter-bar input::placeholder {
+  color: var(--text-3);
+}
+.filter-bar .bi {
+  font-size: 13px;
+  color: var(--text-3);
+}
+.sort-badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-dim);
+  padding: 6px var(--s3);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* ── CARD GRIDS (albums, artists, playlists) ── */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px var(--s4);
+  padding: var(--s4) var(--s5) var(--s5);
+}
+.card-item {
+  cursor: pointer;
+  min-width: 0;
+}
+.card-item:active .card-art {
+  transform: scale(0.96);
+  opacity: 0.8;
+}
+.card-art {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--r-md);
+  object-fit: cover;
+  background: var(--surface-2);
+  box-shadow: var(--shadow-md);
+  transition:
+    transform 0.2s var(--spring),
+    opacity 0.15s;
+  display: block;
+}
+.card-art.round {
+  border-radius: var(--r-full);
+}
+.card-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 7px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card-sub {
+  font-size: 12px;
+  color: var(--text-2);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* artist grid: 2 cols → 3 cols ≥ 420px */
+.artist-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px var(--s4);
+  padding: var(--s4) var(--s5) var(--s5);
+  text-align: center;
+}
+@media (min-width: 420px) {
+  .artist-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* desktop track list header */
+.track-list-header {
+  display: none;
+}
+
+/* ── USER PLAYLISTS ── */
+.lib-playlists-empty {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s4) var(--s5);
+  font-size: 13px;
+  color: var(--text-3);
+}
+.lib-playlists-empty .bi {
+  font-size: 18px;
+  opacity: 0.5;
+}
+.lib-pl-cover {
+  background: linear-gradient(135deg, #6d28d9, #4f46e5);
+  background-size: cover;
+  background-position: center;
+}
+.lib-pl-delete {
+  padding: var(--s2);
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+  flex-shrink: 0;
+}
+.lib-pl-delete:hover {
+  color: #ff453a;
+}
+.lib-pl-delete .bi {
+  font-size: 15px;
+}
+
+/* ── SORT CHIPS ── */
+.sort-chips-row {
+  display: flex;
+  gap: 8px;
+  padding: 8px var(--s5) 4px;
+  flex-wrap: wrap;
+}
+.sort-chip {
+  padding: 5px 14px;
+  border-radius: var(--r-full);
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
+}
+.sort-chip.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* ── TRACK MORE BTN ── */
+.track-more-btn {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  padding: 6px 8px;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: var(--r-sm);
+  flex-shrink: 0;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+.track-more-btn:hover {
+  opacity: 1;
+}
+
+/* ── DESKTOP ── */
+@media (min-width: 900px) {
+  .card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    padding: var(--s4) 28px var(--s5);
+    gap: 22px var(--s4);
+  }
+  .artist-grid {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    padding: var(--s4) 28px var(--s5);
+    gap: 20px var(--s4);
+  }
+  .card-item:hover .card-art {
+    transform: scale(1.04);
+    box-shadow: var(--shadow-lg);
+  }
+  .liked-hero {
+    padding: var(--s6) 28px;
+  }
+  .liked-filter-row {
+    padding: var(--s3) 28px;
+  }
+  .track-list-header {
+    display: grid;
+    grid-template-columns: 36px 1fr 180px 80px 60px;
+    align-items: center;
+    gap: var(--s3);
+    padding: var(--s2) 28px;
+    border-bottom: 0.5px solid var(--border);
+    position: sticky;
+    top: 64px;
+    z-index: var(--z-player);
+    background: var(--glass);
+    backdrop-filter: var(--blur-sm);
+  }
+  .track-list-header span {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+  .track-list-header span:last-child {
+    text-align: right;
+  }
+}

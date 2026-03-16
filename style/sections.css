@@ -1,0 +1,231 @@
+/* style/sections.css — shared section headers, hero card, horizontal scroll */
+
+/* ── SECTIONS ── */
+.section {
+  padding: var(--s5) 0 0;
+}
+
+.section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0 var(--s5) var(--s3);
+}
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--text);
+}
+.see-all-btn {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--accent);
+}
+
+/* ── HORIZONTAL SCROLL ── */
+.horiz-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.horiz-scroll::-webkit-scrollbar {
+  display: none;
+}
+.horiz-inner {
+  display: flex;
+  gap: var(--s4);
+  padding: 0 var(--s5) var(--s3);
+}
+
+.horiz-card {
+  flex-shrink: 0;
+  width: 130px;
+  cursor: pointer;
+}
+.horiz-card:active .horiz-art {
+  transform: scale(0.95);
+  opacity: 0.8;
+}
+.horiz-art {
+  width: 130px;
+  height: 130px;
+  border-radius: var(--r-md);
+  object-fit: cover;
+  background: var(--surface-2);
+  box-shadow: var(--shadow-md);
+  transition:
+    transform 0.2s var(--spring),
+    opacity 0.15s;
+}
+.horiz-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 7px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.horiz-artist {
+  font-size: 11px;
+  color: var(--text-2);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── HERO CARD ── */
+#hero-card {
+  margin: var(--s4) var(--s5);
+  border-radius: var(--r-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  cursor: pointer;
+}
+.hero-inner {
+  position: relative;
+  height: 200px;
+  background: var(--surface-3) center/cover no-repeat;
+}
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 25%,
+    rgba(0, 0, 0, 0.72) 100%
+  );
+}
+.hero-info {
+  position: absolute;
+  bottom: var(--s4);
+  left: var(--s4);
+  right: 64px;
+  color: #fff;
+}
+.hero-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.65;
+  display: block;
+  margin-bottom: 4px;
+}
+.hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hero-artist {
+  font-size: 13px;
+  opacity: 0.65;
+  margin-top: 2px;
+}
+.hero-play {
+  position: absolute;
+  bottom: var(--s4);
+  right: var(--s4);
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-full);
+  background: #fff;
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.2s var(--spring);
+}
+.hero-play:active {
+  transform: scale(0.88);
+}
+.hero-play .bi {
+  font-size: 20px;
+}
+
+/* ── EMPTY / SKELETON STATES ── */
+.empty {
+  text-align: center;
+  padding: 64px var(--s5);
+  color: var(--text-3);
+}
+.empty .bi {
+  font-size: 48px;
+  opacity: 0.18;
+  display: block;
+  margin: 0 auto 14px;
+}
+.empty p {
+  font-family: 'Playfair Display', serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.empty small {
+  font-size: 13px;
+  display: block;
+  margin-top: 5px;
+}
+
+/* ── ERROR STATE ── */
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 48px 24px;
+  color: var(--text-3);
+  text-align: center;
+}
+.error-state i {
+  font-size: 36px;
+  opacity: 0.5;
+}
+.error-state p {
+  margin: 0;
+  font-size: 15px;
+}
+.retry-btn {
+  margin-top: 4px;
+  padding: 8px 20px;
+  border-radius: var(--r-full);
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ── DESKTOP ── */
+@media (min-width: 900px) {
+  .section-header {
+    padding: 0 28px var(--s3);
+  }
+  .horiz-inner {
+    padding: 0 28px var(--s3);
+  }
+  #hero-card {
+    margin: var(--s4) 28px;
+  }
+  .hero-inner {
+    height: 240px;
+  }
+  .section-title {
+    font-size: 20px;
+  }
+  .horiz-card {
+    width: 155px;
+  }
+  .horiz-art {
+    width: 155px;
+    height: 155px;
+  }
+}

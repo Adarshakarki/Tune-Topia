@@ -1,0 +1,39 @@
+/* z-index.css — all stacking contexts in one place */
+
+:root {
+  /* - within sub-pages / now-playing (internal layering) - */
+  --z-bg:          0;   /* bg art, color fills */
+  --z-art:         1;   /* artwork image */
+  --z-gradient:    2;   /* hero dissolve gradients */
+  --z-controls:    3;   /* np controls col */
+  --z-panel:      15;   /* np lyrics / queue overlay panels */
+  --z-topbar:     20;   /* floating topbars inside sub-pages */
+  --z-sheet-inner: 25;  /* bottom sheets nested inside sub-pages */
+
+  /* - main page chrome - */
+  --z-sticky:     30;   /* track-list-header, sticky section headers */
+  --z-tabs:       38;   /* search tabs wrap */
+  --z-header:     40;   /* page-header (sticky) */
+  --z-filter:     45;   /* sticky filter rows */
+  --z-nav:        50;   /* bottom-nav mobile */
+
+  /* - overlays covering main content - */
+  --z-sidebar-backdrop: 190;
+  --z-sidebar:          200;
+
+  /* - sub-pages (slide in over main) - */
+  --z-subpage:    250;  /* album, artist, playlist, user-playlist, genre */
+  --z-subpage-2:  255;  /* sub-page opened from within another sub-page */
+
+  /* - player bar: always floats above sub-pages - */
+  --z-player:     270;
+
+  /* - full screen views - */
+  --z-fullscreen: 300;  /* now-playing, video player */
+
+  /* - global overlapping UI (above everything including player) - */
+  --z-sheet:      400;  /* track options, profile popup, queue sheets */
+  --z-modal:      500;  /* create playlist modal, sleep timer */
+  --z-picker:     550;  /* playlist picker */
+  --z-toast:      600;  /* always on top */
+}

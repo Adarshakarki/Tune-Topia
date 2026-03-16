@@ -1,0 +1,151 @@
+/* userplaylist.css */
+
+#page-user-playlist {
+  position: fixed; inset: 0; z-index: var(--z-player);
+  transform: translateX(100%);
+  visibility: hidden;
+  background: var(--pl-dark, oklch(0.13 0.012 48));
+  transition:
+    transform .38s cubic-bezier(.32,.72,0,1),
+    visibility 0s .38s;
+}
+#page-user-playlist.open {
+  transform: translateX(0);
+  visibility: visible;
+  transition:
+    transform .38s cubic-bezier(.32,.72,0,1),
+    visibility 0s 0s;
+}
+
+#upl-topbar {
+  position: absolute; top: 0; left: 0; right: 0; z-index: var(--z-player);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: max(env(safe-area-inset-top,0px), 14px) var(--s4) var(--s2);
+  gap: var(--s2);
+  background: linear-gradient(to bottom, oklch(0 0 0 / 0.32) 0%, transparent 100%);
+}
+#upl-topbar-title {
+  flex: 1; min-width: 0;
+  font-size: 13px; font-weight: 600; color: oklch(1 0 0 / 0.8);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  text-align: center; padding: 0 var(--s2);
+}
+
+#upl-scroll {
+  position: absolute; inset: 0;
+  overflow-y: scroll; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: oklch(1 0 0 / 0.2) transparent;
+}
+
+#upl-hero {
+  position: relative; width: 100%;
+  aspect-ratio: 1 / 1; max-height: 45dvh; overflow: hidden;
+  /* - warm coffee fallback when no art - */
+  background: linear-gradient(135deg, oklch(0.22 0.05 48), oklch(0.30 0.07 38));
+  display: flex; align-items: center; justify-content: center;
+}
+#upl-hero-art {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+#upl-hero-placeholder {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: oklch(1 0 0 / 0.35); font-size: 72px;
+}
+#upl-hero::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; z-index: var(--z-player);
+  height: 60%;
+  background: linear-gradient(to bottom, transparent 0%, var(--pl-dark, oklch(0.13 0.012 48)) 100%);
+  pointer-events: none;
+}
+
+#upl-controls { padding: 0 var(--s5) var(--s6); }
+#upl-info     { padding: var(--s3) 0 var(--s1); text-align: center; }
+#upl-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px; font-weight: 800; color: oklch(1 0 0); margin-bottom: 4px;
+}
+#upl-desc { font-size: 13px; color: oklch(1 0 0 / 0.55); margin-bottom: 4px; }
+#upl-meta { font-size: 12px; color: oklch(1 0 0 / 0.4); font-weight: 500; }
+
+#upl-actions {
+  display: flex; align-items: center; gap: var(--s3);
+  padding: var(--s3) 0 var(--s4);
+}
+#upl-shuffle-btn {
+  flex: 1; height: 46px;
+  display: flex; align-items: center; justify-content: center; gap: var(--s2);
+  background: oklch(1 0 0 / 0.13); color: oklch(1 0 0);
+  font-size: 15px; font-weight: 700; border-radius: var(--r-lg);
+  transition: background .15s;
+}
+#upl-shuffle-btn:active { background: oklch(1 0 0 / 0.22); }
+#upl-play-all {
+  flex: 1; height: 46px;
+  display: flex; align-items: center; justify-content: center; gap: var(--s2);
+  background: oklch(1 0 0 / 0.9); color: oklch(0.12 0 0);
+  font-size: 15px; font-weight: 700; border-radius: var(--r-lg);
+  transition: opacity .15s;
+}
+#upl-play-all:active { opacity: .75; }
+
+#upl-tracklist { padding-bottom: max(env(safe-area-inset-bottom,0px), 40px); }
+
+.upl-track-more {
+  padding: var(--s2); color: oklch(1 0 0 / 0.35);
+  display: flex; align-items: center; flex-shrink: 0;
+  transition: color .15s;
+}
+.upl-track-more .bi { font-size: 16px; }
+
+#upl-tracklist .track-card        { background: transparent; border-bottom-color: oklch(1 0 0 / 0.07); }
+#upl-tracklist .track-card:active { background: oklch(1 0 0 / 0.07); }
+#upl-tracklist .track-card.playing { background: oklch(1 0 0 / 0.1); }
+#upl-tracklist .track-name         { color: oklch(1 0 0); }
+#upl-tracklist .track-name.playing { color: var(--accent); }
+#upl-tracklist .track-meta         { color: oklch(1 0 0 / 0.45); }
+
+/* - filter row: scoped for specificity over pages.css - */
+#upl-controls .liked-filter-row {
+  display: flex; align-items: center; gap: var(--s2);
+  padding: var(--s3) var(--s5);
+  background: var(--pl-dark, oklch(0.13 0.012 48));
+  border-bottom: 0.5px solid oklch(1 0 0 / 0.08);
+  position: sticky; top: 0; z-index: var(--z-player);
+}
+#upl-controls .filter-bar {
+  flex: 1; display: flex; align-items: center; gap: var(--s2);
+  background: oklch(1 0 0 / 0.08);
+  border: 0.5px solid oklch(1 0 0 / 0.12);
+  border-radius: var(--r-full);
+  padding: 7px var(--s4);
+}
+#upl-controls .filter-bar .bi { font-size: 13px; color: oklch(1 0 0 / 0.38); flex-shrink: 0; }
+
+#upl-filter-input {
+  flex: 1; background: none; border: none; outline: none;
+  font-size: 13px; color: oklch(1 0 0);
+  /* - clear default search input chrome - */
+  -webkit-appearance: none;
+  appearance: none;
+}
+#upl-filter-input::placeholder { color: oklch(1 0 0 / 0.38); }
+
+#upl-sort-label {
+  background: oklch(1 0 0 / 0.1);
+  border: 0.5px solid oklch(1 0 0 / 0.15);
+  border-radius: var(--r-full);
+  padding: 6px var(--s4); font-size: 12px; font-weight: 600;
+  color: oklch(1 0 0 / 0.7); white-space: nowrap;
+  transition: background .14s, color .14s; cursor: pointer;
+}
+#upl-sort-label:hover { background: oklch(1 0 0 / 0.18); color: oklch(1 0 0); }
+
+@media (min-width: 900px) {
+  #upl-hero      { aspect-ratio: unset; max-height: unset; height: 300px; }
+  #upl-info      { max-width: 680px; margin: 0 auto; padding-top: var(--s4); }
+  #upl-actions   { max-width: 380px; margin: 0 auto; }
+  #upl-tracklist { max-width: 680px; margin: 0 auto; }
+}

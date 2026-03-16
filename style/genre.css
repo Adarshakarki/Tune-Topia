@@ -1,0 +1,254 @@
+/* ══════════════════════════════════════════
+   GENRE PAGE  (#page-genre)
+══════════════════════════════════════════ */
+
+#page-genre {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-player);
+  transform: translateX(100%);
+  visibility: hidden;
+  background: var(--bg);
+  transition:
+    transform 0.38s cubic-bezier(0.32, 0.72, 0, 1),
+    visibility 0s 0.38s;
+}
+#page-genre.open {
+  transform: translateX(0);
+  visibility: visible;
+  transition:
+    transform 0.38s cubic-bezier(0.32, 0.72, 0, 1),
+    visibility 0s 0s;
+}
+
+/* ── topbar ── */
+#genre-topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-player);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: max(env(safe-area-inset-top, 0px), 14px) var(--s4) var(--s2);
+  gap: var(--s2);
+  background: var(--bg);
+  border-bottom: 0.5px solid var(--border);
+}
+#genre-topbar-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  padding: 0 var(--s2);
+}
+#genre-back-btn {
+  color: var(--text) !important;
+}
+
+/* ── scroll ── */
+#genre-scroll {
+  position: absolute;
+  inset: 0;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-top: 68px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-mid) transparent;
+}
+
+/* ── section titles ── */
+.genre-section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  padding: var(--s4) var(--s4) var(--s2);
+}
+
+/* ── card grid ── */
+.genre-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--s3);
+  padding: var(--s2) var(--s4) var(--s4);
+}
+
+/* ── card ── */
+.genre-card {
+  cursor: pointer;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform 0.15s var(--spring),
+    box-shadow 0.15s;
+}
+.genre-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+.genre-card:active {
+  transform: scale(0.97);
+}
+
+.genre-card-img {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.genre-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s;
+}
+.genre-card:hover .genre-card-img img {
+  transform: scale(1.06);
+}
+
+.genre-card-play {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.38);
+  opacity: 0;
+  transition: opacity 0.2s;
+  font-size: 28px;
+  color: #fff;
+}
+.genre-card:hover .genre-card-play,
+.genre-card:active .genre-card-play {
+  opacity: 1;
+}
+
+.genre-card-info {
+  padding: 9px 10px 11px;
+}
+.genre-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 3px;
+}
+.genre-card-sub {
+  font-size: 11px;
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── track list container ── */
+#genre-tracks-list {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg); /* Ensures background isn't dark while text is dark */
+  /* Respects spacing tokens and clears the bottom player bar */
+  padding: var(--s2) var(--s4) calc(var(--s10) + var(--bar-h-mobile));
+}
+
+/* ── individual track row ── */
+.alb-track {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s3) 0;
+  border-bottom: 0.5px solid var(--border);
+  transition: background 0.2s;
+}
+
+.alb-track:active {
+  background: var(--surface-2);
+}
+
+/* ── thumbnail ── */
+.art-track-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-xs);
+  object-fit: cover;
+  background: var(--surface-3);
+}
+
+/* ── text elements (fixing the "white text" issue) ── */
+.alb-track-num {
+  width: 20px;
+  font-size: 13px;
+  color: var(--text-3); /* Muted #A89880 */
+  text-align: center;
+}
+
+.alb-track-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.alb-track-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(
+    --text
+  ); /* Dark #1A1410 (Light Mode) or Light #F5F0E8 (Dark Mode) */
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.alb-track-artist {
+  font-size: 13px;
+  color: var(--text-2); /* Secondary #6B5E4E */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.alb-track-dur {
+  font-size: 13px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── desktop adjustment ── */
+@media (min-width: 900px) {
+  #genre-tracks-list {
+    padding-bottom: calc(var(--s10) + var(--bar-h-desktop));
+  }
+}
+
+/* ── empty ── */
+.genre-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px;
+  color: var(--text-3);
+  font-size: 14px;
+}
+
+/* ── desktop ── */
+@media (min-width: 900px) {
+  #page-genre {
+    left: calc(var(--sb-w) + var(--s2) * 2);
+  }
+  .genre-cards-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+}

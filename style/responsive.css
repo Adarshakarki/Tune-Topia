@@ -1,0 +1,51 @@
+/* responsive.css — breakpoint tweaks only, layout defined in layout.css */
+
+/* ── TABLET (600–899) ── */
+@media (min-width: 600px) and (max-width: 899px) {
+  .card-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .artist-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .mood-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .horiz-card {
+    width: 150px;
+  }
+  .horiz-art {
+    width: 150px;
+    height: 150px;
+  }
+}
+
+/* ── WIDE DESKTOP (≥ 1280) ── */
+@media (min-width: 1280px) {
+  :root {
+    --sb-w: 240px;
+  }
+  .card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  }
+  .artist-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  }
+  .horiz-card {
+    width: 175px;
+  }
+  .horiz-art {
+    width: 175px;
+    height: 175px;
+  }
+}
+
+/* ── REDUCED MOTION ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

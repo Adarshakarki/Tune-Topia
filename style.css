@@ -1,0 +1,21 @@
+/* style.css */
+@import url('style/tokens.css');
+@import url('style/layout.css');
+@import url('style/pages.css');
+@import url('style/components.css');
+@import url('style/player.css');
+@import url('style/responsive.css');
+@import url('style/album.css');
+@import url('style/artist.css');
+@import url('style/equalizer.css');
+@import url('style/genre.css');
+@import url('style/playlist.css');
+@import url('style/userplaylist.css');
+@import url('style/sections.css');
+@import url('style/search.css');
+@import url('style/library.css');
+@import url('style/modals.css');
+@import url('style/settings.css');
+@import url('style/account.css');
+@import url('style/capsule.css');
+@import url('style/z-index.css');

@@ -1,0 +1,339 @@
+/* style/video.css — video player page */
+
+#page-video {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-player);
+  background: #000;
+  display: none;
+  flex-direction: column;
+}
+#page-video.active {
+  display: flex;
+}
+
+.vp-wrap {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* ── Header ──────────────────────────────────────────────────── */
+.vp-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.85) 0%,
+    transparent 100%
+  );
+  transition: opacity 0.35s;
+}
+.vp-header.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.vp-back-btn {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.vp-back-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.vp-header-info {
+  flex: 1;
+  min-width: 0;
+}
+.vp-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vp-artist {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Source badge */
+.vp-source-badge {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+.vp-source-badge.tidal {
+  background: rgba(0, 200, 255, 0.18);
+  color: #00c8ff;
+}
+.vp-source-badge.yt {
+  background: rgba(255, 0, 0, 0.18);
+  color: #ff4444;
+}
+
+/* Like button in header */
+.vp-like-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+  transition:
+    color 0.2s,
+    transform 0.15s;
+}
+.vp-like-btn:hover {
+  color: #fff;
+}
+.vp-like-btn.liked {
+  color: #ff4d6d;
+}
+.vp-like-btn:active {
+  transform: scale(1.2);
+}
+
+/* ── Video area ───────────────────────────────────────────────── */
+.vp-video-wrap {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  overflow: hidden;
+}
+#vp-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* ── Spinner ──────────────────────────────────────────────────── */
+.vp-spinner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.vp-spin-ring {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  border-top-color: #fff;
+  animation: vp-spin 0.75s linear infinite;
+}
+@keyframes vp-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.vp-spinner.hidden {
+  display: none;
+}
+
+/* ── Error ────────────────────────────────────────────────────── */
+.vp-error {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 14px;
+  gap: 10px;
+  text-align: center;
+  padding: 24px;
+}
+.vp-error.visible {
+  display: flex;
+}
+.vp-error i {
+  font-size: 36px;
+}
+
+/* ── Centre controls (seek + play) ────────────────────────────── */
+.vp-center-controls {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: var(--z-player);
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  transition: opacity 0.35s;
+}
+.vp-center-controls.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Bottom controls (progress + fullscreen) ──────────────────── */
+.vp-controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-player);
+  padding: 8px 16px 24px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.88) 0%, transparent 100%);
+  transition: opacity 0.35s;
+}
+.vp-controls.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Progress */
+.vp-progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.vp-time {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  flex-shrink: 0;
+  min-width: 32px;
+}
+.vp-time-right {
+  text-align: right;
+}
+
+.vp-progress-bar {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 2px;
+  position: relative;
+  cursor: pointer;
+  transition: height 0.15s;
+}
+.vp-progress-bar:hover {
+  height: 6px;
+}
+.vp-progress-fill {
+  height: 100%;
+  background: #fff;
+  border-radius: 2px;
+  width: 0%;
+  pointer-events: none;
+}
+.vp-progress-thumb {
+  position: absolute;
+  top: 50%;
+  right: -6px;
+  transform: translateY(-50%) scale(0);
+  width: 13px;
+  height: 13px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.15s;
+  pointer-events: none;
+}
+.vp-progress-bar:hover .vp-progress-thumb {
+  transform: translateY(-50%) scale(1);
+}
+
+/* Bottom row — just fullscreen */
+.vp-btn-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* Shared button styles */
+.vp-ctrl-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  font-size: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  transition:
+    color 0.2s,
+    transform 0.15s;
+  padding: 4px;
+}
+.vp-ctrl-btn span {
+  font-size: 10px;
+  line-height: 1;
+}
+.vp-ctrl-btn:hover {
+  color: #fff;
+  transform: scale(1.12);
+}
+
+.vp-play-btn {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  cursor: pointer;
+  padding-left: 3px;
+  transition:
+    transform 0.15s,
+    background 0.2s;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+.vp-play-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.08);
+}
+.vp-play-btn:active {
+  transform: scale(0.93);
+}
+
+.vp-fs-btn {
+  font-size: 20px;
+}

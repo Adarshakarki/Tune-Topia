@@ -1,0 +1,82 @@
+tunetopia/
+│
+├── index.html                  (666 lines)
+│   ├── <head>                  fonts, meta, stylesheet links
+│   ├── #shell                  root flex container
+│   │   ├── #sidebar            desktop left nav (logo, sb-items)
+│   │   ├── #sidebar-overlay    mobile tap-to-close backdrop
+│   │   └── #main-wrap
+│   │       ├── #main-content   all pages live here
+│   │       │   ├── #page-home          hero card, horiz scroll sections
+│   │       │   ├── #page-search        search bar, tabs, mood grid, results
+│   │       │   ├── #page-library       lib menu → liked/albums/artists/history
+│   │       │   ├── #page-liked         liked songs list
+│   │       │   ├── #page-albums        albums card grid
+│   │       │   ├── #page-artists       artists card grid
+│   │       │   ├── #page-history       recently played list
+│   │       │   └── #page-account       profile, settings, API status
+│   │       └── #player-bar     mini bar (art, title, controls, progress)
+│   │
+│   ├── #now-playing            full screen player overlay
+│   │   ├── #np-bg-wrap         blurred album art bg + gradient layer
+│   │   ├── #np-topbar          floating close chevron + song title + more btn
+│   │   ├── #np-artwork-wrap    full-width album art (55dvh)
+│   │   ├── #np-controls-col    info, progress, main controls, volume, secondary
+│   │   ├── #np-lyrics-panel    .np-overlay — lyrics body + mini playback bar
+│   │   ├── #np-queue-panel     .np-overlay — queue list
+│   │   └── #np-more-sheet      .bottom-sheet — shuffle, repeat, extra actions
+│   │
+│   └── #toast                  global toast notification
+│
+├── style.css                   (7 lines) — just @import entries, entry point
+│
+├── style/
+│   ├── tokens.css              (133) CSS variables: colours, spacing, radius,
+│   │                                 shadows, typography, transitions
+│   ├── layout.css              (402) shell, sidebar, main-wrap, player bar,
+│   │                                 bottom nav, desktop sidebar layout
+│   ├── pages.css               (403) sections, horiz scroll, hero, search,
+│   │                                 mood tiles, top result, library, liked,
+│   │                                 card grids, artist grid, account/settings
+│   ├── components.css          (168) track cards (mobile + desktop),
+│   │                                 eq-bars, explicit tag, quality badge,
+│   │                                 skeletons, scrollbar
+│   ├── player.css              (556) mini bar, full NP player, topbar,
+│   │                                 artwork, controls, progress, overlays
+│   │                                 (lyrics/queue), more sheet,
+│   │                                 desktop 2-col layout, short-screen tweaks
+│   └── responsive.css          (27)  tablet (600–899), wide desktop (≥1280),
+│                                     reduced motion
+│
+└── app/
+    ├── app.js                  (702) main controller — all event listeners,
+    │   ├── constants            MOODS data, API configs
+    │   ├── navigation           showPage, goBack, sidebar open/close
+    │   ├── player events        _bindPlayerEvents — bar + NP button wiring
+    │   ├── playTrack()          sets queue, starts playback, opens NP
+    │   ├── like handling        _onLike, _updateLikedCount
+    │   ├── home init            hero, horiz scroll sections
+    │   ├── search               _initSearch, tabs, mood clicks, results render
+    │   ├── library              _renderLibrary, albums, artists pages
+    │   ├── history/recent       _loadHistory, _loadRecent
+    │   ├── liked page           _renderLikedPage, filter/sort
+    │   ├── account/settings     _renderAccount, status ping, theme toggle
+    │   └── event helpers        _attachTrackEvents, _attachHorizEvents, etc.
+    │
+    └── ui.js                   (451) pure DOM rendering — no business logic
+        ├── toast()              global notification
+        ├── applyTheme()         dark/light attribute on <html>
+        ├── extractColor()       canvas colour extraction from album art
+        ├── renderHero/Horiz/    home section renderers
+        │   TopResult/Tracks/
+        │   Albums/Artists/
+        │   MoodTiles/Queue/
+        │   Lyrics()
+        ├── setTrackInfo()       updates bar + NP artwork, title, gradient
+        ├── setPlayState()       play/pause icon sync across all buttons
+        ├── updateProgress()     all progress bars + timestamps
+        ├── setShuffle/Repeat()  badge state in more sheet
+        ├── syncLikeButtons()    heart icon sync across all cards + NP
+        ├── openPlayer/close     NP open/close + overlay clear
+        ├── openPanel/close      lyrics & queue overlay fade
+        └── openMoreSheet/close  bottom sheet open with state sync
