@@ -1,5 +1,3 @@
-// app/constants.js
-
 export const MOODS = [
   {
     label: 'Hip-Hop / Rap',
@@ -85,7 +83,7 @@ export const MOODS = [
     c2: '#1a7a30',
     img: 'assets/moods/indie.jpg',
   },
-];
+]
 
 export const PLAYLIST_QUERIES = [
   'TIDAL Top Hits',
@@ -108,4 +106,4 @@ export const PLAYLIST_QUERIES = [
   'Soul Essentials',
   'Party Hits',
   'Thoro Hip-Hop',
-];
+]

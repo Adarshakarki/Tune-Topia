@@ -1,7 +1,5 @@
-// sw.js — TuneTopia service worker
-
-const CACHE     = 'tunetopia-v1';
-const PRECACHE  = [
+const CACHE = 'tunetopia-v1'
+const PRECACHE = [
   '/',
   '/index.html',
   '/style.css',
@@ -26,28 +24,36 @@ const PRECACHE  = [
   '/style/video.css',
   '/style/responsive.css',
   '/assets/circularlogo.png',
-];
+]
 
 // - install: precache shell assets -
-self.addEventListener('install', e => {
+self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(PRECACHE)).then(() => self.skipWaiting())
-  );
-});
+    caches
+      .open(CACHE)
+      .then((c) => c.addAll(PRECACHE))
+      .then(() => self.skipWaiting())
+  )
+})
 
 // - activate: clear old caches -
-self.addEventListener('activate', e => {
+self.addEventListener('activate', (e) => {
   e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
-  );
-});
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(
+          keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))
+        )
+      )
+      .then(() => self.clients.claim())
+  )
+})
 
 // - fetch strategy -
-self.addEventListener('fetch', e => {
-  const { request } = e;
-  const url = new URL(request.url);
+self.addEventListener('fetch', (e) => {
+  const { request } = e
+  const url = new URL(request.url)
 
   // - never cache API calls, audio streams, or external resources -
   if (
@@ -56,25 +62,22 @@ self.addEventListener('fetch', e => {
     request.destination === 'audio' ||
     request.headers.get('range')
   ) {
-    e.respondWith(fetch(request));
-    return;
+    e.respondWith(fetch(request))
+    return
   }
 
   // - app shell: cache first, fall back to network -
   e.respondWith(
-    caches.match(request).then(cached => {
-      if (cached) return cached;
-      return fetch(request).then(response => {
+    caches.match(request).then((cached) => {
+      if (cached) return cached
+      return fetch(request).then((response) => {
         // only cache valid same-origin responses
-        if (
-          !response ||
-          response.status !== 200 ||
-          response.type !== 'basic'
-        ) return response;
-        const clone = response.clone();
-        caches.open(CACHE).then(c => c.put(request, clone));
-        return response;
-      });
+        if (!response || response.status !== 200 || response.type !== 'basic')
+          return response
+        const clone = response.clone()
+        caches.open(CACHE).then((c) => c.put(request, clone))
+        return response
+      })
     })
-  );
-});
+  )
+})

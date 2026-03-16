@@ -1,5 +1,3 @@
-// data/defaults.js — cold start content and recommendation config
-
 export const COLD_START_ARTISTS = [
   // Pop
   'Taylor Swift',
@@ -116,9 +114,9 @@ export const COLD_START_ARTISTS = [
   'Meek Mill',
   'Lil Uzi Vert',
   'XXXTentacion',
-];
+]
 
-export const COLD_START_YT_FALLBACK = 'top hits 2025';
+export const COLD_START_YT_FALLBACK = 'top hits 2025'
 
 export const GENRE_SEEDS = {
   pop: 'pop hits',
@@ -129,8 +127,8 @@ export const GENRE_SEEDS = {
   electronic: 'electronic music',
   latin: 'latin hits',
   kpop: 'kpop hits',
-};
+}
 
-export const COLD_START_PICK_COUNT = 6;
-export const MAX_PERSONALISED_QUERIES = 6;
-export const DISCOVERY_QUERY_COUNT = 1;
+export const COLD_START_PICK_COUNT = 6
+export const MAX_PERSONALISED_QUERIES = 6
+export const DISCOVERY_QUERY_COUNT = 1

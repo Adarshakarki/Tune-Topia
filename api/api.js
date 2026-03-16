@@ -1,45 +1,43 @@
-// api/api.js
-
-const BASE_TIMEOUT = 9000;
+const BASE_TIMEOUT = 9000
 
 async function fetchJSON(url, timeout = BASE_TIMEOUT) {
-  const ctrl = new AbortController();
-  const tid = setTimeout(() => ctrl.abort(), timeout);
+  const ctrl = new AbortController()
+  const tid = setTimeout(() => ctrl.abort(), timeout)
   try {
-    const r = await fetch(url, { signal: ctrl.signal });
-    clearTimeout(tid);
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    return await r.json();
+    const r = await fetch(url, { signal: ctrl.signal })
+    clearTimeout(tid)
+    if (!r.ok) throw new Error(`HTTP ${r.status}`)
+    return await r.json()
   } catch (e) {
-    clearTimeout(tid);
-    throw e;
+    clearTimeout(tid)
+    throw e
   }
 }
 
 async function tryBases(bases, path) {
-  const errs = [];
+  const errs = []
   for (const base of bases) {
     try {
-      const data = await fetchJSON(`${base}${path}`);
-      return { data, base };
+      const data = await fetchJSON(`${base}${path}`)
+      return { data, base }
     } catch (e) {
-      errs.push(`${base}: ${e.message}`);
+      errs.push(`${base}: ${e.message}`)
     }
   }
-  throw new Error('All providers failed:\n' + errs.join('\n'));
+  throw new Error('All providers failed:\n' + errs.join('\n'))
 }
 
 function tidalCover(coverId, size = 320) {
-  if (!coverId) return '';
-  return `https://resources.tidal.com/images/${coverId.replace(/-/g, '/')}/${size}x${size}.jpg`;
+  if (!coverId) return ''
+  return `https://resources.tidal.com/images/${coverId.replace(/-/g, '/')}/${size}x${size}.jpg`
 }
 
 function decodeManifest(payload) {
-  const raw = atob(payload.manifest);
-  const mime = payload.manifestMimeType || '';
+  const raw = atob(payload.manifest)
+  const mime = payload.manifestMimeType || ''
 
   if (mime === 'application/vnd.tidal.bts') {
-    const manifest = JSON.parse(raw);
+    const manifest = JSON.parse(raw)
     return {
       type: 'direct',
       url: manifest.urls[0],
@@ -48,7 +46,7 @@ function decodeManifest(payload) {
       quality: payload.audioQuality,
       bitDepth: payload.bitDepth,
       sampleRate: payload.sampleRate,
-    };
+    }
   }
 
   if (mime === 'application/dash+xml') {
@@ -58,14 +56,14 @@ function decodeManifest(payload) {
       quality: payload.audioQuality,
       bitDepth: payload.bitDepth,
       sampleRate: payload.sampleRate,
-    };
+    }
   }
 
-  throw new Error('Unknown manifest: ' + mime);
+  throw new Error('Unknown manifest: ' + mime)
 }
 
 function normalizeTrack(t, source = 'tidal') {
-  const artists = (t.artists || [t.artist]).filter(Boolean);
+  const artists = (t.artists || [t.artist]).filter(Boolean)
   return {
     id: String(t.id),
     title: t.title || 'Unknown',
@@ -79,39 +77,39 @@ function normalizeTrack(t, source = 'tidal') {
     tags: t.mediaMetadata?.tags || [],
     explicit: t.explicit || false,
     source,
-  };
+  }
 }
 
 function qualityBadge(track) {
-  const tags = track.tags || [];
-  if (tags.includes('HIRES_LOSSLESS')) return { label: 'HiRes', cls: 'hires' };
+  const tags = track.tags || []
+  if (tags.includes('HIRES_LOSSLESS')) return { label: 'HiRes', cls: 'hires' }
   if (tags.includes('LOSSLESS') || track.quality === 'LOSSLESS')
-    return { label: 'FLAC', cls: 'lossless' };
-  if (track.quality === 'YT') return { label: 'YT', cls: 'yt' };
-  return null;
+    return { label: 'FLAC', cls: 'lossless' }
+  if (track.quality === 'YT') return { label: 'YT', cls: 'yt' }
+  return null
 }
 
 function fmtDur(s) {
-  if (!s || isNaN(s)) return '';
+  if (!s || isNaN(s)) return ''
   return `${Math.floor(s / 60)}:${Math.floor(s % 60)
     .toString()
-    .padStart(2, '0')}`;
+    .padStart(2, '0')}`
 }
 
 function fmtTime(s) {
-  if (!s || isNaN(s)) return '0:00';
+  if (!s || isNaN(s)) return '0:00'
   return `${Math.floor(s / 60)}:${Math.floor(s % 60)
     .toString()
-    .padStart(2, '0')}`;
+    .padStart(2, '0')}`
 }
 
 function escHtml(s) {
-  if (!s) return '';
+  if (!s) return ''
   return s
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/"/g, '&quot;')
 }
 
 export {
@@ -124,4 +122,4 @@ export {
   fmtDur,
   fmtTime,
   escHtml,
-};
+}

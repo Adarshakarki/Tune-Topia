@@ -1,6 +1,3 @@
-// api/index.js — single import point for all API calls
-// Nothing outside this folder should import from client/ or services/ directly
-
 export {
   searchTracks,
   searchAlbums,
@@ -14,14 +11,14 @@ export {
   getPlaylist,
   getHomeTrending,
   getStream,
-} from './services/tidal.service.js';
+} from './services/tidal.service.js'
 
 export {
   searchVideos,
   getAudioStream,
   getVideoStream,
   normalizeVideo,
-} from './services/youtube.service.js';
+} from './services/youtube.service.js'
 
 export {
   fetchJSON,
@@ -33,4 +30,4 @@ export {
   fmtDur,
   fmtTime,
   escHtml,
-} from './utils.js';
+} from './utils.js'

@@ -1,16 +1,6 @@
-/* style/search.css — search page, browse, mood grid, video results */
-
-/* ── SEARCH BAR ──────────────────────────────────────────────────────────────
-   FIX 2 — Visual weight & interactivity:
-   - Added a 1px inset border so the bar reads as a distinct interactive field
-     rather than blending into the page background.
-   - Increased vertical padding 10px → 12px so the container feels substantial.
-   - Added a soft drop-shadow on focus-within to signal "this is active."
-   - Desktop: capped max-width at 640px via the wrap so it doesn't stretch
-     across the full content column and leave dead air.                      */
 .search-bar-wrap {
   flex: 1;
-  max-width: 640px;                /* desktop cap — prevents excessive stretching */
+  max-width: 640px;             
 }
 .search-bar {
   display: flex;
@@ -18,8 +8,8 @@
   gap: var(--s2);
   background: var(--surface-3);
   border-radius: var(--r-md);
-  padding: 12px var(--s3);         /* was 10px — slightly taller */
-  border: 1px solid var(--border); /* FIX 2: makes the field feel interactive */
+  padding: 12px var(--s3);         
+  border: 1px solid var(--border);
   transition: border-color 0.18s, box-shadow 0.18s;
 }
 .search-bar:focus-within {
@@ -50,12 +40,6 @@
   font-size: 13px;
 }
 
-/* ── TABS ────────────────────────────────────────────────────────────────────
-   FIX 5 — Inactive tab text should look clickable, not disabled.
-   Raised inactive color from var(--text-2) to var(--text) at 0.60 opacity,
-   and added a :hover state that brings it to 0.80. The active state stays
-   full var(--text). This removes the "greyed out / disabled" read on the
-   non-selected tabs without competing with the active indicator.            */
 .search-tabs-wrap {
   position: sticky;
   top: 0;
@@ -95,18 +79,6 @@
   box-shadow: var(--shadow-sm);
 }
 
-/* ── BROWSE / MOOD ───────────────────────────────────────────────────────────
-   FIX 1 — Genre label legibility:
-   - Replaced the flat top-to-bottom dark overlay (::after) with a bottom-up
-     scrim that concentrates darkness where the text actually sits. This keeps
-     the image vibrant in the upper portion while ensuring text contrast at
-     the bottom.
-   - Switched the label from 'Playfair Display' serif to a system sans-serif
-     stack at heavier weight (800). Serif at small scale on a busy image is
-     where the legibility falls apart — sans-serif stays crisp at any size.
-   - Added text-shadow as a final fallback for edge-lit images.
-   - Increased font size 17px → 16px (smaller, but sans-serif reads larger
-     than serif at the same point size, so this is effectively an upgrade).  */
 .browse-title {
   font-family: 'Playfair Display', serif;
   font-size: 22px;
@@ -130,8 +102,8 @@
   justify-content: flex-end;
   padding: var(--s4);
   font-size: 15px;
-  font-weight: 800;                /* was 700 Playfair — heavier sans reads better */
-  font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; /* FIX 1 */
+  font-weight: 800;
+  font-family: 'Playfair Display', serif;
   color: #fff;
   cursor: pointer;
   box-shadow: var(--shadow-md);
@@ -179,14 +151,6 @@
   transform: scale(0.97);
 }
 
-/* ── UNIFIED BADGE SYSTEM ────────────────────────────────────────────────────
-   FIX 4 — Standardise E / HIRES / FLAC / TIDAL / YT badges:
-   One base class (.badge) sets the shared geometry: same font-size (9px),
-   same padding (2px 5px), same border-radius (4px), same font-weight (700),
-   same letter-spacing. Colour modifiers are separate classes.
-   Apply: <span class="badge badge-explicit">E</span>
-          <span class="badge badge-quality">HIRES</span>
-          <span class="badge badge-quality">FLAC</span>            */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -434,7 +398,7 @@
   /* FIX 2: on desktop the wrap's max-width already caps it at 640px;
      remove the flex:1 stretch so it doesn't fight the cap.                */
   .search-bar-wrap {
-    max-width: 560px;             /* slightly tighter on desktop */
+    max-width: 1230px;             /* slightly tighter on desktop */
   }
 
   .browse-title {
