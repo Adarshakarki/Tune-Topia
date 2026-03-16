@@ -344,3 +344,42 @@ if ('mediaSession' in navigator) {
     if (e.seekTime && _active.duration) _active.currentTime = e.seekTime;
   });
 }
+
+// ── NOW PLAYING PANEL ─────────────────────────────────────────────────────
+
+const _npPanel = document.getElementById('now-playing');
+
+export function openNowPlaying() {
+  _npPanel?.classList.add('open');
+  _emit('panelOpened', null);
+}
+
+export function closeNowPlaying() {
+  _npPanel?.classList.remove('open');
+  _emit('panelClosed', null);
+}
+
+// ── UI WIRING ─────────────────────────────────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', () => {
+  const $el = (id) => document.getElementById(id);
+
+  // mini bar → open now playing (ignore taps on controls)
+  $el('player-bar')?.addEventListener('click', (e) => {
+    if (!e.target.closest('#bar-like-btn') &&
+        !e.target.closest('.bar-ctrl') &&
+        !e.target.closest('.bar-play-btn'))
+      openNowPlaying();
+  });
+
+  // down button → close now playing
+  $el('np-down-btn')?.addEventListener('click', closeNowPlaying);
+
+  // more options → open sheet
+  $el('np-more-btn')?.addEventListener('click', () => {
+    $el('np-more-sheet')?.classList.add('open');
+  });
+  $el('np-more-sheet-overlay')?.addEventListener('click', () => {
+    $el('np-more-sheet')?.classList.remove('open');
+  });
+});

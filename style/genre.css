@@ -163,8 +163,8 @@
   padding: var(--s2) var(--s4) calc(var(--s10) + var(--bar-h-mobile));
 }
 
-/* ── individual track row ── */
-.alb-track {
+/* ── individual track row — scoped to genre page ── */
+#page-genre .alb-track {
   display: flex;
   align-items: center;
   gap: var(--s3);
@@ -173,7 +173,7 @@
   transition: background 0.2s;
 }
 
-.alb-track:active {
+#page-genre .alb-track:active {
   background: var(--surface-2);
 }
 
@@ -186,25 +186,23 @@
   background: var(--surface-3);
 }
 
-/* ── text elements (fixing the "white text" issue) ── */
-.alb-track-num {
+/* ── text elements ── */
+#page-genre .alb-track-num {
   width: 20px;
   font-size: 13px;
-  color: var(--text-3); /* Muted #A89880 */
+  color: var(--text-3);
   text-align: center;
 }
 
-.alb-track-info {
+#page-genre .alb-track-info {
   flex: 1;
   min-width: 0;
 }
 
-.alb-track-title {
+#page-genre .alb-track-title {
   font-size: 15px;
   font-weight: 600;
-  color: var(
-    --text
-  ); /* Dark #1A1410 (Light Mode) or Light #F5F0E8 (Dark Mode) */
+  color: var(--text);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -213,15 +211,15 @@
   text-overflow: ellipsis;
 }
 
-.alb-track-artist {
+#page-genre .alb-track-artist {
   font-size: 13px;
-  color: var(--text-2); /* Secondary #6B5E4E */
+  color: var(--text-2);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.alb-track-dur {
+#page-genre .alb-track-dur {
   font-size: 13px;
   color: var(--text-3);
   font-variant-numeric: tabular-nums;

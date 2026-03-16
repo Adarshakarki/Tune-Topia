@@ -30,7 +30,7 @@ export function init(playTrackFn, openAlbumFn) {
   });
   $('artist-play-btn')?.addEventListener('click', () => {
     if (_tracks.length) {
-      _playFn(_tracks, 0);
+      _playFn(_tracks[0], _tracks, 0);
       close();
     }
   });
@@ -230,7 +230,7 @@ function _renderTracks(tracks) {
   el.querySelectorAll('.alb-track').forEach((row) => {
     row.addEventListener('click', (e) => {
       if (!e.target.closest('.alb-track-more'))
-        _playFn(_tracks, +row.dataset.index);
+        _playFn(_tracks[+row.dataset.index], _tracks, +row.dataset.index);
     });
   });
   el.querySelectorAll('.alb-track-more').forEach((btn) => {

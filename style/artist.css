@@ -37,6 +37,7 @@
   gap: var(--s2);
   background: linear-gradient(to bottom, oklch(0 0 0 / 0.32) 0%, transparent 100%);
 }
+#artist-back-btn { color: oklch(1 0 0 / 0.85); }
 #artist-topbar-title {
   flex: 1; min-width: 0;
   font-size: 13px; font-weight: 600;
@@ -154,48 +155,48 @@
   margin-bottom: var(--s2);
 }
 
-/* FIX 1 + 4 — Tracklist on artist page (same fixes as album) */
-.alb-track {
+/* tracklist — scoped to prevent genre.css override */
+#page-artist .alb-track {
   display: flex; align-items: center;
-  gap: var(--s2);                  /* was var(--s3) */
+  gap: var(--s2);
   padding: 10px var(--s5);
   cursor: pointer;
   transition: background 0.12s;
 }
-.alb-track:active { background: oklch(1 0 0 / 0.07); }
+#page-artist .alb-track:active { background: oklch(1 0 0 / 0.07); }
 
-.alb-track-num {
+#page-artist .alb-track-num {
   font-size: 14px; font-weight: 600;
-  color: oklch(1 0 0 / 0.45);     /* raised from 0.30 */
+  color: oklch(1 0 0 / 0.45);
   width: 18px; text-align: right;
   flex-shrink: 0;
 }
-.alb-track-info { flex: 1; min-width: 0; }
-.alb-track-title {
+#page-artist .alb-track-info { flex: 1; min-width: 0; }
+#page-artist .alb-track-title {
   font-size: 15px; font-weight: 600;
   color: oklch(1 0 0 / 0.95);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.alb-track-artist {
+#page-artist .alb-track-artist {
   font-size: 12px;
-  color: oklch(1 0 0 / 0.65);     /* was 0.45 — the key legibility fix */
+  color: oklch(1 0 0 / 0.65);
   margin-top: 2px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.alb-track-dur {
+#page-artist .alb-track-dur {
   font-size: 13px;
-  color: oklch(1 0 0 / 0.52);     /* was 0.35 */
+  color: oklch(1 0 0 / 0.52);
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
-.alb-track-more {
+#page-artist .alb-track-more {
   width: 32px; height: 32px;
   border-radius: var(--r-full);
   display: flex; align-items: center; justify-content: center;
   color: oklch(1 0 0 / 0.50);
   font-size: 18px; flex-shrink: 0;
 }
-.alb-track-more:active { color: oklch(1 0 0); }
+#page-artist .alb-track-more:active { color: oklch(1 0 0); }
 
 .art-track-thumb {
   width: 42px; height: 42px;
@@ -327,9 +328,9 @@
   background: oklch(0 0 0 / 0.06);
 }
 
-.alb-track.playing                  { background: oklch(1 0 0 / 0.07); }
-.alb-track.playing .alb-track-title { color: var(--accent); }
-.alb-track.playing .alb-track-num   { color: var(--accent); }
+#page-artist .alb-track.playing                  { background: oklch(1 0 0 / 0.07); }
+#page-artist .alb-track.playing .alb-track-title { color: var(--accent); }
+#page-artist .alb-track.playing .alb-track-num   { color: var(--accent); }
 
 @media (min-width: 900px) {
   /* layout.css handles left/right/top/bottom/border-radius */
@@ -385,6 +386,3 @@
   #artist-scroll::-webkit-scrollbar       { width: 6px; }
   #artist-scroll::-webkit-scrollbar-thumb { background: oklch(1 0 0 / 0.35); border-radius: 3px; }
 }
-
-#page-album.stacked,
-#page-artist.stacked { z-index: var(--z-subpage-2); }
