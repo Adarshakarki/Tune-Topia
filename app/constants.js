@@ -25,7 +25,7 @@ export const MOODS = [
     genreId: 'indierock',
     c1: '#374151',
     c2: '#111827',
-    img: 'assets/moods/rock.jpg',
+    img: 'assets/moods/rockindie.jpg',
   },
   {
     label: 'Dance & Electronic',
@@ -109,7 +109,7 @@ export const MOODS = [
     genreId: 'world',
     c1: '#059669',
     c2: '#064e3b',
-    img: 'assets/moods/reggae.jpg',
+    img: 'assets/moods/global.jpg',
   },
   {
     label: 'Soundtrack',
@@ -123,7 +123,7 @@ export const MOODS = [
     genreId: 'kids',
     c1: '#f59e0b',
     c2: '#b45309',
-    img: 'assets/moods/pop.jpg',
+    img: 'assets/moods/kids.jpg',
   },
   {
     label: 'Legacy',

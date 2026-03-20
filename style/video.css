@@ -28,7 +28,11 @@
   grid-template-columns: 48px 1fr 48px;
   align-items: center;
   padding: max(env(safe-area-inset-top, 0px), 16px) 12px 20px;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.72) 0%, transparent 100%);
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.72) 0%,
+    transparent 100%
+  );
   transition: opacity 0.3s;
 }
 .vp-header.hidden {
@@ -40,7 +44,7 @@
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.12);
+  background: rgba(255, 255, 255, 0.12);
   border: none;
   color: #fff;
   display: flex;
@@ -51,7 +55,7 @@
   transition: background 0.2s;
 }
 .vp-back-btn:active {
-  background: rgba(255,255,255,0.26);
+  background: rgba(255, 255, 255, 0.26);
 }
 .vp-back-btn .bi {
   font-size: 20px;
@@ -74,7 +78,7 @@
 }
 .vp-artist {
   font-size: 11px;
-  color: rgba(255,255,255,0.55);
+  color: rgba(255, 255, 255, 0.55);
   margin-top: 2px;
   white-space: nowrap;
   overflow: hidden;
@@ -92,13 +96,15 @@
   height: 38px;
   background: none;
   border: none;
-  color: rgba(255,255,255,0.6);
+  color: rgba(255, 255, 255, 0.6);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   justify-self: end;
-  transition: color 0.2s, transform 0.15s;
+  transition:
+    color 0.2s,
+    transform 0.15s;
 }
 .vp-like-btn .bi {
   font-size: 22px;
@@ -140,12 +146,14 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  border: 3px solid rgba(255,255,255,0.14);
-  border-top-color: rgba(255,255,255,0.88);
+  border: 3px solid rgba(255, 255, 255, 0.14);
+  border-top-color: rgba(255, 255, 255, 0.88);
   animation: vp-spin 0.75s linear infinite;
 }
 @keyframes vp-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 .vp-spinner.hidden {
   display: none;
@@ -159,7 +167,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: rgba(255,255,255,0.45);
+  color: rgba(255, 255, 255, 0.45);
   font-size: 14px;
   gap: 10px;
   text-align: center;
@@ -194,8 +202,8 @@
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.16);
-  border: 1.5px solid rgba(255,255,255,0.3);
+  background: rgba(255, 255, 255, 0.16);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
   color: #fff;
   display: flex;
   align-items: center;
@@ -203,14 +211,16 @@
   cursor: pointer;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
-  transition: background 0.18s, transform 0.15s;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  transition:
+    background 0.18s,
+    transform 0.15s;
 }
 .vp-play-btn .bi {
   font-size: 30px;
 }
 .vp-play-btn:hover {
-  background: rgba(255,255,255,0.26);
+  background: rgba(255, 255, 255, 0.26);
 }
 .vp-play-btn:active {
   transform: scale(0.88);
@@ -220,14 +230,16 @@
 .vp-ctrl-btn {
   background: none;
   border: none;
-  color: rgba(255,255,255,0.8);
+  color: rgba(255, 255, 255, 0.8);
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
   padding: 6px;
-  transition: color 0.18s, transform 0.15s;
+  transition:
+    color 0.18s,
+    transform 0.15s;
 }
 .vp-ctrl-btn .bi {
   font-size: 28px;
@@ -253,7 +265,7 @@
   right: 0;
   z-index: 15;
   padding: 24px 20px max(env(safe-area-inset-bottom, 0px), 24px);
-  background: linear-gradient(to top, rgba(0,0,0,0.76) 0%, transparent 100%);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.76) 0%, transparent 100%);
   transition: opacity 0.3s;
 }
 .vp-controls.hidden {
@@ -269,7 +281,7 @@
 .vp-time {
   font-size: 11px;
   font-weight: 600;
-  color: rgba(255,255,255,0.65);
+  color: rgba(255, 255, 255, 0.65);
   flex-shrink: 0;
   min-width: 34px;
   font-variant-numeric: tabular-nums;
@@ -281,7 +293,7 @@
 .vp-progress-bar {
   flex: 1;
   height: 4px;
-  background: rgba(255,255,255,0.2);
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 2px;
   position: relative;
   cursor: pointer;

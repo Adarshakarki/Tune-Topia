@@ -133,7 +133,11 @@
   padding: max(env(safe-area-inset-top, 0px), 14px) var(--s4) var(--s3);
   gap: var(--s2);
   /* top scrim so icons are readable over any artwork */
-  background: linear-gradient(to bottom, oklch(0 0 0 / 0.3) 0%, transparent 100%);
+  background: linear-gradient(
+    to bottom,
+    oklch(0 0 0 / 0.3) 0%,
+    transparent 100%
+  );
 }
 .np-topbar-title {
   flex: 1;
@@ -839,12 +843,36 @@
     border-radius: 0;
     cursor: pointer;
     -webkit-mask-image:
-      linear-gradient(to right, transparent 0%, black 28%, black 72%, transparent 100%),
-      linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
+      linear-gradient(
+        to right,
+        transparent 0%,
+        black 28%,
+        black 72%,
+        transparent 100%
+      ),
+      linear-gradient(
+        to bottom,
+        transparent 0%,
+        black 20%,
+        black 80%,
+        transparent 100%
+      );
     -webkit-mask-composite: source-in;
     mask-image:
-      linear-gradient(to right, transparent 0%, black 28%, black 72%, transparent 100%),
-      linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
+      linear-gradient(
+        to right,
+        transparent 0%,
+        black 28%,
+        black 72%,
+        transparent 100%
+      ),
+      linear-gradient(
+        to bottom,
+        transparent 0%,
+        black 20%,
+        black 80%,
+        transparent 100%
+      );
     mask-composite: intersect;
   }
 

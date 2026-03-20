@@ -12,7 +12,8 @@ export function registerLoader(name, fn) {
 }
 
 export function showPage(name, pushState = true) {
-  _prevPage = document.querySelector('.page.active')?.id?.replace('page-', '') || 'home'
+  _prevPage =
+    document.querySelector('.page.active')?.id?.replace('page-', '') || 'home'
   if (pushState && !_isPopping) {
     history.pushState({ page: name }, '', `?p=${name}`)
   }

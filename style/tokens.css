@@ -254,12 +254,18 @@ textarea {
   animation-play-state: paused;
 }
 @keyframes eq {
-  from { height: 3px; }
-  to { height: 14px; }
+  from {
+    height: 3px;
+  }
+  to {
+    height: 14px;
+  }
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 .spinning {
   animation: spin 1s linear infinite;

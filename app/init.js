@@ -111,14 +111,19 @@ function init() {
     if (document.querySelector('#page-albums.active')) Library.loadAlbums()
   })
 
-  document.querySelectorAll('.nav-btn[data-page]').forEach((btn) =>
-    btn.addEventListener('click', () => Router.showPage(btn.dataset.page))
-  )
-  document.querySelectorAll('.sb-item[data-page]').forEach((item) =>
-    item.addEventListener('click', () => Router.showPage(item.dataset.page))
-  )
+  document
+    .querySelectorAll('.nav-btn[data-page]')
+    .forEach((btn) =>
+      btn.addEventListener('click', () => Router.showPage(btn.dataset.page))
+    )
+  document
+    .querySelectorAll('.sb-item[data-page]')
+    .forEach((item) =>
+      item.addEventListener('click', () => Router.showPage(item.dataset.page))
+    )
   document.querySelectorAll('[data-page]').forEach((el) => {
-    if (el.classList.contains('sb-item') || el.classList.contains('nav-btn')) return
+    if (el.classList.contains('sb-item') || el.classList.contains('nav-btn'))
+      return
     el.addEventListener('click', () => Router.showPage(el.dataset.page))
   })
   document.querySelectorAll('[data-back]').forEach((btn) => {
@@ -129,7 +134,6 @@ function init() {
   })
 
   $('sidebar-overlay')?.addEventListener('click', Router.closeSidebar)
-
   ;(function () {
     const shell = document.getElementById('shell')
     const btn = $('sb-collapse-btn')
@@ -144,11 +148,15 @@ function init() {
   })()
 
   $('lib-liked')?.addEventListener('click', () => Router.showPage('liked'))
-  $('lib-playlists')?.addEventListener('click', () => Router.showPage('playlists'))
+  $('lib-playlists')?.addEventListener('click', () =>
+    Router.showPage('playlists')
+  )
   $('lib-albums')?.addEventListener('click', () => Router.showPage('albums'))
   $('lib-artists')?.addEventListener('click', () => Router.showPage('artists'))
   $('lib-history')?.addEventListener('click', () => Router.showPage('history'))
-  $('lib-liked-videos')?.addEventListener('click', () => Router.showPage('liked-videos'))
+  $('lib-liked-videos')?.addEventListener('click', () =>
+    Router.showPage('liked-videos')
+  )
 
   $('sb-theme-btn')?.addEventListener('click', () => {
     const next = State.get('ui.theme') === 'dark' ? 'light' : 'dark'

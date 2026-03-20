@@ -4,7 +4,8 @@ import * as Router from '../app/router.js'
 import { toggle as toggleLike, isLiked } from './likedVideos.js'
 
 const PAGE_ID = 'page-video'
-const HLS_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.4.12/hls.min.js'
+const HLS_CDN =
+  'https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.4.12/hls.min.js'
 
 let _hls = null
 let _hideTimer = null
@@ -16,13 +17,15 @@ const $ = (id) => document.getElementById(id)
 
 function _pauseMusic() {
   // Pause audio player when video starts
-  import('../modules/player.js').then((P) => {
-    if (P.getCurrentTrack && P.getDuration() > 0) {
-      // Only pause if actually playing
-      const audio = document.getElementById('audio')
-      if (audio && !audio.paused) audio.pause()
-    }
-  }).catch(() => {})
+  import('../modules/player.js')
+    .then((P) => {
+      if (P.getCurrentTrack && P.getDuration() > 0) {
+        // Only pause if actually playing
+        const audio = document.getElementById('audio')
+        if (audio && !audio.paused) audio.pause()
+      }
+    })
+    .catch(() => {})
 }
 
 function _ensurePage() {
@@ -85,7 +88,10 @@ function _ensurePage() {
 
 function _loadHls() {
   return new Promise((res, rej) => {
-    if (window.Hls) { res(); return }
+    if (window.Hls) {
+      res()
+      return
+    }
     const s = document.createElement('script')
     s.src = HLS_CDN
     s.onload = res
@@ -153,7 +159,8 @@ export async function open(track) {
   } catch (e) {
     $('vp-spinner')?.classList.add('hidden')
     $('vp-error')?.classList.add('visible')
-    if ($('vp-error-msg')) $('vp-error-msg').textContent = e.message || 'Video unavailable'
+    if ($('vp-error-msg'))
+      $('vp-error-msg').textContent = e.message || 'Video unavailable'
   }
 }
 
@@ -182,11 +189,19 @@ async function _playHls(video, stream) {
     _hls.on(Hls.Events.MANIFEST_PARSED, () => video.play())
     _hls.on(Hls.Events.ERROR, (_, data) => {
       if (!data.fatal) return
-      if (data.type === Hls.ErrorTypes.NETWORK_ERROR) { _hls.startLoad(); return }
-      if (data.type === Hls.ErrorTypes.MEDIA_ERROR) { _hls.recoverMediaError(); return }
+      if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+        _hls.startLoad()
+        return
+      }
+      if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+        _hls.recoverMediaError()
+        return
+      }
       $('vp-spinner')?.classList.add('hidden')
       $('vp-error')?.classList.add('visible')
-      if ($('vp-error-msg')) $('vp-error-msg').textContent = 'Stream error — ' + (data.details || 'unknown')
+      if ($('vp-error-msg'))
+        $('vp-error-msg').textContent =
+          'Stream error — ' + (data.details || 'unknown')
     })
   } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
     video.src = stream.url
@@ -198,7 +213,9 @@ async function _playHls(video, stream) {
 
 function _destroyHls() {
   if (_hls) {
-    try { _hls.destroy() } catch {}
+    try {
+      _hls.destroy()
+    } catch {}
     _hls = null
   }
 }
@@ -249,7 +266,9 @@ function _bindControls() {
   document.addEventListener('fullscreenchange', () => {
     const icon = $('vp-fs-icon')
     if (icon)
-      icon.className = document.fullscreenElement ? 'bi bi-fullscreen-exit' : 'bi bi-fullscreen'
+      icon.className = document.fullscreenElement
+        ? 'bi bi-fullscreen-exit'
+        : 'bi bi-fullscreen'
   })
 
   const bar = $('vp-progress-bar')
@@ -259,12 +278,34 @@ function _bindControls() {
     const pct = Math.max(0, Math.min(1, (clientX - r.left) / r.width))
     video.currentTime = pct * video.duration
   }
-  bar.addEventListener('mousedown', (e) => { _seeking = true; _seekTo(e.clientX) })
-  bar.addEventListener('touchstart', (e) => { _seeking = true; _seekTo(e.touches[0].clientX) }, { passive: true })
-  document.addEventListener('mousemove', (e) => { if (_seeking) _seekTo(e.clientX) })
-  document.addEventListener('touchmove', (e) => { if (_seeking) _seekTo(e.touches[0].clientX) }, { passive: true })
-  document.addEventListener('mouseup', () => { _seeking = false })
-  document.addEventListener('touchend', () => { _seeking = false })
+  bar.addEventListener('mousedown', (e) => {
+    _seeking = true
+    _seekTo(e.clientX)
+  })
+  bar.addEventListener(
+    'touchstart',
+    (e) => {
+      _seeking = true
+      _seekTo(e.touches[0].clientX)
+    },
+    { passive: true }
+  )
+  document.addEventListener('mousemove', (e) => {
+    if (_seeking) _seekTo(e.clientX)
+  })
+  document.addEventListener(
+    'touchmove',
+    (e) => {
+      if (_seeking) _seekTo(e.touches[0].clientX)
+    },
+    { passive: true }
+  )
+  document.addEventListener('mouseup', () => {
+    _seeking = false
+  })
+  document.addEventListener('touchend', () => {
+    _seeking = false
+  })
 
   const _showCtrls = () => {
     $('vp-controls')?.classList.remove('hidden')
@@ -295,9 +336,15 @@ function _bindControls() {
     _setPlayIcon(false)
     _showCtrls()
   })
-  video.addEventListener('waiting', () => $('vp-spinner')?.classList.remove('hidden'))
-  video.addEventListener('playing', () => $('vp-spinner')?.classList.add('hidden'))
-  video.addEventListener('canplay', () => $('vp-spinner')?.classList.add('hidden'))
+  video.addEventListener('waiting', () =>
+    $('vp-spinner')?.classList.remove('hidden')
+  )
+  video.addEventListener('playing', () =>
+    $('vp-spinner')?.classList.add('hidden')
+  )
+  video.addEventListener('canplay', () =>
+    $('vp-spinner')?.classList.add('hidden')
+  )
   video.addEventListener('loadedmetadata', () => {
     if ($('vp-duration')) $('vp-duration').textContent = _fmt(video.duration)
     $('vp-spinner')?.classList.add('hidden')

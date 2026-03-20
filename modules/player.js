@@ -145,9 +145,13 @@ let _dash = null
 
 async function _loadDashJs() {
   return new Promise((res, rej) => {
-    if (window.dashjs) { res(); return }
+    if (window.dashjs) {
+      res()
+      return
+    }
     const s = document.createElement('script')
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/dashjs/4.7.4/dash.all.min.js'
+    s.src =
+      'https://cdnjs.cloudflare.com/ajax/libs/dashjs/4.7.4/dash.all.min.js'
     s.onload = res
     s.onerror = rej
     document.head.appendChild(s)
@@ -156,7 +160,11 @@ async function _loadDashJs() {
 
 async function _playDash(manifestXml) {
   await _loadDashJs()
-  if (_dash) { try { _dash.destroy() } catch {} }
+  if (_dash) {
+    try {
+      _dash.destroy()
+    } catch {}
+  }
   _dash = dashjs.MediaPlayer().create()
   const blob = new Blob([manifestXml], { type: 'application/dash+xml' })
   _dash.initialize(_active, URL.createObjectURL(blob), true)
@@ -195,7 +203,9 @@ export async function play(track, tracks, startIndex) {
   _inactive = audioB
 
   if (_dash) {
-    try { _dash.destroy() } catch {}
+    try {
+      _dash.destroy()
+    } catch {}
     _dash = null
   }
 
@@ -259,8 +269,12 @@ export function seekSeconds(delta) {
   )
 }
 
-export function getCurrentTime() { return _active.currentTime }
-export function getDuration() { return _active.duration || 0 }
+export function getCurrentTime() {
+  return _active.currentTime
+}
+export function getDuration() {
+  return _active.duration || 0
+}
 
 export function setVolume(v) {
   const vol = Math.max(0, Math.min(1, v))
@@ -310,7 +324,11 @@ function _updateMediaSession(track) {
     album: track.album || '',
     artwork: track.cover
       ? [
-          { src: track.coverSmall || track.cover, sizes: '96x96', type: 'image/jpeg' },
+          {
+            src: track.coverSmall || track.cover,
+            sizes: '96x96',
+            type: 'image/jpeg',
+          },
           { src: track.cover, sizes: '512x512', type: 'image/jpeg' },
         ]
       : [],
