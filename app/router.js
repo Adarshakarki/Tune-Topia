@@ -3,17 +3,19 @@ import * as UI from './ui.js'
 const $ = (id) => document.getElementById(id)
 
 let _prevPage = 'home'
+let _isPopping = false
 
-// Page load callbacks registered by each page module
 const _pageLoaders = {}
 
 export function registerLoader(name, fn) {
   _pageLoaders[name] = fn
 }
 
-export function showPage(name) {
-  _prevPage =
-    document.querySelector('.page.active')?.id?.replace('page-', '') || 'home'
+export function showPage(name, pushState = true) {
+  _prevPage = document.querySelector('.page.active')?.id?.replace('page-', '') || 'home'
+  if (pushState && !_isPopping) {
+    history.pushState({ page: name }, '', `?p=${name}`)
+  }
   UI.showPage(name)
   closeSidebar()
   $('main-content')?.scrollTo(0, 0)
@@ -22,7 +24,11 @@ export function showPage(name) {
 }
 
 export function goBack(fallback = 'home') {
-  showPage(_prevPage || fallback)
+  if (history.length > 1) {
+    history.back()
+  } else {
+    showPage(_prevPage || fallback)
+  }
 }
 
 export function openSidebar() {
@@ -33,4 +39,17 @@ export function openSidebar() {
 export function closeSidebar() {
   $('sidebar')?.classList.remove('open')
   $('sidebar-overlay')?.classList.remove('visible')
+}
+
+// Handle browser back/forward
+window.addEventListener('popstate', (e) => {
+  _isPopping = true
+  const page = e.state?.page || 'home'
+  showPage(page, false)
+  _isPopping = false
+})
+
+// Initialize history state for current page
+if (!history.state) {
+  history.replaceState({ page: 'home' }, '', '?p=home')
 }

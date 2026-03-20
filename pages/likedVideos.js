@@ -1,7 +1,7 @@
 import * as LikedVideos from '../modules/likedVideos.js'
 import { escHtml } from '../api/utils.js'
 
-// Re-exports for video.js which imports directly from this file
+// re-exports used by search.js
 export const toggle = (video) => {
   const r = LikedVideos.toggle(video)
   _updateCount()
@@ -17,12 +17,12 @@ function _updateCount() {
   if (lbl) lbl.textContent = `${n} video${n !== 1 ? 's' : ''}`
 }
 
-let _playFn = null
+let _playVideo = null
 let _filterQ = ''
 let _sort = 'recent'
 
 export function init(playVideoFn) {
-  _playFn = playVideoFn
+  _playVideo = playVideoFn
   _updateCount()
 
   $('lv-filter-input')?.addEventListener('input', (e) => {
@@ -32,12 +32,12 @@ export function init(playVideoFn) {
 
   $('lv-sort-label')?.addEventListener('click', () => {
     _sort = _sort === 'recent' ? 'az' : 'recent'
-    $('lv-sort-label').textContent = _sort === 'recent' ? 'Recent' : 'A–Z'
+    const lbl = $('lv-sort-label')
+    if (lbl) lbl.textContent = _sort === 'recent' ? 'Recent' : 'A–Z'
     _render()
   })
 }
 
-// Called by router when page becomes active
 export function onEnter() {
   _filterQ = ''
   _sort = 'recent'
@@ -118,7 +118,7 @@ function _render() {
       if (e.target.closest('.lv-unlike-btn')) return
       const id = row.dataset.id
       const vid = LikedVideos.getAll().find((v) => v.id === id)
-      if (vid && _playFn) _playFn(vid)
+      if (vid && _playVideo) _playVideo(vid)
     })
   })
 

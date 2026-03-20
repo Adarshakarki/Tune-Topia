@@ -8,6 +8,8 @@ const INSTANCES = {
       'https://arran.monochrome.tf',
       'https://triton.squid.wtf',
       'https://monochrome-api.samidy.com',
+      'https://hifi.p1nkhamster.xyz',
+      'https://lossless.wtf',
       'https://tidal.kinoplus.online',
       'https://wolf.qqdl.site',
       'https://maus.qqdl.site',
@@ -22,6 +24,8 @@ const INSTANCES = {
       'https://api.monochrome.tf',
       'https://arran.monochrome.tf',
       'https://triton.squid.wtf',
+      'https://hifi.p1nkhamster.xyz',
+      'https://lossless.wtf',
       'https://wolf.qqdl.site',
       'https://maus.qqdl.site',
       'https://vogel.qqdl.site',
@@ -61,7 +65,6 @@ export async function checkAll() {
   return { api, streaming }
 }
 
-// Runs check immediately then on interval, returns stop function
 export function startLiveCheck(callback, interval = 30000) {
   let running = true
   async function run() {

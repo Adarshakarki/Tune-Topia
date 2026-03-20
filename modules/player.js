@@ -4,7 +4,6 @@ import History from './history.js'
 import { getStream as tidalStream } from '../api/index.js'
 import { getAudioStream as ytStream, searchVideos } from '../api/index.js'
 
-// - dual audio elements for gapless crossfade -
 const audioA = document.getElementById('audio')
 const audioB = new Audio()
 audioB.preload = 'auto'
@@ -12,7 +11,6 @@ audioB.preload = 'auto'
 let _active = audioA
 let _inactive = audioB
 
-// - event emitter -
 const _listeners = {}
 export function on(event, cb) {
   if (!_listeners[event]) _listeners[event] = []
@@ -30,11 +28,15 @@ export function setSleepAfterTrack(val) {
   _sleepAfterTrack = val
 }
 
-// - pre-buffer state -
-const _preloadLead = 20 // seconds before end to start buffering
+const _preloadLead = 20
 let _preloaded = null
 let _preloading = false
 let _swapping = false
+
+function _pauseVideo() {
+  const vp = document.getElementById('vp-video')
+  if (vp && !vp.paused) vp.pause()
+}
 
 function _bindAudio(el) {
   el.addEventListener('play', () => {
@@ -107,9 +109,7 @@ async function _preloadNext() {
     _inactive.volume = 0
     _inactive.load()
     _preloaded = { track: nextTrack }
-  } catch {
-    // fail silently — loads normally on next()
-  }
+  } catch {}
   _preloading = false
 }
 
@@ -141,18 +141,13 @@ function _swapToPreloaded() {
   _preloadNext()
 }
 
-// - dash.js lazy loader -
 let _dash = null
 
 async function _loadDashJs() {
   return new Promise((res, rej) => {
-    if (window.dashjs) {
-      res()
-      return
-    }
+    if (window.dashjs) { res(); return }
     const s = document.createElement('script')
-    s.src =
-      'https://cdnjs.cloudflare.com/ajax/libs/dashjs/4.7.4/dash.all.min.js'
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/dashjs/4.7.4/dash.all.min.js'
     s.onload = res
     s.onerror = rej
     document.head.appendChild(s)
@@ -161,11 +156,7 @@ async function _loadDashJs() {
 
 async function _playDash(manifestXml) {
   await _loadDashJs()
-  if (_dash) {
-    try {
-      _dash.destroy()
-    } catch {}
-  }
+  if (_dash) { try { _dash.destroy() } catch {} }
   _dash = dashjs.MediaPlayer().create()
   const blob = new Blob([manifestXml], { type: 'application/dash+xml' })
   _dash.initialize(_active, URL.createObjectURL(blob), true)
@@ -187,6 +178,9 @@ async function _getStream(track) {
 export async function play(track, tracks, startIndex) {
   if (tracks) Queue.load(tracks, startIndex ?? 0)
 
+  // Pause any playing video
+  _pauseVideo()
+
   _preloaded = null
   _preloading = false
   _swapping = false
@@ -201,9 +195,7 @@ export async function play(track, tracks, startIndex) {
   _inactive = audioB
 
   if (_dash) {
-    try {
-      _dash.destroy()
-    } catch {}
+    try { _dash.destroy() } catch {}
     _dash = null
   }
 
@@ -267,12 +259,8 @@ export function seekSeconds(delta) {
   )
 }
 
-export function getCurrentTime() {
-  return _active.currentTime
-}
-export function getDuration() {
-  return _active.duration || 0
-}
+export function getCurrentTime() { return _active.currentTime }
+export function getDuration() { return _active.duration || 0 }
 
 export function setVolume(v) {
   const vol = Math.max(0, Math.min(1, v))
@@ -322,11 +310,7 @@ function _updateMediaSession(track) {
     album: track.album || '',
     artwork: track.cover
       ? [
-          {
-            src: track.coverSmall || track.cover,
-            sizes: '96x96',
-            type: 'image/jpeg',
-          },
+          { src: track.coverSmall || track.cover, sizes: '96x96', type: 'image/jpeg' },
           { src: track.cover, sizes: '512x512', type: 'image/jpeg' },
         ]
       : [],
@@ -343,8 +327,6 @@ if ('mediaSession' in navigator) {
   })
 }
 
-// ── NOW PLAYING PANEL ─────────────────────────────────────────────────────
-
 const _npPanel = document.getElementById('now-playing')
 
 export function openNowPlaying() {
@@ -357,12 +339,9 @@ export function closeNowPlaying() {
   _emit('panelClosed', null)
 }
 
-// ── UI WIRING ─────────────────────────────────────────────────────────────
-
 document.addEventListener('DOMContentLoaded', () => {
   const $el = (id) => document.getElementById(id)
 
-  // mini bar → open now playing (ignore taps on controls)
   $el('player-bar')?.addEventListener('click', (e) => {
     if (
       !e.target.closest('#bar-like-btn') &&
@@ -372,10 +351,8 @@ document.addEventListener('DOMContentLoaded', () => {
       openNowPlaying()
   })
 
-  // down button → close now playing
   $el('np-down-btn')?.addEventListener('click', closeNowPlaying)
 
-  // more options → open sheet
   $el('np-more-btn')?.addEventListener('click', () => {
     $el('np-more-sheet')?.classList.add('open')
   })

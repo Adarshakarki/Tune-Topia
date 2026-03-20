@@ -1,4 +1,4 @@
-/* ── LIBRARY MENU ── */
+/* - library menu - */
 .lib-menu {
   background: var(--surface);
   border-top: 0.5px solid var(--border);
@@ -28,11 +28,36 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--bg) !important;
+  /* override inline purple gradients with token-based accent tones */
+  background: var(--accent) !important;
 }
 .lib-item-icon .bi {
   font-size: 14px;
 }
+
+/* subtle differentiation per section using opacity variants */
+#lib-liked .lib-item-icon {
+  background: var(--accent) !important;
+}
+#lib-playlists .lib-item-icon {
+  background: var(--accent-mid) !important;
+}
+#lib-albums .lib-item-icon {
+  background: var(--accent) !important;
+  opacity: 0.9;
+}
+#lib-artists .lib-item-icon {
+  background: var(--accent-mid) !important;
+  opacity: 0.9;
+}
+#lib-liked-videos .lib-item-icon {
+  background: oklch(0.45 0.12 20) !important; /* muted warm red */
+}
+#lib-history .lib-item-icon {
+  background: var(--text-2) !important;
+}
+
 .lib-item-body {
   display: flex;
   flex-direction: column;
@@ -55,7 +80,7 @@
   flex-shrink: 0;
 }
 
-/* ── LIKED PAGE ── */
+/* liked page */
 .liked-hero {
   display: flex;
   align-items: center;
@@ -69,12 +94,12 @@
   height: 64px;
   border-radius: var(--r-md);
   flex-shrink: 0;
-  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  background: var(--accent) !important;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
-  box-shadow: 0 6px 20px rgba(109, 40, 217, 0.3);
+  color: var(--bg);
+  box-shadow: 0 6px 20px var(--accent-shadow);
 }
 .liked-hero-icon .bi {
   font-size: 26px;
@@ -137,7 +162,7 @@
   flex-shrink: 0;
 }
 
-/* ── CARD GRIDS (albums, artists, playlists) ── */
+/* card grids */
 .card-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -185,7 +210,6 @@
   text-overflow: ellipsis;
 }
 
-/* artist grid: 2 cols → 3 cols ≥ 420px */
 .artist-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -199,12 +223,11 @@
   }
 }
 
-/* desktop track list header */
 .track-list-header {
   display: none;
 }
 
-/* ── USER PLAYLISTS ── */
+/* user playlists */
 .lib-playlists-empty {
   display: flex;
   align-items: center;
@@ -218,7 +241,7 @@
   opacity: 0.5;
 }
 .lib-pl-cover {
-  background: linear-gradient(135deg, #6d28d9, #4f46e5);
+  background: var(--accent-dim);
   background-size: cover;
   background-position: center;
 }
@@ -237,7 +260,7 @@
   font-size: 15px;
 }
 
-/* ── SORT CHIPS ── */
+/* sort chips */
 .sort-chips-row {
   display: flex;
   gap: 8px;
@@ -260,11 +283,10 @@
 }
 .sort-chip.active {
   background: var(--accent);
-  color: #fff;
+  color: var(--bg);
   border-color: var(--accent);
 }
 
-/* ── TRACK MORE BTN ── */
 .track-more-btn {
   background: none;
   border: none;
@@ -281,7 +303,7 @@
   opacity: 1;
 }
 
-/* ── DESKTOP ── */
+/* desktop */
 @media (min-width: 900px) {
   .card-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -312,9 +334,8 @@
     border-bottom: 0.5px solid var(--border);
     position: sticky;
     top: 64px;
-    z-index: var(--z-player);
+    z-index: var(--z-sticky);
     background: var(--glass);
-    backdrop-filter: var(--blur-sm);
   }
   .track-list-header span {
     font-size: 11px;

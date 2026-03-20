@@ -23,13 +23,11 @@ export async function runSearch(query, tab = 'music') {
   try {
     let results = []
     if (tab === 'music') {
-      try {
-        results = await searchTracks(query)
-      } catch {}
-      if (!results.length) results = await searchVideos(query)
+      // Tidal only on music tab
+      results = await searchTracks(query).catch(() => [])
       State.set('search.topResult', _detectTopResult(results))
     } else if (tab === 'video') {
-      // Tidal videos (api.monochrome.tf only) + YouTube in parallel
+      // Both Tidal and YouTube on video tab
       const [tidal, yt] = await Promise.allSettled([
         searchTidalVideos(query),
         searchVideos(query),

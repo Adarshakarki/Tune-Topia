@@ -1,10 +1,17 @@
 export const MOODS = [
   {
-    label: 'Hip-Hop / Rap',
+    label: 'Hip-Hop',
     genreId: 'hip_hop',
     c1: '#5856d6',
     c2: '#2d2c8e',
     img: 'assets/moods/hip-hop.jpg',
+  },
+  {
+    label: 'R&B / Soul',
+    genreId: 'rnb',
+    c1: '#c45c2f',
+    c2: '#7a2e0f',
+    img: 'assets/moods/rnb.jpg',
   },
   {
     label: 'Pop',
@@ -14,15 +21,15 @@ export const MOODS = [
     img: 'assets/moods/pop.jpg',
   },
   {
-    label: 'Rock',
-    genreId: 'rock',
-    c1: '#ff2d55',
-    c2: '#a50020',
+    label: 'Rock / Indie',
+    genreId: 'indierock',
+    c1: '#374151',
+    c2: '#111827',
     img: 'assets/moods/rock.jpg',
   },
   {
-    label: 'Electronic',
-    genreId: 'electronic',
+    label: 'Dance & Electronic',
+    genreId: 'dance_electronic',
     c1: '#00c7be',
     c2: '#007a77',
     img: 'assets/moods/edm.jpg',
@@ -51,8 +58,8 @@ export const MOODS = [
   {
     label: 'Latin',
     genreId: 'latin',
-    c1: '#ff2d55',
-    c2: '#8e001c',
+    c1: '#dc2626',
+    c2: '#7f1d1d',
     img: 'assets/moods/latin.jpg',
   },
   {
@@ -70,6 +77,41 @@ export const MOODS = [
     img: 'assets/moods/blues.jpg',
   },
   {
+    label: 'Metal',
+    genreId: 'metal',
+    c1: '#374151',
+    c2: '#0d0d0d',
+    img: 'assets/moods/rock.jpg',
+  },
+  {
+    label: 'K-Pop',
+    genreId: 'kpop',
+    c1: '#ec4899',
+    c2: '#9d174d',
+    img: 'assets/moods/kpop.jpg',
+  },
+  {
+    label: 'Gospel / Christian',
+    genreId: 'gospel',
+    c1: '#d97706',
+    c2: '#92400e',
+    img: 'assets/moods/gospel.jpg',
+  },
+  {
+    label: 'Folk / Americana',
+    genreId: 'americana',
+    c1: '#92400e',
+    c2: '#451a03',
+    img: 'assets/moods/country.jpg',
+  },
+  {
+    label: 'Global',
+    genreId: 'world',
+    c1: '#059669',
+    c2: '#064e3b',
+    img: 'assets/moods/reggae.jpg',
+  },
+  {
     label: 'Soundtrack',
     genreId: 'film_tv',
     c1: '#7c3aed',
@@ -77,11 +119,18 @@ export const MOODS = [
     img: 'assets/moods/soundtrack.jpg',
   },
   {
-    label: 'Alternative',
-    genreId: 'indie_alternative',
-    c1: '#34c759',
-    c2: '#1a7a30',
-    img: 'assets/moods/indie.jpg',
+    label: 'Kids',
+    genreId: 'kids',
+    c1: '#f59e0b',
+    c2: '#b45309',
+    img: 'assets/moods/pop.jpg',
+  },
+  {
+    label: 'Legacy',
+    genreId: 'retro',
+    c1: '#6b7280',
+    c2: '#1f2937',
+    img: 'assets/moods/classic.jpg',
   },
 ]
 

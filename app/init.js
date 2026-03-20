@@ -20,9 +20,14 @@ import * as GenrePage from '../pages/genre.js'
 import * as PlaylistPage from '../pages/playlist.js'
 import * as UserPlaylistPage from '../pages/userplaylist.js'
 import * as LikedVideosPage from '../pages/likedVideos.js'
+import * as VideoPage from '../pages/video.js'
 import { playTrack } from './playback.js'
 
 const $ = (id) => document.getElementById(id)
+
+function openVideo(track) {
+  VideoPage.open(track)
+}
 
 export function renderAccountBtn() {
   const btn = $('home-account-btn')
@@ -33,13 +38,22 @@ export function renderAccountBtn() {
     : '<i class="bi bi-person-circle" id="home-account-icon"></i>'
 }
 
+function _stripBackButtonText() {
+  document.querySelectorAll('.back-btn').forEach((btn) => {
+    const icon = btn.querySelector('i.bi')
+    if (icon) {
+      while (btn.firstChild) btn.removeChild(btn.firstChild)
+      btn.appendChild(icon)
+    }
+  })
+}
+
 function init() {
   State.init()
   UI.applyTheme(State.get('ui.theme') || 'light')
   UI.renderGreeting()
   renderAccountBtn()
 
-  // Module init
   Playlists.init(State)
   AlbumPage.init(playTrack)
   ArtistPage.init(playTrack, (album) => AlbumPage.open(album))
@@ -48,7 +62,7 @@ function init() {
     PlaylistsUI.renderPage()
     Library.render()
   })
-  LikedVideosPage.init(playTrack)
+  LikedVideosPage.init(openVideo)
   GenrePage.init(
     (pl) => PlaylistPage.open(pl),
     (album) => AlbumPage.open(album),
@@ -63,7 +77,6 @@ function init() {
   Sheets.initEvents()
   NowPlaying.init()
 
-  // Page loaders
   Router.registerLoader('home', Home.load)
   Router.registerLoader('library', Library.render)
   Router.registerLoader('liked', Liked.render)
@@ -81,9 +94,9 @@ function init() {
   setTimeout(() => {
     Home.load()
     Library.render()
+    _stripBackButtonText()
   }, 0)
 
-  // State subscriptions
   const _refreshQueue = () =>
     UI.renderQueue(
       State.get('queue.tracks') || [],
@@ -98,30 +111,25 @@ function init() {
     if (document.querySelector('#page-albums.active')) Library.loadAlbums()
   })
 
-  // Nav
-  document
-    .querySelectorAll('.nav-btn[data-page]')
-    .forEach((btn) =>
-      btn.addEventListener('click', () => Router.showPage(btn.dataset.page))
-    )
-  document
-    .querySelectorAll('.sb-item[data-page]')
-    .forEach((item) =>
-      item.addEventListener('click', () => Router.showPage(item.dataset.page))
-    )
+  document.querySelectorAll('.nav-btn[data-page]').forEach((btn) =>
+    btn.addEventListener('click', () => Router.showPage(btn.dataset.page))
+  )
+  document.querySelectorAll('.sb-item[data-page]').forEach((item) =>
+    item.addEventListener('click', () => Router.showPage(item.dataset.page))
+  )
   document.querySelectorAll('[data-page]').forEach((el) => {
-    if (el.classList.contains('sb-item') || el.classList.contains('nav-btn'))
-      return
+    if (el.classList.contains('sb-item') || el.classList.contains('nav-btn')) return
     el.addEventListener('click', () => Router.showPage(el.dataset.page))
   })
-  document
-    .querySelectorAll('[data-back]')
-    .forEach((btn) =>
-      btn.addEventListener('click', () => Router.showPage(btn.dataset.back))
-    )
+  document.querySelectorAll('[data-back]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      if (window.history.length > 1) window.history.back()
+      else Router.showPage(btn.dataset.back)
+    })
+  })
+
   $('sidebar-overlay')?.addEventListener('click', Router.closeSidebar)
 
-  // Sidebar collapse — desktop only
   ;(function () {
     const shell = document.getElementById('shell')
     const btn = $('sb-collapse-btn')
@@ -135,26 +143,19 @@ function init() {
     })
   })()
 
-  // Library shortcuts
   $('lib-liked')?.addEventListener('click', () => Router.showPage('liked'))
-  $('lib-playlists')?.addEventListener('click', () =>
-    Router.showPage('playlists')
-  )
+  $('lib-playlists')?.addEventListener('click', () => Router.showPage('playlists'))
   $('lib-albums')?.addEventListener('click', () => Router.showPage('albums'))
   $('lib-artists')?.addEventListener('click', () => Router.showPage('artists'))
   $('lib-history')?.addEventListener('click', () => Router.showPage('history'))
-  $('lib-liked-videos')?.addEventListener('click', () =>
-    Router.showPage('liked-videos')
-  )
+  $('lib-liked-videos')?.addEventListener('click', () => Router.showPage('liked-videos'))
 
-  // Theme toggle
   $('sb-theme-btn')?.addEventListener('click', () => {
     const next = State.get('ui.theme') === 'dark' ? 'light' : 'dark'
     State.setTheme(next)
     UI.applyTheme(next)
   })
 
-  // More sheet position sync
   NowPlaying.syncMoreSheetPosition()
   window.addEventListener('resize', NowPlaying.syncMoreSheetPosition)
 }

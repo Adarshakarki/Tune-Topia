@@ -1,10 +1,9 @@
-/* - desktop-only elements hidden on mobile - */
+/* desktop-only elements hidden on mobile */
 #np-desktop-art {
   display: none;
 }
 
-/* ── MINI BAR ── */
-
+/* mini bar */
 #bar-art {
   width: var(--bar-h-mobile);
   height: var(--bar-h-mobile);
@@ -13,7 +12,6 @@
   flex-shrink: 0;
   background: var(--surface-2);
   display: block;
-  /* - left/right fade on mobile - */
   -webkit-mask-image: linear-gradient(
     to right,
     transparent 0%,
@@ -35,7 +33,6 @@
   gap: var(--s3);
 }
 
-/* - full opacity so album color saturates the bar - */
 #player-bar-bg {
   opacity: 1;
 }
@@ -61,7 +58,6 @@
   background: oklch(1 0 0 / 0.65);
 }
 
-/* - text + controls over album gradient - */
 #bar-title {
   color: oklch(1 0 0);
 }
@@ -82,12 +78,11 @@
   color: oklch(1 0 0);
 }
 
-/* ── NOW PLAYING ── */
-
+/* now playing */
 #now-playing {
   position: fixed;
   inset: 0;
-  z-index: var(--z-player);
+  z-index: var(--z-fullscreen);
   transform: translateY(100%);
   transition:
     transform 0.5s var(--snap),
@@ -111,7 +106,7 @@
 #np-bg-wrap {
   position: absolute;
   inset: 0;
-  z-index: var(--z-player);
+  z-index: 0;
   pointer-events: none;
   overflow: hidden;
 }
@@ -125,17 +120,20 @@
   display: none;
 }
 
+/* topbar must be above everything inside now-playing */
 #np-topbar {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  z-index: var(--z-player);
+  z-index: 30;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: max(env(safe-area-inset-top, 0px), 14px) var(--s4) var(--s3);
   gap: var(--s2);
+  /* top scrim so icons are readable over any artwork */
+  background: linear-gradient(to bottom, oklch(0 0 0 / 0.3) 0%, transparent 100%);
 }
 .np-topbar-title {
   flex: 1;
@@ -154,68 +152,76 @@
 }
 
 .np-icon-btn {
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
   border-radius: var(--r-full);
-  background: oklch(1 0 0 / 0.1);
+  background: oklch(1 0 0 / 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: oklch(1 0 0 / 0.82);
+  color: oklch(1 0 0 / 0.88);
   flex-shrink: 0;
   transition: background 0.15s;
+  /* always visible */
+  pointer-events: all;
 }
 .np-icon-btn:active {
-  background: oklch(1 0 0 / 0.2);
+  background: oklch(1 0 0 / 0.22);
 }
 .np-icon-btn .bi {
   font-size: 17px;
 }
 
 #np-artwork-wrap {
-  position: relative;
-  z-index: var(--z-player);
-  width: 100%;
-  height: 55dvh;
-  flex-shrink: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  /* covers top + safe area + about half the screen */
+  height: 58dvh;
   overflow: hidden;
 }
 #np-artwork-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center top;
   transition: filter 0.45s var(--ease);
 }
 #now-playing.paused #np-artwork-img {
   filter: brightness(0.72) saturate(0.75);
 }
 
+/* bottom color fade - artwork dissolves into background color */
 #np-artwork-wrap::after {
   content: '';
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: var(--z-player);
-  height: 60%;
+  z-index: 3;
+  height: 55%;
   background: linear-gradient(
     to bottom,
     transparent 0%,
-    transparent 20%,
+    transparent 15%,
     var(--np-color, oklch(0.1 0.01 48)) 100%
   );
   pointer-events: none;
 }
+
+/* bottom backdrop blur - frosted dissolve between art and controls */
 #np-artwork-wrap::before {
   content: '';
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: var(--z-player);
+  z-index: 3;
   height: 30%;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   mask-image: linear-gradient(to bottom, transparent, black);
   -webkit-mask-image: linear-gradient(to bottom, transparent, black);
   pointer-events: none;
@@ -223,13 +229,15 @@
 
 #np-controls-col {
   position: relative;
-  z-index: var(--z-player);
+  z-index: 5;
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
   padding-bottom: max(env(safe-area-inset-bottom, 0px), 24px);
+  /* sit below the absolute artwork */
+  margin-top: 58dvh;
   transition: background 0.7s ease;
 }
 
@@ -299,7 +307,7 @@
 }
 #np-progress-bar {
   width: 100%;
-  height: 6px;
+  height: 4px;
   background: oklch(1 0 0 / 0.18);
   border-radius: var(--r-full);
   cursor: pointer;
@@ -426,12 +434,11 @@
   pointer-events: none;
 }
 
-/* ── OVERLAYS ── */
-
+/* overlays */
 .np-overlay {
   position: absolute;
   inset: 0;
-  z-index: var(--z-player);
+  z-index: 20;
   opacity: 0;
   pointer-events: none;
   transition:
@@ -469,7 +476,7 @@
   color: oklch(1 0 0);
 }
 
-/* - lyrics - */
+/* lyrics */
 #np-lyrics-body {
   flex: 1;
   overflow-y: auto;
@@ -569,7 +576,7 @@
   font-size: 26px;
 }
 
-/* - queue - */
+/* queue */
 #np-queue-list {
   flex: 1;
   overflow-y: auto;
@@ -635,9 +642,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ── BOTTOM SHEETS ── */
-
-/* - global sheets: must sit above sub-pages (z-index 250) and player (z-index 260) - */
+/* bottom sheets */
 .bottom-sheet-global,
 #track-options-sheet,
 #playlist-picker-sheet,
@@ -645,14 +650,14 @@
 #playlist-modal-overlay,
 #sleep-timer-popup {
   position: fixed !important;
-  z-index: var(--z-player);
+  z-index: var(--z-sheet);
 }
 
 @media (min-width: 900px) {
   #np-more-sheet {
     position: fixed !important;
     visibility: visible !important;
-    z-index: var(--z-player);
+    z-index: var(--z-sheet);
   }
   #np-more-sheet .bottom-sheet-card {
     max-height: 70vh;
@@ -663,7 +668,7 @@
 .bottom-sheet {
   position: absolute;
   inset: 0;
-  z-index: var(--z-player);
+  z-index: var(--z-sheet-inner);
 }
 .bottom-sheet.open {
   pointer-events: auto;
@@ -775,7 +780,7 @@
   background: var(--accent-dim);
 }
 
-/* ── QUEUE PANEL HEADER ── */
+/* queue panel header */
 .np-queue-header {
   display: flex;
   align-items: center;
@@ -806,15 +811,13 @@
   border-color: oklch(1 0 0 / 0.5);
 }
 
-/* ── DESKTOP ── */
+/* desktop */
 @media (min-width: 900px) {
-  /* - mini bar: transparent so album color bleeds through - */
   #player-bar {
     background: transparent;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
-  /* - frosted overlay on top of the color - */
   #player-bar::before {
     content: '';
     position: absolute;
@@ -835,38 +838,13 @@
     height: 72px;
     border-radius: 0;
     cursor: pointer;
-    /* - 4-sided fade: art dissolves into the album color bg - */
     -webkit-mask-image:
-      linear-gradient(
-        to right,
-        transparent 0%,
-        black 28%,
-        black 72%,
-        transparent 100%
-      ),
-      linear-gradient(
-        to bottom,
-        transparent 0%,
-        black 20%,
-        black 80%,
-        transparent 100%
-      );
+      linear-gradient(to right, transparent 0%, black 28%, black 72%, transparent 100%),
+      linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
     -webkit-mask-composite: source-in;
     mask-image:
-      linear-gradient(
-        to right,
-        transparent 0%,
-        black 28%,
-        black 72%,
-        transparent 100%
-      ),
-      linear-gradient(
-        to bottom,
-        transparent 0%,
-        black 20%,
-        black 80%,
-        transparent 100%
-      );
+      linear-gradient(to right, transparent 0%, black 28%, black 72%, transparent 100%),
+      linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
     mask-composite: intersect;
   }
 
@@ -874,9 +852,8 @@
     display: block;
   }
 
-  /* ── DESKTOP NOW PLAYING — full cinematic backdrop ── */
+  /* desktop NP - cinematic */
   #now-playing {
-    /* - layout.css handles left/top/right/bottom/border-radius - */
     flex-direction: column;
     background: oklch(0 0 0) !important;
   }
@@ -906,7 +883,7 @@
       oklch(0 0 0 / 0.55) 70%,
       oklch(0 0 0 / 0.85) 100%
     );
-    z-index: var(--z-player);
+    z-index: 1;
   }
 
   #np-topbar {
@@ -914,7 +891,7 @@
     top: 0;
     left: 0;
     right: 0;
-    z-index: var(--z-player);
+    z-index: 30;
     padding: 28px 36px;
     justify-content: flex-start;
   }
@@ -943,12 +920,13 @@
     bottom: 0;
     left: 0;
     right: 0;
-    z-index: var(--z-player);
+    z-index: 10;
     flex-direction: column;
     justify-content: flex-end;
     padding: 0 48px 40px;
     background: transparent !important;
     transition: none;
+    margin-top: 0; /* artwork is hidden on desktop */
   }
 
   #np-info {
@@ -1014,20 +992,6 @@
     color: oklch(1 0 0 / 0.5);
   }
 
-  #np-shuffle-btn {
-    display: flex !important;
-  }
-  #np-repeat-btn {
-    display: flex !important;
-  }
-  #np-np-more-btn {
-    display: flex !important;
-    color: oklch(1 0 0 / 0.7);
-  }
-  #np-np-more-btn:hover {
-    color: oklch(1 0 0);
-  }
-
   #np-main-controls {
     display: flex;
     align-items: center;
@@ -1081,9 +1045,6 @@
   #np-volume {
     display: none;
   }
-  #np-vol-group {
-    display: none !important;
-  }
   #np-secondary-controls {
     display: none;
   }
@@ -1122,7 +1083,7 @@
   }
 }
 
-/* ── COMPACT HEIGHT ── */
+/* compact height */
 @media (max-height: 680px) and (max-width: 899px) {
   #np-artwork-wrap {
     height: 42dvh;
@@ -1154,11 +1115,11 @@
   }
 }
 
-/* ── SLEEP TIMER ── */
+/* sleep timer */
 .sleep-timer-overlay {
   position: fixed;
   inset: 0;
-  z-index: var(--z-player);
+  z-index: var(--z-modal);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1181,7 +1142,7 @@
 }
 .sleep-timer-card {
   position: relative;
-  z-index: var(--z-player);
+  z-index: 1;
   background: var(--surface);
   border: 0.5px solid var(--border-mid);
   border-radius: var(--r-xl);
@@ -1285,7 +1246,7 @@
   color: var(--accent);
 }
 
-/* ── PLAYBACK SPEED ── */
+/* speed options */
 .speed-options {
   display: flex;
   gap: 6px;

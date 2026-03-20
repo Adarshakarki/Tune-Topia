@@ -1,4 +1,6 @@
 #shell {
+  position: fixed;
+  inset: 0;
   display: flex;
   flex-direction: column;
   height: 100dvh;
@@ -6,21 +8,21 @@
   background: var(--bg);
 }
 
-/* - mobile sidebar backdrop - */
+/* mobile sidebar backdrop */
 #sidebar-overlay {
   display: none;
   position: fixed;
   inset: 0;
   z-index: var(--z-player);
   background: oklch(0 0 0 / 0.38);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 #sidebar-overlay.visible {
   display: block;
 }
 
-/* - sidebar - */
+/* sidebar */
 #sidebar {
   position: fixed;
   top: 0;
@@ -109,19 +111,11 @@
   padding: var(--s4) var(--s3) var(--s2);
 }
 
-/* FIX 5 — icon consistency: all inactive icons render at the same visual weight
-   via opacity. The active state overrides to full opacity + accent color.
-   This compensates for mixed filled/outline icons in the HTML without
-   requiring an icon audit — thin outlines and solid fills will visually
-   converge at ~0.7 opacity. */
 .sb-item {
   display: flex;
   align-items: center;
   gap: var(--s3);
-  /* FIX 1 — breathing room: bumped vertical padding from 9px → 12px so
-     items feel less compressed in the "sea of cream" */
   padding: 12px var(--s3);
-  /* - bookmark tab: flat left, pill right - */
   border-radius: 0 var(--r-full) var(--r-full) 0;
   font-size: 13px;
   font-weight: 600;
@@ -143,8 +137,6 @@
   background: var(--accent-dim);
   color: var(--accent);
 }
-
-/* FIX 5 cont. — muted inactive icons, crisp active icons */
 .sb-item .bi {
   font-size: 16px;
   flex-shrink: 0;
@@ -180,7 +172,7 @@
 .sb-collapse-btn .bi {
   font-size: 15px;
   opacity: 1;
-} /* collapse btn is its own affordance, full opacity */
+}
 .sb-logo-text {
   transition:
     opacity 0.2s,
@@ -205,15 +197,14 @@
   flex-shrink: 0;
 }
 
-/* - main area - */
+/* main area */
 #main-wrap {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  /* - push entire wrap above fixed nav on mobile - */
-  padding-bottom: var(--nav-h);
+  padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
 }
 
 #main-content {
@@ -231,25 +222,18 @@
   display: block;
 }
 
-/* - page header - */
+/* page header - scrolls WITH content, not sticky */
 .page-header {
-  position: sticky;
-  top: 0;
-  z-index: var(--z-player);
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: var(--s3);
-  padding: 52px var(--s5) var(--s3);
-  background: var(--glass);
-  backdrop-filter: var(--blur);
-  -webkit-backdrop-filter: var(--blur);
+  padding: max(env(safe-area-inset-top, 0px), var(--s5)) var(--s5) var(--s3);
+  background: var(--bg);
   border-bottom: 0.5px solid var(--border);
-  box-shadow: var(--highlight);
 }
 .page-header-search {
   padding: var(--s3) var(--s5) var(--s3);
-  min-height: unset;
   align-items: center;
 }
 .page-header-left {
@@ -257,15 +241,10 @@
   flex-direction: column;
   gap: 2px;
 }
-
-/* FIX 2 — "See All" anchor: align-items: flex-end pins the right-side
-   link to the baseline of the title text, creating a strong horizontal
-   anchor instead of floating in mid-air */
 .page-header-right {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: var(--s2);
-  padding-bottom: 0; /* removed the 2px fudge — baseline alignment handles it */
 }
 
 .greeting {
@@ -278,7 +257,7 @@
 
 .page-title {
   font-family: 'Playfair Display', serif;
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.4px;
   line-height: 1.05;
@@ -296,17 +275,14 @@
   padding: 0;
 }
 
-/* - player bar - */
+/* player bar */
 #player-bar {
   flex-shrink: 0;
   height: var(--bar-h-mobile);
   position: relative;
   overflow: hidden;
   background: var(--glass);
-  backdrop-filter: var(--blur);
-  -webkit-backdrop-filter: var(--blur);
   border-top: 0.5px solid var(--border);
-  box-shadow: var(--highlight);
   z-index: var(--z-player);
   max-height: 0;
   border-top-width: 0;
@@ -325,7 +301,7 @@
   z-index: var(--z-player);
   transition: background 0.8s var(--ease);
   pointer-events: none;
-  opacity: 0.55;
+  opacity: 1;
 }
 
 #player-bar-inner {
@@ -371,11 +347,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-/* FIX 2 — artist name legibility: bumped from 12px → 13px and from
-   var(--text-2) → var(--text) at 0.72 opacity. Pure text-2 tends to
-   be too low-contrast on warm cream backgrounds; the opacity approach
-   gives a warm-grey that stays readable without being loud. */
 #bar-artist {
   font-size: 13px;
   color: var(--text);
@@ -432,10 +403,6 @@
   font-size: 18px;
 }
 
-/* FIX 3 — Play button safe area on mobile: padding was var(--s2) on
-   the parent; the button itself needs a minimum 10px safe-zone from
-   any card or container edge. Adding margin-right ensures it never
-   butts against the card boundary */
 .bar-play-btn {
   width: 38px;
   height: 38px;
@@ -446,7 +413,7 @@
   align-items: center;
   justify-content: center;
   transition: transform 0.18s var(--spring);
-  margin-right: 2px; /* prevents edge-hugging on tight mobile layouts */
+  margin-right: 2px;
 }
 .bar-play-btn:active {
   transform: scale(0.88);
@@ -470,56 +437,42 @@
   transition: width 0.5s linear;
 }
 
-/* FIX 4 (mobile) — bottom nav shadow: var(--highlight) is typically a
-   single inset highlight. Adding an explicit upward shadow creates a
-   real sense of layering so content scrolling behind the nav feels
-   intentionally separated rather than accidentally clipped. */
 #bottom-nav {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
-  height: var(--nav-h);
+  height: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: stretch;
-  padding-top: var(--s2);
   padding-bottom: env(safe-area-inset-bottom, 0px);
   background: var(--glass);
-  backdrop-filter: var(--blur);
-  -webkit-backdrop-filter: var(--blur);
   border-top: 0.5px solid var(--border);
-  box-shadow:
-    var(--highlight),
-    0 -8px 24px -4px oklch(0 0 0 / 0.07),
-    0 -2px 6px -2px oklch(0 0 0 / 0.05);
+  box-shadow: 0 -4px 20px -4px oklch(0 0 0 / 0.06);
   z-index: var(--z-player);
 }
 
 .nav-btn {
   flex: 1;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 3px;
-  padding-top: var(--s1);
+  justify-content: center;
   color: var(--text-3);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
   transition: color 0.15s;
+  height: 100%;
 }
 .nav-btn.active {
   color: var(--accent);
 }
 .nav-btn .bi {
-  font-size: 22px;
+  font-size: 24px;
 }
 .nav-btn span {
-  line-height: 1;
+  display: none;
 }
 
-/* ─── desktop ───────────────────────────────────────────────────────── */
+/* desktop */
 @media (min-width: 900px) {
   ::-webkit-scrollbar {
     width: 4px;
@@ -529,33 +482,21 @@
     border-radius: var(--r-full);
   }
 
-  /* FIX 1 & 4 (desktop) — grounded sidebar layout:
-     - Remove top/bottom padding so sidebar and main-wrap extend
-       edge-to-edge vertically, eliminating the "widget floating in cream" look.
-     - Keep horizontal padding (var(--s2)) for the gap between the two panels
-       and the right screen edge.
-     - The sidebar gets flat top/bottom radius on its left edge so it hugs
-       the screen corners; main-wrap keeps full rounding on its right side. */
   #shell {
     flex-direction: row;
-    padding: var(--s2) var(--s2) var(--s2) 0; /* ← was: var(--s2) on all sides */
+    padding: var(--s2) var(--s2) var(--s2) 0;
     gap: var(--s2);
     background: var(--bg-2);
   }
 
-  /* FIX 1 & 4 cont. — sidebar: flush to the left viewport edge,
-     only rounded on the right side so it reads as a true panel,
-     not a floating card */
   #sidebar {
     position: relative;
     transform: none !important;
     flex-shrink: 0;
-    border-radius: 0 var(--r-xl) var(--r-xl) 0; /* ← was: var(--r-xl) all corners */
+    border-radius: 0 var(--r-xl) var(--r-xl) 0;
     border: 0.5px solid var(--border);
-    border-left: none; /* clean flush against viewport edge */
+    border-left: none;
     background: var(--surface);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
     transition: width 0.25s var(--snap);
     overflow: hidden;
   }
@@ -567,7 +508,6 @@
     display: none !important;
   }
 
-  /* - :has() lifts --sb-w to :root so position:fixed sub-pages see it - */
   #shell.sb-collapsed,
   html:has(#shell.sb-collapsed) {
     --sb-w: 56px;
@@ -592,7 +532,7 @@
   #shell.sb-collapsed .sb-item {
     justify-content: center;
     padding: 12px 0;
-  } /* keep 12px from fix 1 */
+  }
   #shell.sb-collapsed .sb-nav {
     padding: 0 var(--s1) var(--s2);
   }
@@ -605,8 +545,6 @@
     margin-left: 0;
   }
 
-  /* FIX 4 cont. — main-wrap: full rounding on all corners since it's now
-     separated from the sidebar by a gap rather than corner-sharing with it */
   #main-wrap {
     flex: 1;
     min-width: 0;
@@ -615,7 +553,6 @@
     border: 0.5px solid var(--border);
     overflow: hidden;
     padding-bottom: 0;
-    /* subtle shadow to reinforce the card-like elevation */
     box-shadow: 0 2px 16px oklch(0 0 0 / 0.04);
   }
 
@@ -639,7 +576,7 @@
     font-size: 22px;
   }
 
-  /* - player bar floats above sub-pages - */
+  /* player bar */
   #player-bar {
     height: var(--bar-h-desktop);
     border-radius: var(--r-xl);
@@ -691,7 +628,7 @@
   }
   .bar-play-btn {
     margin: 0 var(--s2);
-  } /* desktop override — reset mobile margin-right */
+  }
 
   #bar-progress-wrap {
     display: flex;
@@ -777,8 +714,6 @@
     width: 80%;
   }
 
-  /* FIX 4 cont. — sub-pages: left edge now aligns with sidebar + gap only
-     (no extra left padding since #shell has padding-left: 0 at desktop) */
   #page-album,
   #page-artist,
   #page-playlist,
@@ -786,14 +721,11 @@
     top: var(--s2) !important;
     right: var(--s2) !important;
     bottom: var(--s2) !important;
-    left: calc(
-      var(--sb-w) + var(--s2)
-    ) !important; /* ← was: var(--s2) * 2, remove extra unit */
+    left: calc(var(--sb-w) + var(--s2)) !important;
     border-radius: var(--r-xl) !important;
     overflow: hidden !important;
   }
 
-  /* - now-playing: true full viewport, TV/poster immersion - */
   #now-playing {
     top: 0 !important;
     right: 0 !important;
@@ -802,23 +734,4 @@
     border-radius: 0 !important;
     overflow: hidden;
   }
-}
-
-/* ─── featured card overlay (FIX 3) ────────────────────────────────── */
-/* Replaces flat darkening with a directional gradient that keeps the
-   artwork vibrant while giving text enough contrast. Apply this class
-   to your feature card's overlay element, or adapt the selector to
-   match your existing structure. */
-.featured-card-overlay,
-.feature-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    135deg,
-    oklch(0 0 0 / 0.68) 0%,
-    oklch(0 0 0 / 0.38) 45%,
-    oklch(0 0 0 / 0) 100%
-  );
-  pointer-events: none;
 }
