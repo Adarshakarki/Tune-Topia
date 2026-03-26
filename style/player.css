@@ -152,24 +152,25 @@
   padding: 0 var(--s2);
 }
 .np-more-btn-offset {
-  margin-right: 0;
+  margin-right: -4px;
 }
 
 .np-icon-btn {
   width: 38px;
   height: 38px;
-  background: transparent;
+  border-radius: var(--r-full);
+  background: oklch(1 0 0 / 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
   color: oklch(1 0 0 / 0.88);
   flex-shrink: 0;
-  transition: opacity 0.15s;
+  transition: background 0.15s;
   /* always visible */
   pointer-events: all;
 }
 .np-icon-btn:active {
-  opacity: 0.65;
+  background: oklch(1 0 0 / 0.22);
 }
 .np-icon-btn .bi {
   font-size: 17px;
