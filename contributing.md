@@ -70,8 +70,7 @@ style/tokens.css
   * Spacing
   * Shadows
 
-* ❌ Avoid:
-
+* Avoid:
   * Hardcoded hex values
   * Inline styles
 
