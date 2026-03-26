@@ -4,6 +4,7 @@ import * as Player from '../modules/player.js'
 import { startLiveCheck } from '../api/status.js'
 import { exportBackup, importBackup } from '../modules/backup.js'
 import { escHtml } from '../api/utils.js'
+import { clear as clearCache, getStats } from '../modules/cache.js'
 
 const $ = (id) => document.getElementById(id)
 let _stopStatus = null
@@ -14,6 +15,13 @@ export function render() {
     'aria-checked',
     theme === 'dark' ? 'true' : 'false'
   )
+
+  // Update cache stats
+  const cacheStats = getStats()
+  const cacheEl = $('cache-size')
+  if (cacheEl) {
+    cacheEl.textContent = `${cacheStats.count} items (${cacheStats.size} KB)`
+  }
 
   if (_stopStatus) {
     _stopStatus()
