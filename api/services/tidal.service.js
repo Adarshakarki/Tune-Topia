@@ -176,6 +176,17 @@ export async function getHomeTrending() {
   return tracks
 }
 
+export async function getTrackRecommendations(trackId) {
+  try {
+    const { data } = await get(`/recommendations/?id=${trackId}`)
+    return (data?.data?.items || data?.items || [])
+      .map((item) => normalizeTrack(item.track || item, 'tidal'))
+      .filter((t) => t.id)
+  } catch {
+    return []
+  }
+}
+ 
 // Stream
 export async function getStream(trackId) {
   const pref = localStorage.getItem('tt_quality') || 'lossless'

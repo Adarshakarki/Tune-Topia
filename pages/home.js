@@ -2,7 +2,7 @@ import * as UI from '../app/ui.js'
 import State from '../app/state.js'
 import History from '../modules/history.js'
 import { playTrack } from '../app/playback.js'
-import { searchTracks, getPlaylist, searchArtists } from '../api/index.js'
+import { searchTracks, getPlaylist, searchArtists, getTrackRecommendations } from '../api/index.js'
 import { searchVideos } from '../api/index.js'
 import { searchPlaylists } from '../api/index.js'
 import { escHtml } from '../api/utils.js'
@@ -14,6 +14,15 @@ import * as AlbumPage from './album.js'
 const $ = (id) => document.getElementById(id)
 
 const NEW_RELEASES_PLAYLIST_ID = '1b418bb8-90a7-4f87-901d-707993838346'
+
+function _appendRecs(trackId) {
+  getTrackRecommendations(trackId).then((recs) => {
+    if (!recs.length) return
+    import('../modules/queue.js').then(({ default: Queue }) => {
+      recs.forEach((r) => Queue.add(r))
+    })
+  })
+}
 
 export async function load() {
   const tracksEl = $('home-tracks')
@@ -58,9 +67,11 @@ export async function load() {
 
     _loadFeaturedPlaylists()
 
-    $('hero-card')?.addEventListener('click', () => {
+ $('hero-card')?.addEventListener('click', () => {
       const card = $('hero-card')
-      if (card?._track) playTrack([card._track], 0)
+      if (!card?._track) return
+      playTrack([card._track], 0)
+      _appendRecs(card._track.id)
     })
 
     // Inline search bar → navigate to search
@@ -249,9 +260,13 @@ export function attachTrackEvents(container) {
 
 export function attachHorizEvents(container) {
   container.querySelectorAll('.horiz-card').forEach((card) => {
-    card.addEventListener('click', () =>
-      playTrack(container._tracks, parseInt(card.dataset.index))
-    )
+    card.addEventListener('click', () => {
+      const idx = parseInt(card.dataset.index)
+      const track = container._tracks?.[idx]
+      if (!track) return
+      playTrack([track], 0)
+      _appendRecs(track.id)
+    })
   })
 }
 

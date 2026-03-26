@@ -11,6 +11,7 @@ export {
   getPlaylist,
   getHomeTrending,
   getStream,
+  getTrackRecommendations,
 } from './services/tidal.service.js'
 
 export {

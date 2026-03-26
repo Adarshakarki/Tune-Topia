@@ -10,6 +10,7 @@
   "orientation": "portrait-primary",
   "background_color": "#F5F0E8",
   "theme_color": "#F5F0E8",
+  "theme_color_dark": "#0E0C0A",
   "icons": [
     {
       "src": "assets/logo192.jpeg",

@@ -159,19 +159,19 @@
   width: 38px;
   height: 38px;
   border-radius: var(--r-full);
-  background: oklch(1 0 0 / 0.12);
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
   color: oklch(1 0 0 / 0.88);
   flex-shrink: 0;
   transition: background 0.15s;
-  /* always visible */
   pointer-events: all;
 }
 .np-icon-btn:active {
-  background: oklch(1 0 0 / 0.22);
+  background: oklch(1 0 0 / 0.1);
 }
+
 .np-icon-btn .bi {
   font-size: 17px;
 }
@@ -480,17 +480,22 @@
   color: oklch(1 0 0);
 }
 
-/* lyrics */
+/* ─── LYRICS BODY ─── */
 #np-lyrics-body {
   flex: 1;
   overflow-y: auto;
-  padding: var(--s5) 28px 40vh;
+  padding: var(--s5) 28px 45vh; /* Increased bottom padding for better centering */
   display: flex;
   flex-direction: column;
-  gap: var(--s3);
+  gap: var(--s4);
   min-height: 0;
   overscroll-behavior: contain;
+  /* Premium fade effect at top and bottom */
+  mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
 }
+
+/* ─── PLACEHOLDER ─── */
 .np-lyrics-placeholder {
   text-align: center;
   color: oklch(1 0 0 / 0.22);
@@ -512,23 +517,54 @@
   margin-top: 6px;
   display: block;
 }
+
+/* ─── LYRIC LINES ─── */
 .np-lyrics-line {
   font-family: 'Playfair Display', serif;
-  font-size: 22px;
+  font-size: 26px; /* Slightly bumped up for readability */
   font-weight: 700;
-  line-height: 1.45;
-  color: oklch(1 0 0 / 0.45);
+  line-height: 1.4;
+  color: oklch(1 0 0 / 0.25); /* Dim when inactive */
   cursor: pointer;
-  transition:
-    color 0.3s,
-    transform 0.3s var(--spring);
-}
-.np-lyrics-line.active {
-  color: oklch(1 0 0);
-  transform: scale(1.03);
+  filter: blur(0.5px); /* Soft focus for inactive lines */
+  transition: 
+    color 0.4s ease, 
+    transform 0.4s var(--spring), 
+    filter 0.4s ease;
   transform-origin: left center;
+  transform: scale(0.96);
 }
 
+/* Base Active State */
+.np-lyrics-line.active {
+  color: oklch(1 0 0 / 0.35); /* Base color for current line; words will pop brighter */
+  transform: scale(1.05);
+  filter: blur(0);
+}
+
+/* Standard Lyrics Fallback (if no word-level data exists) */
+.np-lyrics-line.active:not(.enhanced) {
+  color: oklch(1 0 0);
+}
+
+/* ─── WORD-BY-WORD (KARAOKE) ─── */
+.np-lyric-word {
+  display: inline-block;
+  white-space: pre; /* Essential to keep spaces between span-wrapped words */
+  transition: color 0.2s ease, text-shadow 0.2s ease;
+}
+
+/* Words already sung or currently active */
+.np-lyrics-line.active .np-lyric-word.passed {
+  color: oklch(1 0 0);
+}
+
+/* The specific word being sung right now */
+.np-lyrics-line.active .np-lyric-word.current {
+  text-shadow: 0 0 15px oklch(1 0 0 / 0.4);
+}
+
+/* ─── MINI CONTROLS & PROGRESS ─── */
 .np-overlay-mini-ctrl {
   flex-shrink: 0;
   padding: var(--s3) var(--s5) max(env(safe-area-inset-bottom, 0px), var(--s5));

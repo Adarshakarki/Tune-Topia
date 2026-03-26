@@ -25,7 +25,7 @@
   top: 0;
   left: 0;
   right: 0;
-  z-index: var(--z-player);
+  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -126,10 +126,11 @@
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: var(--z-player);
+  z-index: 10;
   padding: var(--s4) var(--s5) var(--s3);
   text-align: center;
 }
+
 #artist-hero-name {
   font-family: 'Playfair Display', serif;
   font-size: 32px;
@@ -487,25 +488,25 @@
   }
 
   /* FIX 2 — desktop: left-align name and follow-row to the same 40px gutter */
-  #artist-hero-name-wrap {
+#artist-hero-name-wrap {
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
-    z-index: var(--z-player);
+    z-index: 10;
     padding: var(--s5) 40px var(--s4);
-    text-align: left;
+    text-align: center;
   }
   #artist-hero-name {
     font-size: 48px;
-    text-align: left;
+    text-align: center;
   }
-
+ 
   #artist-follow-wrap {
     padding-top: var(--s2);
     max-width: 680px;
     margin: 0 auto;
-    justify-content: flex-start; /* was centered — now aligns with name */
+    justify-content: center;
     padding-left: 40px;
     padding-right: 40px;
   }

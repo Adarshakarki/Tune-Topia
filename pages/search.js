@@ -4,6 +4,7 @@ import { playTrack } from '../app/playback.js'
 import { runSearch, clearSearch, setTab } from '../modules/search.js'
 import { escHtml } from '../api/utils.js'
 import { MOODS } from '../app/constants.js'
+import { getTrackRecommendations } from '../api/index.js'
 import * as AlbumPage from './album.js'
 import * as ArtistPage from './artist.js'
 import * as PlaylistPage from './playlist.js'
@@ -14,11 +15,9 @@ import {
 } from './likedVideos.js'
 import * as GenrePage from './genre.js'
 import {
-  attachTrackEvents,
   attachAlbumEvents,
   attachArtistEvents,
 } from './home.js'
-
 const $ = (id) => document.getElementById(id)
 let _searchTimer
 
@@ -123,9 +122,9 @@ function _renderResults() {
     _renderVideos(results, listEl)
   } else if (tab === 'playlists') {
     _renderPlaylists(results, listEl)
-  } else {
+} else {
     UI.renderTracks(results, listEl, null)
-    attachTrackEvents(listEl)
+    _attachSearchTrackEvents(listEl)
   }
 }
 
@@ -221,6 +220,29 @@ function _renderPlaylists(results, container) {
     card.addEventListener('click', () => {
       const p = results[parseInt(card.dataset.index)]
       if (p) PlaylistPage.open(p.id || p)
+    })
+  })
+}
+
+function _attachSearchTrackEvents(container) {
+  container.querySelectorAll('[data-index]').forEach((wrap) => {
+    const card = wrap.querySelector('.track-card')
+    if (!card) return
+    const idx = parseInt(wrap.dataset.index)
+    card.addEventListener('click', () => {
+      const track = container._tracks?.[idx]
+      if (!track) return
+      playTrack([track], 0)
+      getTrackRecommendations(track.id).then((recs) => {
+        if (!recs.length) return
+        import('../modules/queue.js').then(({ default: Queue }) => {
+          recs.forEach((r) => Queue.add(r))
+        })
+      })
+    })
+    wrap.querySelector('.track-like-btn')?.addEventListener('click', (e) => {
+      e.stopPropagation()
+      import('../app/likes.js').then((m) => m.onLike(container._tracks?.[idx]))
     })
   })
 }

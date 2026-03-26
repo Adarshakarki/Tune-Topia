@@ -1,7 +1,7 @@
 import State from './state.js'
 import { has as isLiked } from '../modules/likedSongs.js'
 import { escHtml, fmtTime, qualityBadge } from '../api/utils.js'
-import { getActiveLine } from '../modules/lyrics.js'
+import { getActiveLine, getActiveWord } from '../modules/lyrics.js';
 
 const $ = (id) => document.getElementById(id)
 
@@ -16,14 +16,11 @@ export function toast(msg) {
 }
 
 export function applyTheme(theme) {
-  document.documentElement.setAttribute(
-    'data-theme',
-    theme === 'dark' ? 'dark' : 'light'
-  )
-  $('theme-toggle-btn')?.setAttribute(
-    'aria-checked',
-    theme === 'dark' ? 'true' : 'false'
-  )
+  const isDark = theme === 'dark'
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light')
+  $('theme-toggle-btn')?.setAttribute('aria-checked', String(isDark))
+  const meta = document.getElementById('theme-color-meta')
+  if (meta) meta.setAttribute('content', isDark ? '#0E0C0A' : '#F5F0E8')
 }
 
 export function renderGreeting() {
@@ -274,38 +271,67 @@ function _queueItem(t, index, isActive) {
 export function renderLyrics(synced, plain) {
   const body = $('np-lyrics-body')
   if (!body) return
+  
   if (synced?.length) {
     body.innerHTML = synced
-      .map(
-        (line, i) =>
-          `<div class="np-lyrics-line" data-index="${i}">${escHtml(line.text)}</div>`
-      )
+      .map((line, i) => {
+        // If the line has word-level timestamps, wrap each word in a span
+        if (line.words && line.words.length > 0) {
+          const wordsHtml = line.words.map((word, wIdx) => 
+            `<span class="np-lyric-word" data-windex="${wIdx}">${escHtml(word.text)} </span>`
+          ).join('')
+          return `<div class="np-lyrics-line enhanced" data-index="${i}">${wordsHtml}</div>`
+        }
+        // Fallback to standard line
+        return `<div class="np-lyrics-line" data-index="${i}">${escHtml(line.text)}</div>`
+      })
       .join('')
     return
   }
+
   if (plain) {
     body.innerHTML = plain
       .split('\n')
-      .map(
-        (line) =>
-          `<div class="np-lyrics-line">${escHtml(line) || '&nbsp;'}</div>`
-      )
+      .map(line => `<div class="np-lyrics-line">${escHtml(line) || '&nbsp;'}</div>`)
       .join('')
     return
   }
+  
   body.innerHTML = `<div class="np-lyrics-placeholder"><i class="bi bi-mic-fill"></i><p>Lyrics not available</p></div>`
 }
 
 export function updateActiveLyric(syncedLyrics, currentTime) {
   const body = $('np-lyrics-body')
   if (!body || !syncedLyrics?.length) return
-  const active = getActiveLine(syncedLyrics, currentTime)
-  body
-    .querySelectorAll('.np-lyrics-line')
-    .forEach((el, i) => el.classList.toggle('active', i === active))
-  body
-    .querySelector('.np-lyrics-line.active')
-    ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+  const activeIndex = getActiveLine(syncedLyrics, currentTime)
+  const lines = body.querySelectorAll('.np-lyrics-line')
+
+  lines.forEach((el, i) => {
+    const isActive = i === activeIndex
+    el.classList.toggle('active', isActive)
+
+    // Handle Word-by-Word highlighting inside the active line
+    if (isActive) {
+      const lineData = syncedLyrics[i]
+      if (lineData.words) {
+        const activeWordIndex = getActiveWord(lineData, currentTime)
+        const words = el.querySelectorAll('.np-lyric-word')
+        
+        words.forEach((wordEl, wIdx) => {
+          // 'passed' = word already sung, 'current' = specifically active word
+          wordEl.classList.toggle('passed', wIdx <= activeWordIndex)
+          wordEl.classList.toggle('current', wIdx === activeWordIndex)
+        })
+      }
+    }
+  })
+
+  // Smooth scroll to the active line
+  const activeEl = body.querySelector('.np-lyrics-line.active')
+  if (activeEl) {
+    activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
 }
 
 export function setTrackInfo(track) {
