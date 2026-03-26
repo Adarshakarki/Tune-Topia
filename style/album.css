@@ -41,11 +41,6 @@
 }
 #album-back-btn {
   color: oklch(1 0 0 / 0.85);
-  background: transparent;
-  transition: opacity 0.15s;
-}
-#album-back-btn:active {
-  opacity: 0.65;
 }
 #album-topbar-title {
   flex: 1;
