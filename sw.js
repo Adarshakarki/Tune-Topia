@@ -23,7 +23,7 @@ const PRECACHE = [
   '/style/genre.css',
   '/style/video.css',
   '/style/responsive.css',
-  '/assets/circularlogo.png',
+  '/assets/logo.png',
 ]
 
 // - install: precache shell assets -
