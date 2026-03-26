@@ -43,17 +43,9 @@ export function init() {
     e.stopPropagation()
     onLike(Player.getCurrentTrack())
   })
-  $('mini-prev-btn')?.addEventListener('click', (e) => {
-    e.stopPropagation()
-    Player.prev()
-  })
   $('mini-play-btn')?.addEventListener('click', (e) => {
     e.stopPropagation()
     Player.toggle()
-  })
-  $('mini-next-btn')?.addEventListener('click', (e) => {
-    e.stopPropagation()
-    Player.next()
   })
 
   // Desktop bar controls

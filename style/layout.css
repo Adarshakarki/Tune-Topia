@@ -379,11 +379,12 @@
   display: none;
 }
 
+/* mini bar - mobile only controls */
 #bar-mini-controls {
   display: flex;
-  align-items: center;
-  gap: 2px;
-  flex-shrink: 0;
+}
+#bar-ctrl-row {
+  display: none;
 }
 
 .bar-ctrl {
@@ -393,7 +394,6 @@
   align-items: center;
   justify-content: center;
   color: var(--text);
-  border-radius: var(--r-full);
   transition: opacity 0.15s;
 }
 .bar-ctrl:active {

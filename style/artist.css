@@ -41,6 +41,11 @@
 }
 #artist-back-btn {
   color: oklch(1 0 0 / 0.85);
+  background: transparent;
+  transition: opacity 0.15s;
+}
+#artist-back-btn:active {
+  opacity: 0.65;
 }
 #artist-topbar-title {
   flex: 1;
@@ -486,7 +491,7 @@
     );
   }
 
-  /* FIX 2 — desktop: left-align name and follow-row to the same 40px gutter */
+  /* FIX 2 — desktop: center name to match centered follow/play row */
   #artist-hero-name-wrap {
     position: absolute;
     bottom: 0;
@@ -494,18 +499,18 @@
     right: 0;
     z-index: var(--z-player);
     padding: var(--s5) 40px var(--s4);
-    text-align: left;
+    text-align: center;
   }
   #artist-hero-name {
     font-size: 48px;
-    text-align: left;
+    text-align: center;
   }
 
   #artist-follow-wrap {
     padding-top: var(--s2);
     max-width: 680px;
     margin: 0 auto;
-    justify-content: flex-start; /* was centered — now aligns with name */
+    justify-content: center; /* centered to match name */
     padding-left: 40px;
     padding-right: 40px;
   }

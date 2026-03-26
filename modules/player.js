@@ -333,6 +333,11 @@ function _updateMediaSession(track) {
         ]
       : [],
   })
+  // Set theme color for notification area
+  const themeColor = getComputedStyle(document.documentElement).getPropertyValue('--surface').trim() || '#1a1a1a'
+  try {
+    navigator.mediaSession.setColorTheme(themeColor)
+  } catch {}
 }
 
 if ('mediaSession' in navigator) {
