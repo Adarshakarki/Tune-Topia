@@ -1,7 +1,10 @@
 import State from '../app/state.js'
 import Queue from './queue.js'
 import History from './history.js'
-import { getStream as tidalStream, getTrackRecommendations } from '../api/index.js'
+import {
+  getStream as tidalStream,
+  getTrackRecommendations,
+} from '../api/index.js'
 import { getAudioStream as ytStream, searchVideos } from '../api/index.js'
 
 const audioA = document.getElementById('audio')
@@ -340,7 +343,11 @@ function _updateMediaSession(track) {
     album: track.album || '',
     artwork: track.cover
       ? [
-          { src: track.coverSmall || track.cover, sizes: '96x96', type: 'image/jpeg' },
+          {
+            src: track.coverSmall || track.cover,
+            sizes: '96x96',
+            type: 'image/jpeg',
+          },
           { src: track.cover, sizes: '192x192', type: 'image/jpeg' },
           { src: track.cover, sizes: '512x512', type: 'image/jpeg' },
         ]
@@ -368,15 +375,14 @@ function _updateMediaSession(track) {
   })
 }
 
-  navigator.mediaSession.playbackState = 'playing'
+navigator.mediaSession.playbackState = 'playing'
 
-  _active.onloadedmetadata = () => {
-    navigator.mediaSession.setPositionState({
-      duration: _active.duration || 0,
-      playbackRate: _active.playbackRate || 1,
-      position: 0,
-    })
-  }
+_active.onloadedmetadata = () => {
+  navigator.mediaSession.setPositionState({
+    duration: _active.duration || 0,
+    playbackRate: _active.playbackRate || 1,
+    position: 0,
+  })
 }
 
 function _syncMediaSessionState(isPlaying) {
@@ -398,8 +404,12 @@ if ('mediaSession' in navigator) {
     _syncMediaSessionState(false)
   })
 
-  try { navigator.mediaSession.setActionHandler('seekbackward', null) } catch {}
-  try { navigator.mediaSession.setActionHandler('seekforward', null) } catch {}
+  try {
+    navigator.mediaSession.setActionHandler('seekbackward', null)
+  } catch {}
+  try {
+    navigator.mediaSession.setActionHandler('seekforward', null)
+  } catch {}
 
   navigator.mediaSession.setActionHandler('seekto', (e) => {
     if (e.seekTime != null && _active.duration) {
