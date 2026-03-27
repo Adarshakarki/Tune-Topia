@@ -3,8 +3,9 @@ import {
   getAlbum,
   getPlaylist as getPlaylistRaw,
   getBases,
-} from '../client/tidal.client.js'
-import { tidalCover, decodeManifest, normalizeTrack } from '../utils.js'
+} from '../client/tidal.client.js'; 
+
+import { tidalCover, decodeManifest, normalizeTrack } from '../utils.js'; 
 import { get as cacheGet, set as cacheSet } from '/modules/cache.js';
 
 const CACHE_TTL_SEARCH = 3 * 60 * 1000
