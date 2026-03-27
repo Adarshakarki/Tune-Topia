@@ -349,6 +349,27 @@ function _updateMediaSession(track) {
 
   navigator.mediaSession.playbackState = 'playing'
 
+  // Wait for real duration to be available before setting position state
+  const trySetPosition = () => {
+    if (!_active.duration || !isFinite(_active.duration)) return
+    try {
+      navigator.mediaSession.setPositionState({
+        duration: _active.duration,
+        playbackRate: _active.playbackRate || 1,
+        position: Math.min(_active.currentTime, _active.duration),
+      })
+    } catch {}
+  }
+
+  // iOS needs this after play begins, not just metadata load
+  _active.addEventListener('playing', function onPlaying() {
+    _active.removeEventListener('playing', onPlaying)
+    trySetPosition()
+  })
+}
+
+  navigator.mediaSession.playbackState = 'playing'
+
   _active.onloadedmetadata = () => {
     navigator.mediaSession.setPositionState({
       duration: _active.duration || 0,
@@ -377,8 +398,8 @@ if ('mediaSession' in navigator) {
     _syncMediaSessionState(false)
   })
 
-  navigator.mediaSession.setActionHandler('seekbackward', null)
-  navigator.mediaSession.setActionHandler('seekforward', null)
+  try { navigator.mediaSession.setActionHandler('seekbackward', null) } catch {}
+  try { navigator.mediaSession.setActionHandler('seekforward', null) } catch {}
 
   navigator.mediaSession.setActionHandler('seekto', (e) => {
     if (e.seekTime != null && _active.duration) {
@@ -394,13 +415,15 @@ if ('mediaSession' in navigator) {
 
 setInterval(() => {
   if (!('mediaSession' in navigator)) return
-  if (!_active || !_active.duration) return
+  if (!_active?.duration || !isFinite(_active.duration)) return
 
-  navigator.mediaSession.setPositionState({
-    duration: _active.duration,
-    playbackRate: _active.playbackRate || 1,
-    position: _active.currentTime,
-  })
+  try {
+    navigator.mediaSession.setPositionState({
+      duration: _active.duration,
+      playbackRate: _active.playbackRate || 1,
+      position: Math.min(_active.currentTime, _active.duration),
+    })
+  } catch {}
 }, 1000)
 
 const _npPanel = document.getElementById('now-playing')
