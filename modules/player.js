@@ -341,24 +341,21 @@ function _updateMediaSession(track) {
     artwork: track.cover
       ? [
           { src: track.coverSmall || track.cover, sizes: '96x96', type: 'image/jpeg' },
+          { src: track.cover, sizes: '192x192', type: 'image/jpeg' },
           { src: track.cover, sizes: '512x512', type: 'image/jpeg' },
         ]
       : [],
   })
 
-  // Tell the OS this session is actively playing (fixes "no controls" on new track)
   navigator.mediaSession.playbackState = 'playing'
 
-  // Reset scrubber position for the new track
-  _active.addEventListener('loadedmetadata', function onMeta() {
-    _active.removeEventListener('loadedmetadata', onMeta)
-    if (!('mediaSession' in navigator)) return
+  _active.onloadedmetadata = () => {
     navigator.mediaSession.setPositionState({
-      duration: _active.duration,
+      duration: _active.duration || 0,
       playbackRate: _active.playbackRate || 1,
       position: 0,
     })
-  })
+  }
 }
 
 function _syncMediaSessionState(isPlaying) {
@@ -367,16 +364,22 @@ function _syncMediaSessionState(isPlaying) {
 }
 
 if ('mediaSession' in navigator) {
+  navigator.mediaSession.setActionHandler('previoustrack', () => prev())
+  navigator.mediaSession.setActionHandler('nexttrack', () => next())
+
   navigator.mediaSession.setActionHandler('play', () => {
     _active.play()
     _syncMediaSessionState(true)
   })
+
   navigator.mediaSession.setActionHandler('pause', () => {
     _active.pause()
     _syncMediaSessionState(false)
   })
-  navigator.mediaSession.setActionHandler('previoustrack', () => prev())
-  navigator.mediaSession.setActionHandler('nexttrack', () => next())
+
+  navigator.mediaSession.setActionHandler('seekbackward', null)
+  navigator.mediaSession.setActionHandler('seekforward', null)
+
   navigator.mediaSession.setActionHandler('seekto', (e) => {
     if (e.seekTime != null && _active.duration) {
       _active.currentTime = e.seekTime
@@ -387,13 +390,18 @@ if ('mediaSession' in navigator) {
       })
     }
   })
-  navigator.mediaSession.setActionHandler('seekbackward', (e) => {
-    seekSeconds(-(e.seekOffset || 10))
-  })
-  navigator.mediaSession.setActionHandler('seekforward', (e) => {
-    seekSeconds(e.seekOffset || 10)
-  })
 }
+
+setInterval(() => {
+  if (!('mediaSession' in navigator)) return
+  if (!_active || !_active.duration) return
+
+  navigator.mediaSession.setPositionState({
+    duration: _active.duration,
+    playbackRate: _active.playbackRate || 1,
+    position: _active.currentTime,
+  })
+}, 1000)
 
 const _npPanel = document.getElementById('now-playing')
 
