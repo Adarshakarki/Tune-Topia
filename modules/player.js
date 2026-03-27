@@ -43,11 +43,13 @@ function _bindAudio(el) {
     if (el !== _active) return
     State.set('player.isPlaying', true)
     _emit('playStateChanged', true)
+    _syncMediaSessionState(true)
   })
   el.addEventListener('pause', () => {
     if (el !== _active) return
     State.set('player.isPlaying', false)
     _emit('playStateChanged', false)
+    _syncMediaSessionState(false)
   })
   el.addEventListener('ended', () => {
     if (el !== _active) return
@@ -331,30 +333,65 @@ export function getCurrentTrack() {
 
 function _updateMediaSession(track) {
   if (!('mediaSession' in navigator)) return
+
   navigator.mediaSession.metadata = new MediaMetadata({
     title: track.title || '',
     artist: track.artist || '',
     album: track.album || '',
     artwork: track.cover
       ? [
-          {
-            src: track.coverSmall || track.cover,
-            sizes: '96x96',
-            type: 'image/jpeg',
-          },
+          { src: track.coverSmall || track.cover, sizes: '96x96', type: 'image/jpeg' },
           { src: track.cover, sizes: '512x512', type: 'image/jpeg' },
         ]
       : [],
   })
+
+  // Tell the OS this session is actively playing (fixes "no controls" on new track)
+  navigator.mediaSession.playbackState = 'playing'
+
+  // Reset scrubber position for the new track
+  _active.addEventListener('loadedmetadata', function onMeta() {
+    _active.removeEventListener('loadedmetadata', onMeta)
+    if (!('mediaSession' in navigator)) return
+    navigator.mediaSession.setPositionState({
+      duration: _active.duration,
+      playbackRate: _active.playbackRate || 1,
+      position: 0,
+    })
+  })
+}
+
+function _syncMediaSessionState(isPlaying) {
+  if (!('mediaSession' in navigator)) return
+  navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused'
 }
 
 if ('mediaSession' in navigator) {
-  navigator.mediaSession.setActionHandler('play', () => _active.play())
-  navigator.mediaSession.setActionHandler('pause', () => _active.pause())
+  navigator.mediaSession.setActionHandler('play', () => {
+    _active.play()
+    _syncMediaSessionState(true)
+  })
+  navigator.mediaSession.setActionHandler('pause', () => {
+    _active.pause()
+    _syncMediaSessionState(false)
+  })
   navigator.mediaSession.setActionHandler('previoustrack', () => prev())
   navigator.mediaSession.setActionHandler('nexttrack', () => next())
   navigator.mediaSession.setActionHandler('seekto', (e) => {
-    if (e.seekTime && _active.duration) _active.currentTime = e.seekTime
+    if (e.seekTime != null && _active.duration) {
+      _active.currentTime = e.seekTime
+      navigator.mediaSession.setPositionState({
+        duration: _active.duration,
+        playbackRate: _active.playbackRate || 1,
+        position: _active.currentTime,
+      })
+    }
+  })
+  navigator.mediaSession.setActionHandler('seekbackward', (e) => {
+    seekSeconds(-(e.seekOffset || 10))
+  })
+  navigator.mediaSession.setActionHandler('seekforward', (e) => {
+    seekSeconds(e.seekOffset || 10)
   })
 }
 
