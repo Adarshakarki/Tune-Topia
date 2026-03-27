@@ -77,8 +77,7 @@
 }
 
 .eq-slider {
-  -webkit-appearance: slider-vertical;
-  appearance: slider-vertical;
+appearance: auto; 
   writing-mode: vertical-lr;
   direction: rtl;
   width: 20px;

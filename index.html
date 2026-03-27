@@ -1587,10 +1587,13 @@
       </div>
     </div>
     <script type="module" src="app/init.js"></script>
-    <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js')
-      }
-    </script>
+  <script>
+  if ('serviceWorker' in navigator) {
+    // Use './' to point to the current directory regardless of the repo name
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('Service Worker registered!', reg))
+      .catch(err => console.error('Service Worker failed:', err));
+  }
+  </script>
   </body>
 </html>
