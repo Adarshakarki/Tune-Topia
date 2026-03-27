@@ -26,17 +26,20 @@ const PRECACHE = [
   '/assets/logo.png',
 ]
 
-// - install: precache shell assets -
+// ── install: precache shell assets ──────────────────────────
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches
-      .open(CACHE)
-      .then((c) => c.addAll(PRECACHE))
-      .then(() => self.skipWaiting())
+    caches.open(CACHE).then((c) =>
+      Promise.all(
+        PRECACHE.map((url) =>
+          c.add(url).catch((err) => console.warn('[SW] precache miss:', url, err))
+        )
+      )
+    ).then(() => self.skipWaiting())
   )
 })
 
-// - activate: clear old caches -
+// ── activate: clear old caches ───────────────────────────────
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches
@@ -50,34 +53,45 @@ self.addEventListener('activate', (e) => {
   )
 })
 
-// - fetch strategy -
+// ── fetch strategy ───────────────────────────────────────────
 self.addEventListener('fetch', (e) => {
   const { request } = e
+
+  // pass through non-GET — SW cannot clone/cache POST etc.
+  if (request.method !== 'GET') return
+
   const url = new URL(request.url)
 
-  // - never cache API calls, audio streams, or external resources -
+  // pass through non-http(s) — e.g. chrome-extension://, data:, blob:
+  if (!url.protocol.startsWith('http')) return
+
+  // pass through cross-origin, API calls, audio streams, range requests
+  // wrap in catch so CORS failures (e.g. maus.qqdl.site) don't crash the SW
   if (
     url.origin !== self.location.origin ||
     url.pathname.startsWith('/api/') ||
     request.destination === 'audio' ||
     request.headers.get('range')
   ) {
-    e.respondWith(fetch(request))
+    e.respondWith(
+      fetch(request).catch(() => new Response(null, { status: 503, statusText: 'SW passthrough failed' }))
+    )
     return
   }
 
-  // - app shell: cache first, fall back to network -
+  // app shell: cache first, fall back to network, fall back to /index.html
   e.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached
-      return fetch(request).then((response) => {
-        // only cache valid same-origin responses
-        if (!response || response.status !== 200 || response.type !== 'basic')
+      return fetch(request)
+        .then((response) => {
+          if (!response || response.status !== 200 || response.type !== 'basic')
+            return response
+          const clone = response.clone()
+          caches.open(CACHE).then((c) => c.put(request, clone))
           return response
-        const clone = response.clone()
-        caches.open(CACHE).then((c) => c.put(request, clone))
-        return response
-      })
+        })
+        .catch(() => caches.match('/index.html'))
     })
   )
 })

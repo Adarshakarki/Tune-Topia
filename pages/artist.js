@@ -1,6 +1,6 @@
 import { searchArtists, searchTracks, searchAlbums } from '../api/index.js'
 import { escHtml } from '../api/utils.js'
-import { extractColor } from '../app/ui.js'
+import { extractColor, revertThemeColor } from '../app/ui.js'
 import { toggle, has } from '../modules/likedSongs.js'
 import { toggleArtist, hasArtist } from '../modules/library.js'
 import Queue from '../modules/queue.js'
@@ -111,6 +111,7 @@ export function close() {
   const page = $('page-artist')
   page?.classList.remove('open', 'stacked')
   document.body.style.overflow = ''
+  revertThemeColor()
 }
 
 function _applyColor(r, g, b) {

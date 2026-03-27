@@ -1,30 +1,41 @@
 import {
   get,
+  getAlbum,
   getPlaylist as getPlaylistRaw,
   getBases,
 } from '../client/tidal.client.js'
 import { tidalCover, decodeManifest, normalizeTrack } from '../utils.js'
+import { get as cacheGet, set as cacheSet } from '/modules/cache.js'
 
-const QUALITY_TIERS = {
-  hires: ['HI_RES_LOSSLESS', 'LOSSLESS', 'HIGH'],
-  lossless: ['LOSSLESS', 'HIGH'],
-  high: ['HIGH', 'LOSSLESS'],
-  low: ['HIGH', 'LOSSLESS'], // LOW returns 403 on all instances — use HIGH instead
+const CACHE_TTL_SEARCH = 3 * 60 * 1000
+const CACHE_TTL_ALBUM  = 10 * 60 * 1000
+const CACHE_TTL_RECS   = 5 * 60 * 1000
+
+const QUALITY_MAP = {
+  hires:    'HI_RES_LOSSLESS',
+  lossless: 'LOSSLESS',
+  high:     'HIGH',
+  low:      'LOW',
 }
 
 // ── Search ────────────────────────────────────────────────────
 
 export async function searchTracks(query) {
+  const key = `search:tracks:${query}`
+  const cached = cacheGet(key)
+  if (cached) return cached
   const { data } = await get(`/search/?s=${encodeURIComponent(query)}`)
-  return (data?.data?.items || data?.items || []).map((t) =>
+  const tracks = (data?.data?.items || data?.items || []).map((t) =>
     normalizeTrack(t, 'tidal')
   )
+  cacheSet(key, tracks, CACHE_TTL_SEARCH)
+  return tracks
 }
 
 export async function searchAlbums(query) {
   let items = []
   try {
-    const { data } = await get(`/search/albums?s=${encodeURIComponent(query)}`)
+    const { data } = await getAlbum(`/search/albums?s=${encodeURIComponent(query)}`)  // ← was get()
     items = data?.data?.items || data?.items || []
     if (items.length && items[0]?.cover && !items[0]?.album) {
       return _dedupeAlbums(items.map(_albumFromObject))
@@ -78,13 +89,15 @@ export async function searchPlaylists(query, limit = 6) {
 }
 
 // Album
-
 export async function getAlbumTracks(albumId) {
-  const { data } = await get(`/album?id=${albumId}`)
+  const key = `album:tracks:${albumId}`
+  const cached = cacheGet(key)
+  if (cached) return cached
+  const { data } = await getAlbum(`/album?id=${albumId}`)
   const album = data?.data || data || {}
   const albumCover = album.cover || ''
   const albumTitle = album.title || ''
-  return (album.items || [])
+  const tracks = (album.items || [])
     .filter((row) => row.type === 'track' || row.item)
     .map((row) => {
       const t = row.item || row
@@ -92,6 +105,8 @@ export async function getAlbumTracks(albumId) {
         t.album = { ...(t.album || {}), cover: albumCover, title: albumTitle }
       return normalizeTrack(t, 'tidal')
     })
+  cacheSet(key, tracks, CACHE_TTL_ALBUM)
+  return tracks
 }
 
 // Artist
@@ -177,34 +192,40 @@ export async function getHomeTrending() {
 }
 
 export async function getTrackRecommendations(trackId) {
+  const key = `recs:${trackId}`
+  const cached = cacheGet(key)
+  if (cached) return cached
   try {
     const { data } = await get(`/recommendations/?id=${trackId}`)
-    return (data?.data?.items || data?.items || [])
+    const tracks = (data?.data?.items || data?.items || [])
       .map((item) => normalizeTrack(item.track || item, 'tidal'))
       .filter((t) => t.id)
+    cacheSet(key, tracks, CACHE_TTL_RECS)
+    return tracks
   } catch {
     return []
   }
 }
- 
+
 // Stream
 export async function getStream(trackId) {
   const pref = localStorage.getItem('tt_quality') || 'lossless'
-  const tiers = QUALITY_TIERS[pref] || QUALITY_TIERS.lossless
-  for (const quality of tiers) {
-    try {
-      const { data } = await get(`/track/?id=${trackId}&quality=${quality}`)
-      const payload = data?.data || data
-      if (!payload?.manifest) continue
-      return decodeManifest(payload)
-    } catch {}
+  const quality = QUALITY_MAP[pref] || QUALITY_MAP.lossless
+  try {
+    const { data } = await get(`/track/?id=${trackId}&quality=${quality}`)
+    const payload = data?.data || data
+    if (payload?.manifest) return decodeManifest(payload)
+  } catch {}
+  if (quality !== QUALITY_MAP.lossless) {
+    const { data } = await get(`/track/?id=${trackId}&quality=${QUALITY_MAP.lossless}`)
+    const payload = data?.data || data
+    if (payload?.manifest) return decodeManifest(payload)
   }
-  throw new Error('No stream available from Tidal providers')
+  throw new Error('Stream unavailable')
 }
 
 // Tidal Video
 export async function searchTidalVideos(query) {
-  // Only api.monochrome.tf and arran.monochrome.tf support video search
   const VIDEO_DOMAINS = ['api.monochrome.tf', 'arran.monochrome.tf']
   try {
     const { data } = await get(
@@ -212,7 +233,6 @@ export async function searchTidalVideos(query) {
       null,
       { allowedDomains: VIDEO_DOMAINS }
     )
-    // Response has videos section — find it
     const items = data?.videos?.items || data?.data?.videos?.items || []
     return items.map((v) => _normalizeVideo(v)).filter((v) => v.id)
   } catch {}
@@ -224,15 +244,11 @@ export async function getTidalVideoStream(videoId) {
   const { data } = await get(`/video/?id=${videoId}`, null, {
     allowedDomains: VIDEO_DOMAINS,
   })
-  // Response shape: { version, video: { manifest, ... } }
   const payload = data?.video || data?.data || data
   if (!payload?.manifest) throw new Error('No video manifest')
-
-  // Manifest is base64-encoded JSON: { mimeType, urls: [hlsUrl] }
   const decoded = JSON.parse(atob(payload.manifest))
   const hlsUrl = decoded?.urls?.[0]
   if (!hlsUrl) throw new Error('No HLS URL in manifest')
-
   return { type: 'hls', url: hlsUrl }
 }
 

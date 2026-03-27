@@ -19,6 +19,7 @@ const HARDCODED_BASES = [
 ]
 
 const PLAYLIST_PRIORITY_BASE = 'https://eu-central.monochrome.tf'
+const ALBUM_PRIORITY_BASE = 'https://lossless.wtf'
 
 const UPTIME_URLS = [
   'https://tidal-uptime.jiffy-puffs-1j.workers.dev/',
@@ -77,6 +78,16 @@ export async function get(path, bases, options = {}) {
     if (filtered.length) all = filtered
   }
   return tryBases(all, path)
+}
+
+// add alongside getPlaylist
+export async function getAlbum(path) {
+  const bases = await getBases()
+  const ordered = [
+    ALBUM_PRIORITY_BASE,
+    ...bases.filter((b) => b !== ALBUM_PRIORITY_BASE),
+  ]
+  return tryBases(ordered, path)
 }
 
 export async function getPlaylist(path) {

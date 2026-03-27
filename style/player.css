@@ -129,30 +129,12 @@
   z-index: 30;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: max(env(safe-area-inset-top, 0px), 14px) var(--s4) var(--s3);
-  gap: var(--s2);
-  /* top scrim so icons are readable over any artwork */
   background: linear-gradient(
     to bottom,
     oklch(0 0 0 / 0.3) 0%,
     transparent 100%
   );
-}
-.np-topbar-title {
-  flex: 1;
-  min-width: 0;
-  font-size: 13px;
-  font-weight: 600;
-  color: oklch(1 0 0 / 0.72);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-align: center;
-  padding: 0 var(--s2);
-}
-.np-more-btn-offset {
-  margin-right: -4px;
 }
 
 .np-icon-btn {
@@ -163,13 +145,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: oklch(1 0 0 / 0.88);
+  color: oklch(1 0 0 / 0.65);
   flex-shrink: 0;
-  transition: background 0.15s;
+  transition: color 0.18s;
   pointer-events: all;
 }
+.np-icon-btn:hover {
+  color: oklch(1 0 0 / 0.95);
+}
 .np-icon-btn:active {
-  background: oklch(1 0 0 / 0.1);
+  color: oklch(1 0 0);
+  opacity: 0.6;
 }
 
 .np-icon-btn .bi {
@@ -297,11 +283,34 @@
 .np-love-btn.liked .bi {
   color: var(--accent);
 }
+.np-love-btn:hover {
+  color: oklch(1 0 0 / 0.7);
+}
 .np-love-btn:active {
   transform: scale(0.75);
 }
 .np-love-btn .bi {
   font-size: 22px;
+}
+ 
+.np-more-inline-btn {
+  color: oklch(1 0 0 / 0.3);
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+  background: transparent;
+  transition: color 0.2s;
+}
+.np-more-inline-btn:hover {
+  color: oklch(1 0 0 / 0.7);
+}
+.np-more-inline-btn:active {
+  color: oklch(1 0 0);
+}
+.np-more-inline-btn .bi {
+  font-size: 20px;
 }
 
 #np-progress-wrap {
@@ -343,14 +352,17 @@
   flex-shrink: 0;
 }
 .np-ctrl {
-  color: oklch(1 0 0 / 0.85);
+  color: oklch(1 0 0 / 0.65);
   display: flex;
   align-items: center;
   padding: 6px;
-  transition: opacity 0.15s;
+  transition: color 0.18s;
+}
+.np-ctrl:hover {
+  color: oklch(1 0 0 / 0.95);
 }
 .np-ctrl:active {
-  opacity: 0.3;
+  opacity: 0.4;
 }
 .np-ctrl .bi {
   font-size: 32px;
@@ -391,15 +403,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: oklch(1 0 0 / 0.55);
+  color: oklch(1 0 0 / 0.45);
   padding: var(--s3) var(--s5);
   border-radius: var(--r-md);
-  transition:
-    color 0.15s,
-    background 0.15s;
+  transition: color 0.18s;
+}
+.np-sec-btn:hover {
+  color: oklch(1 0 0 / 0.8);
 }
 .np-sec-btn:active {
-  background: oklch(1 0 0 / 0.07);
+  color: oklch(1 0 0);
+  opacity: 0.5;
 }
 .np-sec-btn.active {
   color: oklch(1 0 0);
@@ -823,11 +837,9 @@
     padding: 28px 36px;
     justify-content: flex-start;
   }
-  #np-topbar-title {
+  
+ #np-topbar-title {
     display: none;
-  }
-  #np-more-btn {
-    display: none !important;
   }
   #np-topbar .np-icon-btn {
     background: oklch(1 0 0 / 0.15);
