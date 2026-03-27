@@ -15,6 +15,9 @@ function _detectTopResult(tracks) {
   return tracks.length ? tracks[0] : null
 }
 
+let _debounceTimer = null
+const DEBOUNCE_DELAY = 300
+
 export async function runSearch(query, tab = 'music') {
   if (!query.trim()) return
   State.set('search.query', query)
@@ -23,11 +26,9 @@ export async function runSearch(query, tab = 'music') {
   try {
     let results = []
     if (tab === 'music') {
-      // Tidal only on music tab
       results = await searchTracks(query).catch(() => [])
       State.set('search.topResult', _detectTopResult(results))
     } else if (tab === 'video') {
-      // Both Tidal and YouTube on video tab
       const [tidal, yt] = await Promise.allSettled([
         searchTidalVideos(query),
         searchVideos(query),
@@ -55,11 +56,25 @@ export async function runSearch(query, tab = 'music') {
   }
 }
 
+export function debouncedSearch(query, tab = 'music') {
+  clearTimeout(_debounceTimer)
+  State.set('search.query', query)
+
+  if (!query.trim()) {
+    _setLoading(false)
+    return
+  }
+
+  _setLoading(true)
+  _debounceTimer = setTimeout(() => runSearch(query, tab), DEBOUNCE_DELAY)
+}
+
 export function setMood(mood) {
   State.set('search.mood', mood)
 }
 
 export function clearSearch() {
+  clearTimeout(_debounceTimer)
   State.set('search.query', '')
   State.set('search.results', [])
   State.set('search.topResult', null)
@@ -70,5 +85,5 @@ export function clearSearch() {
 export function setTab(tab) {
   State.set('search.activeTab', tab)
   const query = State.get('search.query')
-  if (query) runSearch(query, tab)
+  if (query) debouncedSearch(query, tab)
 }

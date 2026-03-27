@@ -4,26 +4,34 @@ import * as Player from '../modules/player.js'
 import { startLiveCheck } from '../api/status.js'
 import { exportBackup, importBackup } from '../modules/backup.js'
 import { escHtml } from '../api/utils.js'
+import * as Cache from '../modules/cache.js'
 
 const $ = (id) => document.getElementById(id)
 let _stopStatus = null
 
+function _renderCacheSize() {
+  const n = Cache.size()
+  const el = $('cache-size-label')
+  if (el) el.textContent = n > 0 ? `${n} item${n !== 1 ? 's' : ''} cached` : 'Cache is empty'
+}
+ 
 export function render() {
   const theme = State.get('ui.theme') || 'light'
   $('theme-toggle-btn')?.setAttribute(
     'aria-checked',
     theme === 'dark' ? 'true' : 'false'
   )
-
+ 
   if (_stopStatus) {
     _stopStatus()
     _stopStatus = null
   }
   _stopStatus = startLiveCheck(_onStatusUpdate, 30000)
-
+ 
   renderQuality()
   renderSpeed()
   renderGapless()
+  _renderCacheSize()
   _initEQ()
 }
 
@@ -131,6 +139,12 @@ export function initEvents() {
     UI.applyTheme(next)
   })
 
+$('clear-cache-btn')?.addEventListener('click', () => {
+    Cache.clear()
+    _renderCacheSize()
+    UI.toast('Cache cleared')
+  })
+ 
   $('backup-export-btn')?.addEventListener('click', () => exportBackup(State))
   $('backup-import-btn')?.addEventListener('click', () =>
     importBackup(

@@ -204,6 +204,82 @@
   color: var(--accent);
 }
 
+#page-playlist .alb-track {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: 10px var(--s5);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+#page-playlist .alb-track:active {
+  background: oklch(1 0 0 / 0.07);
+}
+#page-playlist .alb-track-num {
+  font-size: 14px;
+  font-weight: 600;
+  color: oklch(1 0 0 / 0.45);
+  width: 18px;
+  text-align: right;
+  flex-shrink: 0;
+}
+#page-playlist .alb-track-thumb {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--r-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+#page-playlist .alb-track-info {
+  flex: 1;
+  min-width: 0;
+}
+#page-playlist .alb-track-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: oklch(1 0 0 / 0.95);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#page-playlist .alb-track-artist {
+  font-size: 12px;
+  color: oklch(1 0 0 / 0.55);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#page-playlist .alb-track-dur {
+  font-size: 13px;
+  color: oklch(1 0 0 / 0.45);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+#page-playlist .alb-track-more {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: oklch(1 0 0 / 0.45);
+  font-size: 18px;
+  flex-shrink: 0;
+}
+#page-playlist .alb-track-more:active {
+  color: oklch(1 0 0);
+}
+#page-playlist .alb-track.playing {
+  background: oklch(1 0 0 / 0.07);
+}
+#page-playlist .alb-track.playing .alb-track-title {
+  color: var(--accent);
+}
+#page-playlist .alb-track.playing .alb-track-num {
+  color: var(--accent);
+}
+
 @media (min-width: 900px) {
   /* - layout.css handles left/right/top/bottom/border-radius - */
 

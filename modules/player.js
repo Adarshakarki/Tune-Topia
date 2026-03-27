@@ -1,7 +1,7 @@
 import State from '../app/state.js'
 import Queue from './queue.js'
 import History from './history.js'
-import { getStream as tidalStream } from '../api/index.js'
+import { getStream as tidalStream, getTrackRecommendations } from '../api/index.js'
 import { getAudioStream as ytStream, searchVideos } from '../api/index.js'
 
 const audioA = document.getElementById('audio')
@@ -92,7 +92,20 @@ function _onEnded() {
     _swapToPreloaded()
     return
   }
-  if (!_swapping) next()
+  if (_swapping) return
+  const hasNext = Queue.getNext()
+  if (hasNext) {
+    next()
+    return
+  }
+  // queue exhausted — fetch recs for current track and continue
+  const current = State.get('player.currentTrack')
+  if (!current) return
+  getTrackRecommendations(current.id).then((recs) => {
+    if (!recs.length) return
+    recs.forEach((r) => Queue.add(r))
+    next()
+  })
 }
 
 async function _preloadNext() {

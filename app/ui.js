@@ -413,6 +413,8 @@ export function setTrackInfo(track) {
       ;[$('np-lyrics-panel'), $('np-queue-panel')].forEach((el) => {
         if (el) el.style.background = `rgb(${dark})`
       })
+      const meta = document.getElementById('theme-color-meta')
+      if (meta) meta.setAttribute('content', `rgb(${dark})`)
     })
   }
 }
@@ -513,7 +515,11 @@ export function closePlayer() {
     .querySelectorAll('.np-overlay')
     .forEach((p) => p.classList.remove('open'))
   $('now-playing')?.classList.remove('open')
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+  const meta = document.getElementById('theme-color-meta')
+  if (meta) meta.setAttribute('content', isDark ? '#0E0C0A' : '#F5F0E8')
 }
+
 export function openPanel(id) {
   document
     .querySelectorAll('.np-overlay')

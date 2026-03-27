@@ -145,11 +145,12 @@ function _renderTracklist(tracks) {
       '<div class="empty"><i class="bi bi-music-note-beamed"></i><p>No tracks found</p></div>'
     return
   }
-  el.innerHTML = tracks
+el.innerHTML = tracks
     .map(
       (t, i) => `
     <div class="alb-track" data-index="${i}" data-tid="${escHtml(t.id)}">
       <span class="alb-track-num">${i + 1}</span>
+      <img class="alb-track-thumb" src="${escHtml(t.coverSmall || t.cover || '')}" onerror="this.style.display='none'" alt=""/>
       <div class="alb-track-info">
         <div class="alb-track-title">${escHtml(t.title)}${t.explicit ? ' <span class="explicit-tag">E</span>' : ''}</div>
         <div class="alb-track-artist">${escHtml(t.artist || '')}</div>

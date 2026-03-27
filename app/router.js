@@ -6,6 +6,10 @@ let _prevPage = 'home'
 let _isPopping = false
 
 const _pageLoaders = {}
+const _loadedPages = new Set()
+
+// pages where the loader does heavy network work — skip on revisit
+const CACHE_PAGES = new Set(['home', 'new'])
 
 export function registerLoader(name, fn) {
   _pageLoaders[name] = fn
@@ -20,7 +24,10 @@ export function showPage(name, pushState = true) {
   UI.showPage(name)
   closeSidebar()
   $('main-content')?.scrollTo(0, 0)
-  if (_pageLoaders[name]) _pageLoaders[name]()
+  if (_pageLoaders[name] && !(CACHE_PAGES.has(name) && _loadedPages.has(name))) {
+    _pageLoaders[name]()
+    _loadedPages.add(name)
+  }
   if (name === 'search') setTimeout(() => $('search-input')?.focus(), 100)
 }
 
@@ -42,7 +49,7 @@ export function closeSidebar() {
   $('sidebar-overlay')?.classList.remove('visible')
 }
 
-// Handle browser back/forward
+// handle browser back/forward
 window.addEventListener('popstate', (e) => {
   _isPopping = true
   const page = e.state?.page || 'home'
@@ -50,7 +57,11 @@ window.addEventListener('popstate', (e) => {
   _isPopping = false
 })
 
-// Initialize history state for current page
+export function invalidatePage(name) {
+  _loadedPages.delete(name)
+}
+
+// initialize history state for current page
 if (!history.state) {
   history.replaceState({ page: 'home' }, '', '?p=home')
 }
