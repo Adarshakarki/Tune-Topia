@@ -7,7 +7,17 @@ const $ = (id) => document.getElementById(id)
 let _editing = false
 let _showPage = null
 
-// ── Public ───────────────────────────────────────────────────────────────────
+function _sanitizeImageUrl(url) {
+  if (!url) return ''
+  try {
+    const { protocol, href } = new URL(url)
+    return protocol === 'https:' || protocol === 'http:' || protocol === 'data:'
+      ? href
+      : ''
+  } catch {
+    return ''
+  }
+}
 
 export function render() {
   _syncProfile()
@@ -17,7 +27,6 @@ export function render() {
 export function initEvents(showPageFn) {
   _showPage = showPageFn
 
-  // Profile popup (home avatar button)
   $('home-account-btn')?.addEventListener('click', () => {
     _syncProfile()
     $('profile-popup-sheet')?.classList.add('open')
@@ -36,12 +45,10 @@ export function initEvents(showPageFn) {
     UI.toast('Sign in coming soon')
   })
 
-  // Gear → settings
   $('profile-settings-btn')?.addEventListener('click', () =>
     _showPage('settings')
   )
 
-  // Edit toggle
   $('profile-edit-btn')?.addEventListener('click', () => {
     _editing = !_editing
     $('profile-edit-section').style.display = _editing ? 'block' : 'none'
@@ -50,11 +57,7 @@ export function initEvents(showPageFn) {
       if (ni) ni.value = State.get('user.name') || ''
       const pi = $('pfp-url-input')
       if (pi) pi.value = State.get('user.pfp') || ''
-      _syncPfpEl(
-        'pfp-edit-img',
-        'pfp-edit-preview',
-        State.get('user.pfp') || ''
-      )
+      _syncPfpEl('pfp-edit-img', 'pfp-edit-preview', State.get('user.pfp') || '')
     }
   })
 
@@ -64,11 +67,7 @@ export function initEvents(showPageFn) {
   })
 
   $('pfp-url-input')?.addEventListener('input', () => {
-    _syncPfpEl(
-      'pfp-edit-img',
-      'pfp-edit-preview',
-      $('pfp-url-input').value.trim()
-    )
+    _syncPfpEl('pfp-edit-img', 'pfp-edit-preview', $('pfp-url-input').value.trim())
   })
 
   $('profile-save-btn')?.addEventListener('click', () => {
@@ -87,11 +86,8 @@ export function initEvents(showPageFn) {
     UI.toast('Sign in coming soon')
   )
 
-  // Capsule owns its own period-btn events
   Capsule.initEvents()
 }
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
 
 function _closePopup() {
   $('profile-popup-sheet')?.classList.remove('open')
@@ -101,10 +97,11 @@ function _syncPfpEl(imgId, wrapId, url) {
   const img = $(imgId)
   const wrap = $(wrapId)
   if (!img || !wrap) return
-  img.src = url
-  img.style.display = url ? 'block' : 'none'
+  const safeUrl = _sanitizeImageUrl(url)
+  img.src = safeUrl
+  img.style.display = safeUrl ? 'block' : 'none'
   const ph = wrap.querySelector('.pfp-placeholder')
-  if (ph) ph.style.display = url ? 'none' : 'flex'
+  if (ph) ph.style.display = safeUrl ? 'none' : 'flex'
 }
 
 function _syncProfile() {
