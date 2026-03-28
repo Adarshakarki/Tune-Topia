@@ -1,7 +1,7 @@
 {
   "id": "tunetopia-music",
-  "name": "TuneTopia",
-  "short_name": "TuneTopia",
+  "name": "Tune Topia",
+  "short_name": "Tune Topia",
   "description": "Music streaming with TIDAL and YouTube",
   "start_url": "/Tune-Topia/?source=pwa",
   "scope": "/Tune-Topia/",
