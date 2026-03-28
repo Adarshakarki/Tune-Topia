@@ -1,20 +1,20 @@
 import { fetchJSON, tryBases } from '../utils.js'
 
 const HARDCODED_BASES = [
-  'https://api.monochrome.tf',
-  'https://arran.monochrome.tf',
   'https://eu-central.monochrome.tf',
   'https://us-west.monochrome.tf',
+  'https://arran.monochrome.tf',
+  'https://api.monochrome.tf',
   'https://monochrome-api.samidy.com',
   'https://triton.squid.wtf',
   'https://wolf.qqdl.site',
   'https://maus.qqdl.site',
   'https://vogel.qqdl.site',
-  'https://katze.qqdl.site',
   'https://hund.qqdl.site',
+  'https://tidal.kinoplus.online',
+  'https://katze.qqdl.site',
   'https://hifi.p1nkhamster.xyz',
   'https://lossless.wtf',
-  'https://tidal.kinoplus.online',
   'https://tidal-api.binimum.org',
 ]
 
@@ -46,7 +46,11 @@ let _resolvedBases = null
 
 export async function getBases() {
   if (_resolvedBases) return _resolvedBases
-  const urls = [...UPTIME_URLS].sort(() => Math.random() - 0.5)
+  const urls = [...UPTIME_URLS]
+for (let i = urls.length - 1; i > 0; i--) {
+  const j = Math.floor(Math.random() * (i + 1))
+  ;[urls[i], urls[j]] = [urls[j], urls[i]]
+}
   for (const url of urls) {
     try {
       const d = await fetchJSON(url)
@@ -80,7 +84,6 @@ export async function get(path, bases, options = {}) {
   return tryBases(all, path)
 }
 
-// add alongside getPlaylist
 export async function getAlbum(path) {
   const bases = await getBases()
   const ordered = [

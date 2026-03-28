@@ -55,6 +55,29 @@ export function init() {
     e.stopPropagation()
     Player.next()
   })
+  let _idleTimer = null
+  const _np = $('now-playing')
+
+  function _showNpControls() {
+    _np?.classList.remove('np-idle')
+    clearTimeout(_idleTimer)
+    if (!window.matchMedia('(min-width: 900px)').matches) return
+    if (!_np?.classList.contains('open')) return
+    _idleTimer = setTimeout(() => _np?.classList.add('np-idle'), 3000)
+  }
+
+  _np?.addEventListener('mousemove', _showNpControls)
+  _np?.addEventListener('click', _showNpControls)
+
+  // reset on open/close
+  $('np-close-btn')?.addEventListener(
+    'click',
+    () => {
+      clearTimeout(_idleTimer)
+      _np?.classList.remove('np-idle')
+    },
+    { capture: true }
+  )
 
   // Desktop bar controls
   $('bar-prev-btn')?.addEventListener('click', Player.prev)

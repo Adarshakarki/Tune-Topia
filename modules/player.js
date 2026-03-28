@@ -1,3 +1,4 @@
+//modules/player.js
 import State from '../app/state.js'
 import Queue from './queue.js'
 import History from './history.js'
@@ -7,14 +8,25 @@ import {
 } from '../api/index.js'
 import { getAudioStream as ytStream, searchVideos } from '../api/index.js'
 
+//audio-elements
 const audioA = document.getElementById('audio')
 const audioB = new Audio()
 audioB.preload = 'auto'
 
 let _active = audioA
 let _inactive = audioB
+let _dash = null
+let _preloaded = null
+let _preloading = false
+let _swapping = false
+let _sleepAfterTrack = false
+let _handlersRegistered = false
 
+const _preloadLead = 20
 const _listeners = {}
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+
+//events
 export function on(event, cb) {
   if (!_listeners[event]) _listeners[event] = []
   _listeners[event].push(cb)
@@ -26,21 +38,107 @@ function _emit(event, data) {
   ;(_listeners[event] || []).forEach((cb) => cb(data))
 }
 
-let _sleepAfterTrack = false
-export function setSleepAfterTrack(val) {
-  _sleepAfterTrack = val
+//mediasession-metadata
+function _updateMediaSession(track) {
+  if (!('mediaSession' in navigator)) return
+
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: track.title || '',
+    artist: track.artist || '',
+    album: track.album || '',
+    artwork: track.cover
+      ? [
+          { src: track.coverSmall || track.cover, sizes: '96x96', type: 'image/jpeg' },
+          { src: track.cover, sizes: '192x192', type: 'image/jpeg' },
+          { src: track.cover, sizes: '512x512', type: 'image/jpeg' },
+        ]
+      : [],
+  })
+
+  navigator.mediaSession.playbackState = State.get('player.isPlaying') ? 'playing' : 'paused'
+
+  const _setPosition = () => {
+    if (!_active.duration || !isFinite(_active.duration)) return
+    try {
+      //ios: omit duration to force next/prev buttons
+      const posState = isIOS
+        ? { playbackRate: _active.playbackRate || 1, position: _active.currentTime }
+        : {
+            duration: _active.duration,
+            playbackRate: _active.playbackRate || 1,
+            position: Math.min(_active.currentTime, _active.duration),
+          }
+      navigator.mediaSession.setPositionState(posState)
+    } catch {}
+  }
+
+  const _onLoaded = () => {
+    _setPosition()
+    _active.removeEventListener('loadedmetadata', _onLoaded)
+    _active.removeEventListener('playing', _onPlaying)
+  }
+  const _onPlaying = () => {
+    _setPosition()
+    _active.removeEventListener('loadedmetadata', _onLoaded)
+    _active.removeEventListener('playing', _onPlaying)
+  }
+
+  _active.addEventListener('loadedmetadata', _onLoaded, { once: true })
+  _active.addEventListener('playing', _onPlaying, { once: true })
+
+  if (_active.readyState >= 1) _setPosition()
 }
 
-const _preloadLead = 20
-let _preloaded = null
-let _preloading = false
-let _swapping = false
-
-function _pauseVideo() {
-  const vp = document.getElementById('vp-video')
-  if (vp && !vp.paused) vp.pause()
+//mediasession-state
+function _syncMediaSessionState(isPlaying) {
+  if (!('mediaSession' in navigator)) return
+  navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused'
 }
 
+//mediasession-handlers
+function _ensureMediaSessionHandlers() {
+  if (!('mediaSession' in navigator) || _handlersRegistered) return
+  _handlersRegistered = true
+
+  //ios: disable seek to enforce next/prev
+  try { navigator.mediaSession.setActionHandler('seekbackward', null) } catch {}
+  try { navigator.mediaSession.setActionHandler('seekforward', null) } catch {}
+
+  const handlers = {
+    previoustrack: () => prev(),
+    nexttrack: () => next(),
+    play: () => { _active.play(); _syncMediaSessionState(true) },
+    pause: () => { _active.pause(); _syncMediaSessionState(false) },
+    seekto: (e) => {
+      if (e.seekTime != null && _active.duration && !isIOS) {
+        _active.currentTime = e.seekTime
+        _updatePositionState()
+      }
+    },
+  }
+
+  Object.entries(handlers).forEach(([action, handler]) => {
+    try { navigator.mediaSession.setActionHandler(action, handler) } catch {}
+  })
+}
+
+//mediasession-position
+function _updatePositionState() {
+  if (!('mediaSession' in navigator)) return
+  if (!_active?.duration || !isFinite(_active.duration)) return
+  try {
+    const posState = isIOS
+      ? { playbackRate: _active.playbackRate || 1, position: _active.currentTime }
+      : {
+          duration: _active.duration,
+          playbackRate: _active.playbackRate || 1,
+          position: Math.min(_active.currentTime, _active.duration),
+        }
+    navigator.mediaSession.setPositionState(posState)
+  } catch {}
+}
+
+//audio-binding
 function _bindAudio(el) {
   el.addEventListener('play', () => {
     if (el !== _active) return
@@ -81,6 +179,7 @@ function _bindAudio(el) {
 _bindAudio(audioA)
 _bindAudio(audioB)
 
+//queue-ended
 function _onEnded() {
   if (_sleepAfterTrack) {
     _sleepAfterTrack = false
@@ -103,7 +202,6 @@ function _onEnded() {
     next()
     return
   }
-  // queue exhausted — fetch recs for current track and continue
   const current = State.get('player.currentTrack')
   if (!current) return
   getTrackRecommendations(current.id).then((recs) => {
@@ -113,6 +211,7 @@ function _onEnded() {
   })
 }
 
+//preload
 async function _preloadNext() {
   const nextTrack = Queue.getUpcoming()[0]
   if (!nextTrack) return
@@ -131,6 +230,7 @@ async function _preloadNext() {
   _preloading = false
 }
 
+//gapless-swap
 function _swapToPreloaded() {
   if (_swapping) return
   _swapping = true
@@ -138,6 +238,8 @@ function _swapToPreloaded() {
 
   _inactive.volume = 1
   _inactive.play().catch(() => {})
+  _ensureMediaSessionHandlers()
+
   _active.pause()
   _active.src = ''
   _active.volume = 1
@@ -159,8 +261,7 @@ function _swapToPreloaded() {
   _preloadNext()
 }
 
-let _dash = null
-
+//dash-support
 async function _loadDashJs() {
   return new Promise((res, rej) => {
     if (window.dashjs) {
@@ -168,8 +269,7 @@ async function _loadDashJs() {
       return
     }
     const s = document.createElement('script')
-    s.src =
-      'https://cdnjs.cloudflare.com/ajax/libs/dashjs/4.7.4/dash.all.min.js'
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/dashjs/4.7.4/dash.all.min.js'
     s.onload = res
     s.onerror = rej
     document.head.appendChild(s)
@@ -191,6 +291,7 @@ async function _playDash(manifestXml) {
   })
 }
 
+//stream-resolver
 async function _getStream(track) {
   if (track.source === 'youtube') return ytStream(track.id)
   try {
@@ -201,12 +302,11 @@ async function _getStream(track) {
   throw new Error('Stream unavailable')
 }
 
+//public-play
 export async function play(track, tracks, startIndex) {
   if (tracks) Queue.load(tracks, startIndex ?? 0)
 
-  // Pause any playing video
   _pauseVideo()
-
   _preloaded = null
   _preloading = false
   _swapping = false
@@ -237,6 +337,7 @@ export async function play(track, tracks, startIndex) {
     } else {
       _active.src = stream.url
       await _active.play()
+      _ensureMediaSessionHandlers() //ios: register after user gesture
     }
     History.push(track)
     _emit('queueUpdated', {
@@ -249,6 +350,7 @@ export async function play(track, tracks, startIndex) {
   }
 }
 
+//public-controls
 export async function toggle() {
   if (!_active.src && !_dash) return
   State.get('player.isPlaying') ? _active.pause() : await _active.play()
@@ -334,108 +436,17 @@ export function getCurrentTrack() {
   return State.get('player.currentTrack')
 }
 
-function _updateMediaSession(track) {
-  if (!('mediaSession' in navigator)) return
-
-  navigator.mediaSession.metadata = new MediaMetadata({
-    title: track.title || '',
-    artist: track.artist || '',
-    album: track.album || '',
-    artwork: track.cover
-      ? [
-          {
-            src: track.coverSmall || track.cover,
-            sizes: '96x96',
-            type: 'image/jpeg',
-          },
-          { src: track.cover, sizes: '192x192', type: 'image/jpeg' },
-          { src: track.cover, sizes: '512x512', type: 'image/jpeg' },
-        ]
-      : [],
-  })
-
-  navigator.mediaSession.playbackState = 'playing'
-
-  // Wait for real duration to be available before setting position state
-  const trySetPosition = () => {
-    if (!_active.duration || !isFinite(_active.duration)) return
-    try {
-      navigator.mediaSession.setPositionState({
-        duration: _active.duration,
-        playbackRate: _active.playbackRate || 1,
-        position: Math.min(_active.currentTime, _active.duration),
-      })
-    } catch {}
-  }
-
-  // iOS needs this after play begins, not just metadata load
-  _active.addEventListener('playing', function onPlaying() {
-    _active.removeEventListener('playing', onPlaying)
-    trySetPosition()
-  })
+export function setSleepAfterTrack(val) {
+  _sleepAfterTrack = val
 }
 
-navigator.mediaSession.playbackState = 'playing'
-
-_active.onloadedmetadata = () => {
-  navigator.mediaSession.setPositionState({
-    duration: _active.duration || 0,
-    playbackRate: _active.playbackRate || 1,
-    position: 0,
-  })
+//video-pause
+function _pauseVideo() {
+  const vp = document.getElementById('vp-video')
+  if (vp && !vp.paused) vp.pause()
 }
 
-function _syncMediaSessionState(isPlaying) {
-  if (!('mediaSession' in navigator)) return
-  navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused'
-}
-
-if ('mediaSession' in navigator) {
-  navigator.mediaSession.setActionHandler('previoustrack', () => prev())
-  navigator.mediaSession.setActionHandler('nexttrack', () => next())
-
-  navigator.mediaSession.setActionHandler('play', () => {
-    _active.play()
-    _syncMediaSessionState(true)
-  })
-
-  navigator.mediaSession.setActionHandler('pause', () => {
-    _active.pause()
-    _syncMediaSessionState(false)
-  })
-
-  try {
-    navigator.mediaSession.setActionHandler('seekbackward', null)
-  } catch {}
-  try {
-    navigator.mediaSession.setActionHandler('seekforward', null)
-  } catch {}
-
-  navigator.mediaSession.setActionHandler('seekto', (e) => {
-    if (e.seekTime != null && _active.duration) {
-      _active.currentTime = e.seekTime
-      navigator.mediaSession.setPositionState({
-        duration: _active.duration,
-        playbackRate: _active.playbackRate || 1,
-        position: _active.currentTime,
-      })
-    }
-  })
-}
-
-setInterval(() => {
-  if (!('mediaSession' in navigator)) return
-  if (!_active?.duration || !isFinite(_active.duration)) return
-
-  try {
-    navigator.mediaSession.setPositionState({
-      duration: _active.duration,
-      playbackRate: _active.playbackRate || 1,
-      position: Math.min(_active.currentTime, _active.duration),
-    })
-  } catch {}
-}, 1000)
-
+//nowplaying-ui
 const _npPanel = document.getElementById('now-playing')
 
 export function openNowPlaying() {
@@ -469,3 +480,6 @@ document.addEventListener('DOMContentLoaded', () => {
     $el('np-more-sheet')?.classList.remove('open')
   })
 })
+
+//mediasession-init
+setInterval(_updatePositionState, 1000)

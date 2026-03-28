@@ -222,7 +222,6 @@
   display: block;
 }
 
-/* page header - scrolls WITH content, not sticky */
 .page-header {
   display: flex;
   align-items: center;
@@ -232,19 +231,36 @@
   background: var(--bg);
   border-bottom: 0.5px solid var(--border);
 }
-.page-header-search {
-  padding: var(--s3) var(--s5) var(--s3);
-  align-items: center;
-}
-.page-header-left {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
+
+/* Left and right sections — add padding so buttons aren’t on edge */
+.page-header-left,
 .page-header-right {
   display: flex;
   align-items: center;
   gap: var(--s2);
+  padding-inline: 12px; /* added padding */
+}
+
+/* Centered headers (back button left, title center, action right) */
+.page-header[style*="justify-content:center"] {
+  justify-content: center;
+  position: relative;
+}
+
+.page-header[style*="justify-content:center"] .back-btn {
+  position: absolute;
+  left: var(--s5);
+}
+
+.page-header[style*="justify-content:center"] .page-title {
+  text-align: center;
+  flex: unset;
+}
+
+.page-header[style*="justify-content:center"] .page-header-right {
+  position: absolute;
+  right: var(--s5);
+  margin-left: 0;
 }
 
 .greeting {
@@ -564,7 +580,9 @@
     padding: var(--s4) 28px;
     min-height: 64px;
     align-items: center;
+    justify-content: flex-start; /*alignment: match mobile */
   }
+
   .page-header-search {
     padding: var(--s3) 28px;
   }

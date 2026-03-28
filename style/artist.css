@@ -25,7 +25,7 @@
   top: 0;
   left: 0;
   right: 0;
-  z-index: 20;
+  z-index: 50;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -95,7 +95,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: var(--z-player);
+  z-index: 5;
   height: 65%;
   background: linear-gradient(
     to bottom,
@@ -111,7 +111,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: var(--z-player);
+  z-index: 5;
   height: 30%;
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -137,7 +137,7 @@
   font-weight: 800;
   color: oklch(1 0 0);
   line-height: 1.1;
-  text-shadow: 0 2px 16px oklch(0 0 0 / 0.5);
+  text-shadow: 0 2px 20px oklch(0 0 0 / 0.65);
 }
 
 /* FIX 3 — Following button: solid fill = active state, outline = inactive */
@@ -396,7 +396,10 @@
 }
 
 /* ── Light artist variant ─────────────────────────────────────────────────── */
-#page-artist[data-light='true'] #artist-hero-name,
+#page-artist[data-light='true'] #artist-hero-name {
+  color: oklch(1 0 0); /* keep white regardless of light/dark art */
+  text-shadow: 0 2px 24px oklch(0 0 0 / 0.75); /* stronger shadow on light art */
+}
 #page-artist[data-light='true'] #artist-topbar-title,
 #page-artist[data-light='true'] .art-section-title,
 #page-artist[data-light='true'] .alb-track-title,
@@ -449,7 +452,6 @@
 }
 
 @media (min-width: 900px) {
-  /* layout.css handles left/right/top/bottom/border-radius */
 
   #artist-hero {
     aspect-ratio: unset;
@@ -472,7 +474,7 @@
     height: 100%;
     object-fit: cover;
     object-position: center 20%;
-    z-index: var(--z-player);
+    z-index: 1;
     -webkit-mask-image: linear-gradient(
       to bottom,
       black 0%,
@@ -493,7 +495,7 @@
     bottom: 0;
     left: 0;
     right: 0;
-    z-index: 10;
+    z-index: 15;
     padding: var(--s5) 40px var(--s4);
     text-align: center;
   }

@@ -13,6 +13,8 @@
   border-bottom: 0.5px solid var(--border);
   cursor: pointer;
   transition: background 0.12s;
+  /*alignment: force text left, chevron right */
+  text-align: left;
 }
 .lib-item:last-child {
   border-bottom: none;
@@ -29,34 +31,17 @@
   align-items: center;
   justify-content: center;
   color: var(--bg) !important;
-  /* override inline purple gradients with token-based accent tones */
   background: var(--accent) !important;
 }
 .lib-item-icon .bi {
   font-size: 14px;
 }
-
-/* subtle differentiation per section using opacity variants */
-#lib-liked .lib-item-icon {
-  background: var(--accent) !important;
-}
-#lib-playlists .lib-item-icon {
-  background: var(--accent-mid) !important;
-}
-#lib-albums .lib-item-icon {
-  background: var(--accent) !important;
-  opacity: 0.9;
-}
-#lib-artists .lib-item-icon {
-  background: var(--accent-mid) !important;
-  opacity: 0.9;
-}
-#lib-liked-videos .lib-item-icon {
-  background: oklch(0.45 0.12 20) !important; /* muted warm red */
-}
-#lib-history .lib-item-icon {
-  background: var(--text-2) !important;
-}
+#lib-liked .lib-item-icon { background: var(--accent) !important; }
+#lib-playlists .lib-item-icon { background: var(--accent-mid) !important; }
+#lib-albums .lib-item-icon { background: var(--accent) !important; opacity: 0.9; }
+#lib-artists .lib-item-icon { background: var(--accent-mid) !important; opacity: 0.9; }
+#lib-liked-videos .lib-item-icon { background: oklch(0.45 0.12 20) !important; }
+#lib-history .lib-item-icon { background: var(--text-2) !important; }
 
 .lib-item-body {
   display: flex;
@@ -64,20 +49,27 @@
   gap: 2px;
   flex: 1;
   min-width: 0;
+  /*alignment: ensure text stays left */
+  text-align: left;
 }
 .lib-item-name {
   font-size: 16px;
   font-weight: 500;
   color: var(--text);
+  /*alignment: prevent centering */
+  text-align: left;
 }
 .lib-item-sub {
   font-size: 12px;
   color: var(--text-3);
+  text-align: left;
 }
 .lib-chevron {
   font-size: 13px;
   color: var(--text-3);
   flex-shrink: 0;
+  /*alignment: push chevron to far right */
+  margin-left: auto;
 }
 
 /* liked page */

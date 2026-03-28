@@ -3,23 +3,22 @@ import {
   getAlbum,
   getPlaylist as getPlaylistRaw,
   getBases,
-} from '../client/tidal.client.js'; 
+} from '../client/tidal.client.js'
 
-import { tidalCover, decodeManifest, normalizeTrack } from '../utils.js'; 
-import { get as cacheGet, set as cacheSet } from '../../modules/cache.js';
+import { tidalCover, decodeManifest, normalizeTrack } from '../utils.js'
+import { get as cacheGet, set as cacheSet } from '../../modules/cache.js'
 
-const CACHE_TTL_SEARCH = 3 * 60 * 1000
-const CACHE_TTL_ALBUM  = 10 * 60 * 1000
-const CACHE_TTL_RECS   = 5 * 60 * 1000
+const CACHE_TTL_SEARCH = 5 * 60 * 1000  //5min
+const CACHE_TTL_ALBUM  = 15 * 60 * 1000 //15min
+const CACHE_TTL_RECS   = 10 * 60 * 1000 //10min
+const CACHE_TTL_STREAM = 30 * 60 * 1000 //30min
 
 const QUALITY_MAP = {
-  hires:    'HI_RES_LOSSLESS',
+  hires: 'HI_RES_LOSSLESS',
   lossless: 'LOSSLESS',
-  high:     'HIGH',
-  low:      'LOW',
+  high: 'HIGH',
+  low: 'LOW',
 }
-
-// ── Search ────────────────────────────────────────────────────
 
 export async function searchTracks(query) {
   const key = `search:tracks:${query}`
@@ -33,21 +32,25 @@ export async function searchTracks(query) {
   return tracks
 }
 
+//search-albums
 export async function searchAlbums(query) {
-  let items = []
-  try {
-    const { data } = await getAlbum(`/search/albums?s=${encodeURIComponent(query)}`)  // ← was get()
-    items = data?.data?.items || data?.items || []
-    if (items.length && items[0]?.cover && !items[0]?.album) {
-      return _dedupeAlbums(items.map(_albumFromObject))
-    }
-  } catch {}
+  const key = `search:albums:${query}`
+  const cached = cacheGet(key)
+  if (cached) return cached
 
-  if (!items.length) {
-    const { data } = await get(`/search/?s=${encodeURIComponent(query)}`)
-    items = data?.data?.items || data?.items || []
-  }
-  return _dedupeAlbums(items.filter((t) => t.album?.cover).map(_albumFromTrack))
+  const { data } = await getAlbum(
+    `/search/albums?s=${encodeURIComponent(query)}`
+  )
+  const items = data?.data?.items || data?.items || []
+
+  const albums =
+    items.length && items[0]?.cover && !items[0]?.album
+      ? items.map(_albumFromObject)
+      : items.filter((t) => t.album?.cover).map(_albumFromTrack)
+
+  const result = _dedupeAlbums(albums)
+  cacheSet(key, result, CACHE_TTL_ALBUM)
+  return result
 }
 
 export async function searchArtists(query) {
@@ -140,14 +143,35 @@ export async function getArtistAlbums(artistId) {
     }))
 }
 
-// Playlist
+//playlist
 export async function getPlaylist(playlistId) {
+  const key = `playlist:${playlistId}`
+  const cached = cacheGet(key)
+  if (cached) return cached
+
   let data
+  //try query-param format first (correct endpoint)
   try {
-    ;({ data } = await getPlaylistRaw(`/playlist/${playlistId}`))
+    ;({ data } = await getPlaylistRaw(`/playlist/?id=${playlistId}`))
   } catch {
-    ;({ data } = await getPlaylistRaw(`/playlist?id=${playlistId}`))
+    //fallback to alternate format
+    try {
+      ;({ data } = await getPlaylistRaw(`/playlist?id=${playlistId}`))
+    } catch {
+      //return empty skeleton to prevent UI crash
+      return {
+        id: playlistId,
+        title: 'Playlist',
+        description: '',
+        cover: '',
+        coverSmall: '',
+        trackCount: 0,
+        tracks: [],
+        type: 'playlist',
+      }
+    }
   }
+
   const playlist = data?.playlist || data?.data || data || {}
   const rawItems = data?.items || playlist.items || []
   const imgId = playlist.squareImage || playlist.image || playlist.cover || ''
@@ -162,7 +186,7 @@ export async function getPlaylist(playlistId) {
     })
     .filter(Boolean)
 
-  return {
+  const result = {
     id: String(playlist.uuid || playlistId),
     title: playlist.title || 'Playlist',
     description: playlist.description || '',
@@ -172,6 +196,9 @@ export async function getPlaylist(playlistId) {
     tracks,
     type: 'playlist',
   }
+
+  cacheSet(key, result, CACHE_TTL_ALBUM)
+  return result
 }
 
 // Home
@@ -209,18 +236,25 @@ export async function getTrackRecommendations(trackId) {
 }
 
 // Stream
+//stream
 export async function getStream(trackId) {
   const pref = localStorage.getItem('tt_quality') || 'lossless'
   const quality = QUALITY_MAP[pref] || QUALITY_MAP.lossless
-  try {
-    const { data } = await get(`/track/?id=${trackId}&quality=${quality}`)
-    const payload = data?.data || data
-    if (payload?.manifest) return decodeManifest(payload)
-  } catch {}
-  if (quality !== QUALITY_MAP.lossless) {
-    const { data } = await get(`/track/?id=${trackId}&quality=${QUALITY_MAP.lossless}`)
-    const payload = data?.data || data
-    if (payload?.manifest) return decodeManifest(payload)
+
+  //quality-floor: ensure minimum HIGH (256kbps AAC)
+  const qualityOrder = [quality, QUALITY_MAP.high, QUALITY_MAP.lossless]
+
+  for (const q of qualityOrder) {
+    try {
+      const { data } = await get(`/track/?id=${trackId}&quality=${q}`)
+      const payload = data?.data || data
+      if (payload?.manifest) {
+        const decoded = decodeManifest(payload)
+        //validate minimum quality
+        if (decoded.quality === 'LOW' && q !== QUALITY_MAP.low) continue
+        return decoded
+      }
+    } catch {}
   }
   throw new Error('Stream unavailable')
 }

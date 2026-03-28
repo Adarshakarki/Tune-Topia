@@ -1,4 +1,6 @@
-const BASE_TIMEOUT = 9000
+
+const BASE_TIMEOUT = 12000 //12s for slower networks
+const RETRY_DELAY = 500
 
 async function fetchJSON(url, timeout = BASE_TIMEOUT) {
   const ctrl = new AbortController()
@@ -14,14 +16,21 @@ async function fetchJSON(url, timeout = BASE_TIMEOUT) {
   }
 }
 
-async function tryBases(bases, path) {
+//retry
+async function tryBases(bases, path, retries = 2) {
   const errs = []
-  for (const base of bases) {
-    try {
-      const data = await fetchJSON(`${base}${path}`)
-      return { data, base }
-    } catch (e) {
-      errs.push(`${base}: ${e.message}`)
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    for (const base of bases) {
+      try {
+        const data = await fetchJSON(`${base}${path}`)
+        return { data, base }
+      } catch (e) {
+        errs.push(`${base}: ${e.message}`)
+        //exponential backoff before retry
+        if (attempt < retries) {
+          await new Promise((r) => setTimeout(r, 500 * (attempt + 1)))
+        }
+      }
     }
   }
   throw new Error('All providers failed:\n' + errs.join('\n'))
