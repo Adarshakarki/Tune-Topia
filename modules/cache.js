@@ -2,6 +2,19 @@
 const _mem = new Map()
 const LS_PRE = 'tt_c_'
 
+export function hasValid(key) {
+  const m = _mem.get(key)
+  if (m && Date.now() < m.e) return true
+  try {
+    const raw = localStorage.getItem(LS_PRE + key)
+    if (!raw) return false
+    const { e } = JSON.parse(raw)
+    return Date.now() < e
+  } catch {
+    return false
+  }
+}
+
 export function get(key) {
   const m = _mem.get(key)
   if (m) {
@@ -27,8 +40,14 @@ export function set(key, val, ttl = 5 * 60 * 1000) {
   try {
     localStorage.setItem(LS_PRE + key, JSON.stringify({ v: val, e }))
   } catch {
-    // storage full — memory-only fallback
   }
+}
+
+export function remove(key) {
+  _mem.delete(key)
+  try {
+    localStorage.removeItem(LS_PRE + key)
+  } catch {}
 }
 
 export function clear() {
