@@ -8,6 +8,7 @@ import { escHtml } from '../api/utils.js'
 import { openPicker } from '../pages/playlists-ui.js'
 import { onLike } from '../app/likes.js'
 import { has as isLiked } from '../modules/likedSongs.js'
+import { downloadTrack } from '../modules/downloader.js'
 
 const $ = (id) => document.getElementById(id)
 
@@ -228,21 +229,7 @@ export function initEvents() {
         track.source === 'youtube'
           ? await getAudioStream(track.id)
           : await getStream(track.id)
-      const url = stream.url
-      if (!url)
-        throw new Error('No direct URL (DASH streams cannot be downloaded yet)')
-      const filename = `${track.artist} - ${track.title}.mp3`.replace(
-        /[/\\?%*:|"<>]/g,
-        '-'
-      )
-      const a = Object.assign(document.createElement('a'), {
-        href: url,
-        download: filename,
-        target: '_blank',
-      })
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
+      await downloadTrack(track, stream)
     } catch (e) {
       UI.toast(e.message || 'Download failed')
     }
@@ -336,6 +323,23 @@ export function initEvents() {
       '_blank'
     )
     UI.closeMoreSheet()
+  })
+  $('sheet-download')?.addEventListener('click', async () => {
+    const t = Player.getCurrentTrack()
+    if (!t) return
+    UI.closeMoreSheet()
+    UI.toast('Preparing download…')
+    try {
+      const { getStream, getAudioStream } = await import('../api/index.js')
+      const { downloadTrack } = await import('../modules/downloader.js')
+      const stream =
+        t.source === 'youtube'
+          ? await getAudioStream(t.id)
+          : await getStream(t.id)
+      await downloadTrack(t, stream)
+    } catch (e) {
+      UI.toast(e.message || 'Download failed')
+    }
   })
   $('sheet-add-playlist')?.addEventListener('click', () => {
     const t = Player.getCurrentTrack()
