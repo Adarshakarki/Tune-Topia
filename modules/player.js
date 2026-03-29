@@ -21,6 +21,7 @@ let _preloading = false
 let _swapping = false
 let _sleepAfterTrack = false
 let _handlersRegistered = false
+let _switching = false
 
 const _preloadLead = 20
 const _listeners = {}
@@ -48,21 +49,30 @@ function _updateMediaSession(track) {
     album: track.album || '',
     artwork: track.cover
       ? [
-          { src: track.coverSmall || track.cover, sizes: '96x96', type: 'image/jpeg' },
+          {
+            src: track.coverSmall || track.cover,
+            sizes: '96x96',
+            type: 'image/jpeg',
+          },
           { src: track.cover, sizes: '192x192', type: 'image/jpeg' },
           { src: track.cover, sizes: '512x512', type: 'image/jpeg' },
         ]
       : [],
   })
 
-  navigator.mediaSession.playbackState = State.get('player.isPlaying') ? 'playing' : 'paused'
+  navigator.mediaSession.playbackState = State.get('player.isPlaying')
+    ? 'playing'
+    : 'paused'
 
   const _setPosition = () => {
     if (!_active.duration || !isFinite(_active.duration)) return
     try {
       //ios: omit duration to force next/prev buttons
       const posState = isIOS
-        ? { playbackRate: _active.playbackRate || 1, position: _active.currentTime }
+        ? {
+            playbackRate: _active.playbackRate || 1,
+            position: _active.currentTime,
+          }
         : {
             duration: _active.duration,
             playbackRate: _active.playbackRate || 1,
@@ -101,14 +111,24 @@ function _ensureMediaSessionHandlers() {
   _handlersRegistered = true
 
   //ios: disable seek to enforce next/prev
-  try { navigator.mediaSession.setActionHandler('seekbackward', null) } catch {}
-  try { navigator.mediaSession.setActionHandler('seekforward', null) } catch {}
+  try {
+    navigator.mediaSession.setActionHandler('seekbackward', null)
+  } catch {}
+  try {
+    navigator.mediaSession.setActionHandler('seekforward', null)
+  } catch {}
 
   const handlers = {
     previoustrack: () => prev(),
     nexttrack: () => next(),
-    play: () => { _active.play(); _syncMediaSessionState(true) },
-    pause: () => { _active.pause(); _syncMediaSessionState(false) },
+    play: () => {
+      _active.play()
+      _syncMediaSessionState(true)
+    },
+    pause: () => {
+      _active.pause()
+      _syncMediaSessionState(false)
+    },
     seekto: (e) => {
       if (e.seekTime != null && _active.duration && !isIOS) {
         _active.currentTime = e.seekTime
@@ -118,7 +138,9 @@ function _ensureMediaSessionHandlers() {
   }
 
   Object.entries(handlers).forEach(([action, handler]) => {
-    try { navigator.mediaSession.setActionHandler(action, handler) } catch {}
+    try {
+      navigator.mediaSession.setActionHandler(action, handler)
+    } catch {}
   })
 }
 
@@ -128,7 +150,10 @@ function _updatePositionState() {
   if (!_active?.duration || !isFinite(_active.duration)) return
   try {
     const posState = isIOS
-      ? { playbackRate: _active.playbackRate || 1, position: _active.currentTime }
+      ? {
+          playbackRate: _active.playbackRate || 1,
+          position: _active.currentTime,
+        }
       : {
           duration: _active.duration,
           playbackRate: _active.playbackRate || 1,
@@ -147,7 +172,7 @@ function _bindAudio(el) {
     _syncMediaSessionState(true)
   })
   el.addEventListener('pause', () => {
-    if (el !== _active) return
+    if (el !== _active || _switching) return
     State.set('player.isPlaying', false)
     _emit('playStateChanged', false)
     _syncMediaSessionState(false)
@@ -269,7 +294,8 @@ async function _loadDashJs() {
       return
     }
     const s = document.createElement('script')
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/dashjs/4.7.4/dash.all.min.js'
+    s.src =
+      'https://cdnjs.cloudflare.com/ajax/libs/dashjs/4.7.4/dash.all.min.js'
     s.onload = res
     s.onerror = rej
     document.head.appendChild(s)
@@ -306,6 +332,7 @@ async function _getStream(track) {
 export async function play(track, tracks, startIndex) {
   if (tracks) Queue.load(tracks, startIndex ?? 0)
 
+  _switching = true
   _pauseVideo()
   _preloaded = null
   _preloading = false
@@ -319,7 +346,8 @@ export async function play(track, tracks, startIndex) {
   audioB.src = ''
   _active = audioA
   _inactive = audioB
-
+  _switching = false 
+  
   if (_dash) {
     try {
       _dash.destroy()

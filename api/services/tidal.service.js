@@ -38,9 +38,7 @@ export async function searchAlbums(query) {
   const cached = cacheGet(key)
   if (cached) return cached
 
-  const { data } = await getAlbum(
-    `/search/albums?s=${encodeURIComponent(query)}`
-  )
+  const { data } = await get(`/search/?s=${encodeURIComponent(query)}`)  // <- was getAlbum('/search/albums?...')
   const items = data?.data?.items || data?.items || []
 
   const albums =

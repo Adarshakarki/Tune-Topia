@@ -128,6 +128,8 @@ function _applyColor(r, g, b) {
     'data-light',
     0.299 * r + 0.587 * g + 0.114 * b > 120 ? 'true' : 'false'
   )
+  const meta = document.getElementById('theme-color-meta')
+  if (meta) meta.setAttribute('content', dark)
 }
 
 function _setHeader(artist) {

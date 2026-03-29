@@ -97,15 +97,13 @@ export function qualityBadge(track) {
   return null
 }
 
-// "3:45" from seconds
 export function fmtDur(s) {
-  if (!s || isNaN(s)) return ''
+  if (!s || isNaN(s) || !isFinite(s)) return ''
   return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
 }
 
-// "3:45" from seconds (for progress display)
 export function fmtTime(s) {
-  if (!s || isNaN(s)) return '0:00'
+  if (!s || isNaN(s) || !isFinite(s)) return '0:00'
   return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
 }
 

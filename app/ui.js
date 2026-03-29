@@ -4,6 +4,7 @@ import { escHtml, fmtTime, qualityBadge } from '../api/utils.js'
 import { getActiveLine, getActiveWord } from '../modules/lyrics.js';
 
 const $ = (id) => document.getElementById(id)
+let _npColor = null
 
 // Toast notification
 export function toast(msg) {
@@ -408,6 +409,7 @@ export function setTrackInfo(track) {
         np.style.background = `rgb(${dark})`
         np.style.setProperty('--np-color', `rgb(${dark})`)
       }
+      _npColor = `rgb(${dark})`
       const ctrl = $('np-controls-col')
       if (ctrl) ctrl.style.background = `rgb(${dark})`
       ;[$('np-lyrics-panel'), $('np-queue-panel')].forEach((el) => {
@@ -512,9 +514,14 @@ export function openPlayer() {
 }
 
 export function revertThemeColor() {
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
   const meta = document.getElementById('theme-color-meta')
-  if (meta) meta.setAttribute('content', isDark ? '#0E0C0A' : '#F5F0E8')
+  if (!meta) return
+  if (_npColor) {
+    meta.setAttribute('content', _npColor)
+    return
+  }
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+  meta.setAttribute('content', isDark ? '#0E0C0A' : '#F5F0E8')
 }
  
 export function closePlayer() {
