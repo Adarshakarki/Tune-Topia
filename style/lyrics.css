@@ -3,24 +3,53 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  height: 100%;
+  background: transparent;
 }
 
 #np-lyrics-body {
   flex: 1;
-  overflow-y: auto;
-  padding: var(--s5) var(--s5) 40vh;
+  position: relative;
+  /* Remove manual overflow/padding as am-lyrics handles its own scrolling */
+  overflow: hidden; 
   display: flex;
   flex-direction: column;
-  gap: var(--s3);
   min-height: 0;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
 }
 
+/* 
+  Targeting the custom element specifically 
+  We set the font-family here to ensure the component inherits your Playfair Display
+*/
+am-lyrics {
+  --am-lyrics-font-family: 'Playfair Display', serif;
+  --am-lyrics-font-size: 24px;
+  --am-lyrics-font-weight: 700;
+  --am-lyrics-line-height: 1.45;
+  --am-lyrics-gap: var(--s4);
+  
+  /* Padding matches your original design for the start/end of the list */
+  --am-lyrics-padding-top: var(--s8);
+  --am-lyrics-padding-bottom: 40vh;
+  --am-lyrics-padding-left: var(--s5);
+  --am-lyrics-padding-right: var(--s5);
+
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* placeholder for when fetchLyrics returns null */
 .np-lyrics-placeholder {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
   text-align: center;
   color: oklch(1 0 0 / 0.22);
-  padding: 80px 0;
+  padding: 0 var(--s5);
+  pointer-events: none;
 }
 .np-lyrics-placeholder .bi {
   font-size: 44px;
@@ -29,40 +58,27 @@
 }
 .np-lyrics-placeholder p {
   font-family: 'Playfair Display', serif;
-  font-size: 17px;
+  font-size: 19px;
   font-weight: 600;
+  margin: 0;
 }
 .np-lyrics-placeholder small {
   font-size: 13px;
   color: oklch(1 0 0 / 0.15);
-  margin-top: 6px;
+  margin-top: 8px;
   display: block;
-}
-
-.np-lyrics-line {
-  font-family: 'Playfair Display', serif;
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1.45;
-  color: oklch(1 0 0 / 0.35);
-  cursor: pointer;
-  padding-left: 0;
-  transition:
-    color 0.35s,
-    padding-left 0.25s var(--snap);
-}
-.np-lyrics-line.active {
-  color: oklch(1 0 0);
-  padding-left: 6px;
 }
 
 /* mini controls at bottom of lyrics overlay */
 .np-overlay-mini-ctrl {
   flex-shrink: 0;
+  z-index: 10;
   padding: var(--s3) var(--s5) max(env(safe-area-inset-bottom, 0px), var(--s5));
   border-top: 0.5px solid oklch(1 0 0 / 0.07);
   background: inherit;
+  backdrop-filter: blur(20px); /* Adds that premium glass effect */
 }
+
 #np-lyrics-mini-bar {
   width: 100%;
   height: 3px;
@@ -70,65 +86,69 @@
   border-radius: var(--r-full);
   cursor: pointer;
   margin-bottom: var(--s4);
+  overflow: hidden;
 }
+
 #np-lyrics-mini-fill {
   height: 100%;
   border-radius: var(--r-full);
   background: oklch(1 0 0 / 0.5);
   width: 0%;
   pointer-events: none;
-  transition: width 0.5s linear;
+  /* Changed to transform for better performance than 'width' */
+  transform-origin: left;
+  transition: transform 0.5s linear;
 }
+
 .np-overlay-ctrl-row {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--s8);
 }
+
 .np-panel-ctrl-btn {
   color: oklch(1 0 0 / 0.75);
   display: flex;
   align-items: center;
-  padding: 6px;
-  transition: opacity 0.15s;
+  padding: 8px;
+  transition: opacity 0.15s, transform 0.1s;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
+
 .np-panel-ctrl-btn:active {
-  opacity: 0.3;
+  opacity: 0.5;
+  transform: scale(0.92);
 }
+
 .np-panel-ctrl-btn .bi {
-  font-size: 24px;
-}
-.np-panel-play {
-  width: 56px;
-  height: 56px;
-  border-radius: var(--r-full);
-  background: oklch(1 0 0 / 0.12);
-  color: oklch(1 0 0);
-  justify-content: center;
-}
-.np-panel-play .bi {
   font-size: 26px;
 }
 
-/* desktop */
+.np-panel-play {
+  width: 58px;
+  height: 58px;
+  border-radius: var(--r-full);
+  background: oklch(1 0 0 / 0.1);
+  color: oklch(1 0 0);
+  justify-content: center;
+}
+
+/* desktop tweaks */
 @media (min-width: 900px) {
-  #np-lyrics-body {
-    padding: var(--s6) 48px calc(var(--s6) + 80px);
-    gap: var(--s4);
-    scrollbar-width: thin;
-    scrollbar-color: oklch(1 0 0 / 0.2) transparent;
+  am-lyrics {
+    --am-lyrics-font-size: 32px; /* Bigger lyrics for desktop */
+    --am-lyrics-padding-left: 64px;
+    --am-lyrics-padding-right: 64px;
   }
-  #np-lyrics-body::-webkit-scrollbar {
-    width: 4px;
-  }
-  #np-lyrics-body::-webkit-scrollbar-thumb {
-    background: oklch(1 0 0 / 0.2);
-    border-radius: 4px;
-  }
-  .np-lyrics-line {
-    font-size: 28px;
-  }
+
   .np-overlay-mini-ctrl {
-    padding: var(--s3) 48px var(--s5);
+    padding: var(--s4) 64px var(--s6);
+  }
+
+  .np-lyrics-placeholder p {
+    font-size: 24px;
   }
 }

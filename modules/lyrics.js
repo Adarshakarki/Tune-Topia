@@ -1,122 +1,115 @@
-import { fetchJSON } from '../api/utils.js'
+import { fetchJSON } from '../api/utils.js';
 
-const LRCLIB_BASE = 'https://lrclib.net/api'
-const GENIUS_TOKEN = 'QmS9OvsS-7ifRBKx_ochIPQU7oejIS9Eo_z5iWHmCPyhwLVQID3pYTHJmJTa6z8z'
-const GENIUS_PROXY = 'https://api.allorigins.win/raw?url='
+const LRCLIB_BASE = 'https://lrclib.net/api';
 
-// ─── HELPERS ──────────────────────────────────────────────────────────────────
+/**
+ * Robustly extracts the primary artist name for better API matching.
+ */
+function _primaryArtist(artist) {
+  if (Array.isArray(artist)) {
+    const first = artist[0];
+    return (typeof first === 'object' ? first?.name : first) || '';
+  }
+  if (typeof artist === 'object' && artist !== null) return artist?.name ?? '';
+  if (typeof artist === 'string') {
+    // Split by common delimiters and remove "feat" or "ft"
+    return artist.split(/[,&/]| - | feat\.? | ft\.? /i)[0].trim();
+  }
+  return '';
+}
 
-const cleanQuery = (str) => str.split('(')[0].split('-')[0].split('feat.')[0].trim()
-const normalize = (s) => s.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')
-
-// ─── LRCLIB (TIMED & WORD-LEVEL) ─────────────────────────────────────────────
-
+/**
+ * Fetches lyrics with improved fallback and duration normalization.
+ */
 export async function fetchLyrics(title, artist, album = '', duration = 0) {
-  const params = new URLSearchParams({
+  const primaryArtist = _primaryArtist(artist);
+  
+  // Logic Fix: Ensure duration is strictly handled (LRCLIB expects seconds)
+  // If duration is > 5000, we assume it's ms; otherwise, it's already seconds.
+  const durationSec = duration > 5000 ? Math.round(duration / 1000) : Math.round(duration);
+
+  const queryParams = new URLSearchParams({
     track_name: title,
-    artist_name: artist,
+    artist_name: primaryArtist,
     ...(album && { album_name: album }),
-    ...(duration && { duration: Math.round(duration) }),
-  })
+    ...(durationSec > 0 && { duration: durationSec }),
+  });
 
   try {
-    let data = await fetchJSON(`${LRCLIB_BASE}/get?${params}`)
-    if (!data) {
-      const searchData = await fetchJSON(`${LRCLIB_BASE}/search?${params}`)
-      data = searchData?.[0]
+    // Attempt high-accuracy "get" first
+    let data = await fetchJSON(`${LRCLIB_BASE}/get?${queryParams}`);
+    
+    // Fallback to "search" if get returns nothing (returns an array)
+    if (!data || Object.keys(data).length === 0) {
+      const searchData = await fetchJSON(`${LRCLIB_BASE}/search?${queryParams}`);
+      data = searchData?.[0];
     }
 
-    if (!data) return { plain: null, synced: [] }
+    if (!data) return { plain: null, synced: [] };
 
     return {
       plain: data.plainLyrics || null,
       synced: parseSynced(data.syncedLyrics),
-    }
-  } catch (e) {
-    return { plain: null, synced: [] }
+    };
+  } catch (err) {
+    console.error('Lyrics fetch error:', err);
+    return { plain: null, synced: [] };
   }
 }
 
 /**
- * Parses Enhanced LRC format for word-by-word sync.
- * Standard: [mm:ss.xx] Line Text
- * Enhanced: [mm:ss.xx] <mm:ss.xx> Word <mm:ss.xx> Word
+ * Parses LRC strings, supporting both line-sync and word-sync (Karaoke).
  */
 export function parseSynced(raw) {
-  if (!raw) return []
+  if (!raw) return [];
 
+  // Helper: Safely parse [mm:ss.xx] or <mm:ss.xx>
   const parseTime = (timeStr) => {
-    const [m, s] = timeStr.split(':')
-    return parseInt(m) * 60 + parseFloat(s)
-  }
+    if (!timeStr) return 0;
+    const parts = timeStr.split(':');
+    if (parts.length < 2) return 0;
+    return parseInt(parts[0]) * 60 + parseFloat(parts[1]);
+  };
 
-  return raw.split('\n').map(line => {
-    // 1. Extract line start time: [00:00.00]
-    const lineMatch = line.match(/^\[(\d+:\d+\.\d+)\](.*)/)
-    if (!lineMatch) return null
+  return raw.split('\n')
+    .map(line => {
+      // Regex Fix: Better capture for the timestamp and the remaining text
+      const lineMatch = line.match(/^\[(\d+:\d+\.\d+)\](.*)/);
+      if (!lineMatch) return null;
 
-    const startTime = parseTime(lineMatch[1])
-    const content = lineMatch[2].trim()
+      const startTime = parseTime(lineMatch[1]);
+      const content = lineMatch[2].trim();
 
-    // 2. Check for word-level timestamps: <00:00.00>
-    const words = []
-    const wordRegex = /<(\d+:\d+\.\d+)>\s*([^\s<]+)/g
-    let match
-    
-    while ((match = wordRegex.exec(content)) !== null) {
-      words.push({
-        time: parseTime(match[1]),
-        text: match[2]
-      })
-    }
+      // Extract word-level sync if present: <00:00.00> word
+      const words = [];
+      const wordRegex = /<(\d+:\d+\.\d+)>\s*([^\s<]+)/g;
+      let match;
 
-    // Return structured line
-    return {
-      time: startTime,
-      text: content.replace(/<\d+:\d+\.\d+>/g, '').trim(), // Clean text for display
-      words: words.length > 0 ? words : null // Array of {time, text} if enhanced
-    }
-  }).filter(l => l && (l.text || l.words))
+      while ((match = wordRegex.exec(content)) !== null) {
+        words.push({ 
+          time: parseTime(match[1]), 
+          text: match[2] 
+        });
+      }
+
+      return {
+        time: startTime,
+        // Remove word tags from the main text for clean display
+        text: content.replace(/<\d+:\d+\.\d+>/g, '').trim(),
+        words: words.length > 0 ? words : null,
+      };
+    })
+    .filter(l => l && (l.text || l.words));
 }
 
 export function getActiveLine(syncedLyrics, currentTime) {
-  if (!syncedLyrics?.length) return -1
-  return syncedLyrics.findLastIndex(line => currentTime >= line.time)
+  if (!syncedLyrics?.length) return -1;
+  // findLastIndex is great here; it ensures we get the *current* line even if 
+  // multiple lines share a start time.
+  return syncedLyrics.findLastIndex(line => currentTime >= line.time);
 }
 
-/**
- * Returns the index of the currently active word within a line
- */
 export function getActiveWord(line, currentTime) {
-  if (!line?.words) return -1
-  return line.words.findLastIndex(word => currentTime >= word.time)
-}
-
-// ─── GENIUS (REMAINING LOGIC) ────────────────────────────────────────────────
-
-const geniusCache = new Map()
-
-async function geniusFetch(endpoint) {
-  const url = `https://api.genius.com${endpoint}${endpoint.includes('?') ? '&' : '?'}access_token=${GENIUS_TOKEN}`
-  const res = await fetch(`${GENIUS_PROXY}${encodeURIComponent(url)}`)
-  return res.json()
-}
-
-export async function getGeniusData(track) {
-  if (geniusCache.has(track.id)) return geniusCache.get(track.id)
-  try {
-    const artistName = Array.isArray(track.artists) ? track.artists[0].name : (track.artist?.name || '')
-    const query = encodeURIComponent(`${cleanQuery(track.title)} ${artistName}`)
-    const search = await geniusFetch(`/search?q=${query}`)
-    const hits = search.response.hits
-    if (!hits?.length) return null
-
-    const targetArtist = normalize(artistName)
-    const bestMatch = hits.find(h => normalize(h.result.primary_artist.name).includes(targetArtist))?.result || hits[0].result
-    const refs = await geniusFetch(`/referents?song_id=${bestMatch.id}&text_format=plain`)
-    
-    const result = { song: bestMatch, referents: refs.response.referents }
-    geniusCache.set(track.id, result)
-    return result
-  } catch (e) { return null }
+  if (!line?.words) return -1;
+  return line.words.findLastIndex(word => currentTime >= word.time);
 }
