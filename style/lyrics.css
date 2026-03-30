@@ -131,7 +131,6 @@ am-lyrics {
   width: 58px;
   height: 58px;
   border-radius: var(--r-full);
-  background: oklch(1 0 0 / 0.1);
   color: oklch(1 0 0);
   justify-content: center;
 }
