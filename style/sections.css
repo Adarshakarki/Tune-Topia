@@ -1,9 +1,5 @@
-/* ── SECTIONS ── */
-.section {
-  padding: var(--s5) 0 0;
-  /* FIX: Ensure section has a base height so footer doesn't jump to top */
-  min-height: 200px; 
-}
+/* sections */
+.section { padding: var(--s5) 0 0; }
 
 .section-header {
   display: flex;
@@ -11,7 +7,6 @@
   justify-content: space-between;
   padding: 0 var(--s5) var(--s3);
 }
-
 .section-title {
   font-family: 'Playfair Display', serif;
   font-size: 20px;
@@ -19,45 +14,31 @@
   letter-spacing: -0.3px;
   color: var(--text);
 }
-
 .see-all-btn {
   font-size: 13px;
   font-weight: 500;
   color: var(--accent);
 }
 
-/* ── HORIZONTAL SCROLL ── */
+/* horizontal scroll */
 .horiz-scroll {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  /* Optimization: Tell browser this will scroll horizontally */
-  scroll-snap-type: x proximity; 
 }
-
-.horiz-scroll::-webkit-scrollbar {
-  display: none;
-}
+.horiz-scroll::-webkit-scrollbar { display: none; }
 
 .horiz-inner {
   display: flex;
   gap: var(--s4);
   padding: 0 var(--s5) var(--s3);
-  /* FIX: CRITICAL FOR CLS. Reserves space for cards before JS loads them */
-  min-height: 185px; 
 }
 
 .horiz-card {
   flex-shrink: 0;
   width: 130px;
   cursor: pointer;
-  /* Optimization: Improves scrolling performance on mobile */
-  will-change: transform; 
 }
-
-.horiz-card:active .horiz-art {
-  transform: scale(0.95);
-  opacity: 0.8;
-}
+.horiz-card:active .horiz-art { transform: scale(0.95); opacity: 0.8; }
 
 .horiz-art {
   width: 130px;
@@ -65,13 +46,9 @@
   border-radius: var(--r-md);
   object-fit: cover;
   background: var(--surface-2);
-  /* FIX: Reduced shadow complexity for mobile heat reduction */
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
-  transition: transform 0.2s ease, opacity 0.15s;
-  /* FIX: Prevents layout shift if image fails to load */
-  display: block; 
+  box-shadow: var(--shadow-md);
+  transition: transform 0.2s var(--spring), opacity 0.15s;
 }
-
 .horiz-title {
   font-family: 'Playfair Display', serif;
   font-size: 13px;
@@ -80,10 +57,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  /* FIX: Reserve height for text to prevent shifting */
-  min-height: 1.2em; 
 }
-
 .horiz-artist {
   font-size: 11px;
   color: var(--text-2);
@@ -91,42 +65,27 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  min-height: 1.1em;
 }
 
-/* ── HERO CARD ── */
+/* hero card */
 #hero-card {
   margin: var(--s4) var(--s5);
   border-radius: var(--r-xl);
   overflow: hidden;
-  /* FIX: Reserved height to prevent huge layout shift on load */
-  min-height: 200px; 
-  background: var(--surface-3);
   box-shadow: var(--shadow-lg);
   cursor: pointer;
+  min-height: 200px;
 }
-
 .hero-inner {
   position: relative;
   height: 200px;
-  /* FIX: Ensure background size is set before image loads */
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  background: var(--surface-3) center/cover no-repeat;
 }
-
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    180deg,
-    transparent 25%,
-    rgba(0, 0, 0, 0.72) 100%
-  );
-  /* Optimization: hardware acceleration for the gradient */
-  transform: translateZ(0); 
+  background: linear-gradient(180deg, transparent 25%, rgba(0,0,0,0.72) 100%);
 }
-
 .hero-info {
   position: absolute;
   bottom: var(--s4);
@@ -134,7 +93,6 @@
   right: 64px;
   color: #fff;
 }
-
 .hero-label {
   font-size: 10px;
   font-weight: 700;
@@ -144,7 +102,6 @@
   display: block;
   margin-bottom: 4px;
 }
-
 .hero-title {
   font-family: 'Playfair Display', serif;
   font-size: 20px;
@@ -153,12 +110,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-.hero-artist {
-  font-size: 13px;
-  opacity: 0.65;
-  margin-top: 2px;
-}
+.hero-artist { font-size: 13px; opacity: 0.65; margin-top: 2px; }
 
 .hero-play {
   position: absolute;
@@ -166,55 +118,77 @@
   right: var(--s4);
   width: 44px;
   height: 44px;
-  border-radius: 50%;
+  border-radius: var(--r-full);
   background: #fff;
   color: #000;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: var(--shadow-md);
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.2s var(--spring);
+}
+.hero-play:active { transform: scale(0.88); }
+.hero-play .bi { font-size: 20px; }
+
+/* empty state */
+.empty {
+  text-align: center;
+  padding: 64px var(--s5);
+  color: var(--text-3);
+}
+.empty .bi {
+  font-size: 48px;
+  opacity: 0.18;
+  display: block;
+  margin: 0 auto 14px;
+}
+.empty p {
+  font-family: 'Playfair Display', serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.empty small { font-size: 13px; display: block; margin-top: 5px; }
+
+/* error state */
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 48px 24px;
+  color: var(--text-3);
+  text-align: center;
+}
+.error-state i { font-size: 36px; opacity: 0.5; }
+.error-state p { margin: 0; font-size: 15px; }
+
+.retry-btn {
+  margin-top: 4px;
+  padding: 8px 20px;
+  border-radius: var(--r-full);
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
-.hero-play:active {
-  transform: scale(0.88);
-}
-
-/* ── MOBILE HEAT OPTIMIZATION ── */
-@media (max-width: 768px) {
-  /* Remove expensive blurs/shadows on mobile to stop heating */
-  .horiz-art, #hero-card {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-  }
-  
-  /* Disable any backdrop-filters if you have them elsewhere */
-  .glass {
-     backdrop-filter: none !important;
-     -webkit-backdrop-filter: none !important;
-     background: rgba(0,0,0,0.85);
-  }
-}
-
-/* ── DESKTOP ── */
 @media (min-width: 900px) {
-  .section-header, .horiz-inner {
-    padding: 0 28px var(--s3);
-  }
-  #hero-card {
-    margin: var(--s4) 28px;
-    min-height: 240px;
-  }
-  .hero-inner {
-    height: 240px;
-  }
-  .horiz-card {
-    width: 155px;
-  }
-  .horiz-art {
-    width: 155px;
-    height: 155px;
-  }
-  .horiz-inner {
-    min-height: 210px;
-  }
+  .section-header { padding: 0 28px var(--s3); }
+  .horiz-inner { padding: 0 28px var(--s3); }
+  #hero-card { margin: var(--s4) 28px; }
+  .hero-inner { height: 240px; }
+  .horiz-card { width: 155px; }
+  .horiz-art { width: 155px; height: 155px; }
 }
+
+#home-new-row,
+#home-foryou-row,
+#home-playlists-row,
+#home-recent-row                                   { min-height: 200px; }
+
+#home-artists-row                                  { min-height: 155px; }
+#home-tracks                                       { min-height: 400px; }

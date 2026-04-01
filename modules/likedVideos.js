@@ -1,38 +1,20 @@
-const KEY = 'tt_liked_videos'
+import State from '../app/state.js';
 
-function _load() {
-  try {
-    return JSON.parse(localStorage.getItem(KEY) || '[]')
-  } catch {
-    return []
-  }
-}
+// Retrieval
+export const getAll = () => State.get('library.likedVideos') || [];
+export const has = (id) => getAll().some(v => String(v.id) === String(id));
+export const isLiked = has;
 
-function _save(videos) {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(videos))
-  } catch {}
-}
-
-export function getAll() {
-  return _load()
-}
-
-export function has(id) {
-  return _load().some((v) => v.id === id)
-}
-
-export const isLiked = has
-
+// State Mutators
 export function toggle(video) {
-  const all = _load()
-  const idx = all.findIndex((v) => v.id === video.id)
-  if (idx >= 0) all.splice(idx, 1)
-  else all.unshift({ ...video, likedAt: Date.now() })
-  _save(all)
-  return idx < 0 // true = now liked
+  const all = getAll(), id = String(video.id);
+  const exists = all.some(v => String(v.id) === id);
+  const updated = exists
+    ? all.filter(v => String(v.id) !== id)
+    : [{ ...video, id, likedAt: Date.now() }, ...all];
+
+  State.set('library.likedVideos', updated);
+  return !exists;
 }
 
-export function count() {
-  return _load().length
-}
+export const count = () => getAll().length;

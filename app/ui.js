@@ -2,6 +2,7 @@ import State from './state.js'
 import { has as isLiked } from '../modules/likedSongs.js'
 import { escHtml, fmtTime, qualityBadge } from '../api/utils.js'
 import { getActiveLine, getActiveWord } from '../modules/lyrics.js';
+import { ICONS, getIcon } from './icons.js';
 
 const $ = (id) => document.getElementById(id)
 let _npColor = null
@@ -104,9 +105,7 @@ export function renderHero(track) {
         <div class="hero-title">${escHtml(track.title)}</div>
         <div class="hero-artist">${escHtml(track.artist || '')}</div>
       </div>
-      <button class="hero-play" data-hero-play>
-        <i class="bi bi-play-fill"></i>
-      </button>
+      <button class="hero-play" data-hero-play>${getIcon('play')}</button>
     </div>`
   el._track = track
 }
@@ -129,7 +128,7 @@ export function renderHorizCards(tracks, container) {
 
 export function renderTopResult(track, container) {
   if (!container || !track) return
-  const badge = qualityBadge(track)
+  const b = qualityBadge(track)
   container.innerHTML = `
     <div class="top-result-card" data-id="${escHtml(track.id)}">
       <img src="${escHtml(track.cover || '')}" onerror="this.src=''" alt=""/>
@@ -137,23 +136,17 @@ export function renderTopResult(track, container) {
         <span class="top-result-label">Top Result</span>
         <div class="top-result-title">${escHtml(track.title)}</div>
         <div class="top-result-meta">${escHtml(track.artist || '')}</div>
-        ${badge ? `<span class="quality-badge ${badge.cls}">${badge.label}</span>` : ''}
+        ${b ? `<span class="quality-badge ${b.cls}">${b.label}</span>` : ''}
       </div>
-      <button class="top-result-play"><i class="bi bi-play-fill"></i></button>
+      <button class="top-result-play">${getIcon('play')}</button>
     </div>`
 }
 
 export function renderTracks(tracks, container, currentId) {
-  if (!tracks.length) {
-    container.innerHTML = emptyState(
-      'bi-music-note-beamed',
-      'No results found',
-      'Try a different search'
-    )
-    return
-  }
+  if (!tracks || !tracks.length) return container.innerHTML = emptyState('music', 'No results found', 'Try a different search');
   container.innerHTML = tracks
     .map((t, i) => {
+      if (!t) return '';
       const badge = qualityBadge(t)
       const active = t.id === currentId
       const isVideo = t.source === 'youtube'
@@ -172,7 +165,7 @@ export function renderTracks(tracks, container, currentId) {
           </div>
           <div class="track-right">
             ${active ? `<div class="eq-bars"><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div></div>` : ''}
-            <button class="track-more-btn"><i class="bi bi-three-dots-vertical"></i></button>
+            <button class="track-more-btn">${getIcon('more')}</button>
           </div>
         </div>
       </div>`
@@ -182,9 +175,9 @@ export function renderTracks(tracks, container, currentId) {
 }
 
 export function renderAlbums(albums, container) {
-  if (!albums.length) {
-    container.innerHTML = _emptyState('No albums found')
-    return
+  if (!albums || !albums.length) {
+    container.innerHTML = _emptyState('No albums found');
+    return;
   }
   container.className = 'card-grid'
   container.innerHTML = albums
@@ -201,9 +194,9 @@ export function renderAlbums(albums, container) {
 }
 
 export function renderArtists(artists, container) {
-  if (!artists.length) {
-    container.innerHTML = _emptyState('No artists found')
-    return
+  if (!artists || !artists.length) {
+    container.innerHTML = _emptyState('No artists found');
+    return;
   }
   container.className = 'artist-grid'
   container.innerHTML = artists
@@ -249,7 +242,7 @@ export function renderQueue(tracks, position, upcoming) {
       upcoming.map((t, i) => _queueItem(t, position + 1 + i, false)).join('')
   }
   if (!current && !upcoming.length)
-    html = `<div class="npq-empty"><i class="bi bi-music-note-list"></i><p>Queue is empty</p></div>`
+    html = `<div class="npq-empty">${getIcon('queue')}<p>Queue is empty</p></div>`
   list.innerHTML = html
 }
 
@@ -298,7 +291,7 @@ export function renderLyrics(synced, plain) {
     return
   }
   
-  body.innerHTML = `<div class="np-lyrics-placeholder"><i class="bi bi-mic-fill"></i><p>Lyrics not available</p></div>`
+  body.innerHTML = `<div class="np-lyrics-placeholder">${getIcon('chat')}<p>Lyrics not available</p></div>`
 }
 
 export function updateActiveLyric(syncedLyrics, currentTime) {
@@ -335,11 +328,31 @@ export function updateActiveLyric(syncedLyrics, currentTime) {
   }
 }
 
+export function updatePlayerPosition() {
+  const container = document.querySelector('.bottom-nav-container');
+  const main = $('main-content') || $('app-content') || document.querySelector('main');
+  const active = document.querySelector('.sub-page.open') || document.querySelector('.page.active');
+  const scroll = active?.querySelector('[id$="-scroll"]') || active;
+
+  if (!container || !main) return;
+
+  requestAnimationFrame(() => {
+    const h = container.offsetHeight;
+    const pad = h > 0 ? `${h}px` : '';
+
+    if (scroll) scroll.style.paddingBottom = pad;
+    if (main !== scroll) main.style.paddingBottom = pad;
+  });
+}
+
 export function setTrackInfo(track) {
   if (!track) return
   const art = track.cover || track.coverSmall || ''
 
-  $('player-bar')?.classList.add('has-track')
+  const pb = $('player-bar');
+  if (pb) pb.classList.add('has-track');
+  updatePlayerPosition();
+
   _setSrc('bar-art', art)
   _setText('bar-artist', track.artist || '—')
 
@@ -402,6 +415,7 @@ export function setTrackInfo(track) {
       const bg = $('player-bar-bg')
       if (bg)
         bg.style.background = `linear-gradient(135deg, rgb(${base}), rgb(${dark}))`
+
       const bar = $('player-bar')
       if (bar) bar.style.setProperty('--_fade', `rgb(${dark})`)
       const np = $('now-playing')
@@ -422,17 +436,10 @@ export function setTrackInfo(track) {
 }
 
 export function setPlayState(playing) {
-  const icon = playing ? 'bi-pause-fill' : 'bi-play-fill'
-  ;[
-    'mini-play-icon',
-    'bar-play-icon',
-    'np-play-icon',
-    'np-lyrics-play-icon',
-    'np-queue-play-icon',
-  ].forEach((id) => {
-    const el = $(id)
-    if (el) el.className = `bi ${icon}`
-  })
+  const icon = playing ? ICONS.pause : ICONS.play;
+  ['mini-play-icon', 'bar-play-icon', 'np-play-icon', 'np-lyrics-play-icon', 'np-queue-play-icon'].forEach(id => {
+    const el = $(id); if (el) el.className = `bi ${icon}`;
+  });
   $('now-playing')?.classList.toggle('paused', !playing)
 }
 
@@ -474,20 +481,14 @@ export function setRepeat(on) {
 }
 
 export function syncLikeButtons(trackId) {
-  const liked = isLiked(trackId)
-  document
-    .querySelectorAll(`.track-like-btn[data-tid="${trackId}"]`)
-    .forEach((btn) => {
-      btn.classList.toggle('liked', liked)
-      const icon = btn.querySelector('i')
-      if (icon) icon.className = `bi ${liked ? 'bi-heart-fill' : 'bi-heart'}`
-    })
-  ;[$('bar-like-btn'), $('np-love-btn')].forEach((btn) => {
-    if (!btn) return
-    btn.classList.toggle('liked', liked)
-    const icon = btn.querySelector('i')
-    if (icon) icon.className = `bi ${liked ? 'bi-heart-fill' : 'bi-heart'}`
-  })
+  const liked = isLiked(trackId), icon = liked ? ICONS.heartFill : ICONS.heart;
+  document.querySelectorAll(`.track-like-btn[data-tid="${trackId}"]`).forEach(btn => {
+    btn.classList.toggle('liked', liked);
+    const i = btn.querySelector('i'); if (i) i.className = `bi ${icon}`;
+  });
+  [$('bar-like-btn'), $('np-love-btn')].forEach(btn => {
+    if (btn) { btn.classList.toggle('liked', liked); const i = btn.querySelector('i'); if (i) i.className = `bi ${icon}`; }
+  });
 }
 
 export function showPage(name) {
@@ -572,20 +573,29 @@ export function closeMoreSheet() {
   $('np-more-sheet')?.classList.remove('open')
 }
 
-export function skeletons(n = 8) {
-  return Array(n)
-    .fill(0)
-    .map(
-      () => `
+export function skeletons(n = 8, type = 'list') {
+  const isHoriz = type === 'horiz';
+  return Array(n).fill(0).map(() => isHoriz ? `
+    <div class="horiz-card">
+      <div class="horiz-art skeleton" style="background:var(--surface-3); border-radius:var(--r-md)"></div>
+      <div class="skeleton" style="height:12px; width:80%; margin-top:10px; border-radius:4px"></div>
+      <div class="skeleton" style="height:10px; width:50%; margin-top:6px; border-radius:4px; opacity:0.6"></div>
+    </div>` : `
     <div class="skel-card">
       <div class="skeleton skel-thumb"></div>
       <div class="skel-lines">
         <div class="skeleton skel-line" style="width:${50 + Math.random() * 40}%"></div>
         <div class="skeleton skel-line-sm" style="width:${25 + Math.random() * 30}%"></div>
       </div>
-    </div>`
-    )
-    .join('')
+    </div>`).join('');
+}
+
+export function renderHeroSkeleton() {
+  const el = $('hero-card');
+  if (el) el.innerHTML = `
+    <div class="hero-inner skeleton" style="background:var(--surface-2); border-radius:var(--r-lg); display:flex; align-items:flex-end; padding:var(--s6); height:200px">
+      <div style="width:100%"><div class="skeleton" style="height:24px; width:60%; margin-bottom:12px; border-radius:6px"></div><div class="skeleton" style="height:16px; width:40%; border-radius:4px"></div></div>
+    </div>`;
 }
 
 export function skeletonsGrid(n = 6) {
@@ -619,33 +629,24 @@ function _show(id, visible) {
   if (e) e.style.display = visible ? 'inline-flex' : 'none'
 }
 
-export function emptyState(
-  icon = 'bi-music-note-beamed',
-  msg = 'Nothing here',
-  sub = ''
-) {
+export function emptyState(icon = 'music', msg = 'Nothing here', sub = '') {
   return `<div class="empty">
-    <i class="bi ${escHtml(icon)}"></i>
+    ${getIcon(icon)}
     <p>${escHtml(msg)}</p>
     ${sub ? `<small>${escHtml(sub)}</small>` : ''}
   </div>`
 }
 
 export function errorState(msg = 'Something went wrong', onRetry = null) {
-  const retryId = onRetry ? `retry-${Date.now()}` : null
-  if (retryId)
-    setTimeout(
-      () =>
-        document.getElementById(retryId)?.addEventListener('click', onRetry),
-      0
-    )
+  const id = onRetry ? `retry-${Date.now()}` : null;
+  if (id) setTimeout(() => $(id)?.addEventListener('click', onRetry), 0);
   return `<div class="error-state">
-    <i class="bi bi-wifi-off"></i>
+    ${getIcon('error')}
     <p>${escHtml(msg)}</p>
-    ${retryId ? `<button class="retry-btn" id="${retryId}">Try again</button>` : ''}
+    ${id ? `<button class="retry-btn" id="${id}">Try again</button>` : ''}
   </div>`
 }
 
 function _emptyState(msg, sub = '') {
-  return emptyState('bi-music-note-beamed', msg, sub)
+  return emptyState('music', msg, sub)
 }

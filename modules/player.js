@@ -16,8 +16,6 @@ audioB.preload = 'auto'
 let _active = audioA
 let _inactive = audioB
 let _dash = null
-let _preloaded = null
-let _preloading = false
 let _swapping = false
 let _sleepAfterTrack = false
 let _handlersRegistered = false
@@ -25,6 +23,8 @@ let _switching = false
 
 const _preloadLead = 20
 const _listeners = {}
+let _preloaded = null
+let _preloading = false
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
 
 //events
@@ -42,7 +42,7 @@ function _emit(event, data) {
 //mediasession-metadata
 function _updateMediaSession(track) {
   if (!('mediaSession' in navigator)) return
-
+  
   navigator.mediaSession.metadata = new MediaMetadata({
     title: track.title || '',
     artist: track.artist || '',
@@ -60,27 +60,12 @@ function _updateMediaSession(track) {
       : [],
   })
 
-  navigator.mediaSession.playbackState = State.get('player.isPlaying')
-    ? 'playing'
-    : 'paused'
+  navigator.mediaSession.playbackState = State.get('player.isPlaying') ? 'playing' : 'paused';
 
   const _setPosition = () => {
-    if (!_active.duration || !isFinite(_active.duration)) return
-    try {
-      //ios: omit duration to force next/prev buttons
-      const posState = isIOS
-        ? {
-            playbackRate: _active.playbackRate || 1,
-            position: _active.currentTime,
-          }
-        : {
-            duration: _active.duration,
-            playbackRate: _active.playbackRate || 1,
-            position: Math.min(_active.currentTime, _active.duration),
-          }
-      navigator.mediaSession.setPositionState(posState)
-    } catch {}
-  }
+    if (!_active.duration || !isFinite(_active.duration)) return;
+    try { navigator.mediaSession.setPositionState(isIOS ? { playbackRate: _active.playbackRate || 1, position: _active.currentTime } : { duration: _active.duration, playbackRate: _active.playbackRate || 1, position: Math.min(_active.currentTime, _active.duration) }); } catch {}
+  };
 
   const _onLoaded = () => {
     _setPosition()
@@ -110,30 +95,15 @@ function _ensureMediaSessionHandlers() {
   if (!('mediaSession' in navigator) || _handlersRegistered) return
   _handlersRegistered = true
 
-  //ios: disable seek to enforce next/prev
-  try {
-    navigator.mediaSession.setActionHandler('seekbackward', null)
-  } catch {}
-  try {
-    navigator.mediaSession.setActionHandler('seekforward', null)
-  } catch {}
+  try { navigator.mediaSession.setActionHandler('seekbackward', null); } catch {}
+  try { navigator.mediaSession.setActionHandler('seekforward', null); } catch {}
 
   const handlers = {
-    previoustrack: () => prev(),
-    nexttrack: () => next(),
-    play: () => {
-      _active.play()
-      _syncMediaSessionState(true)
-    },
-    pause: () => {
-      _active.pause()
-      _syncMediaSessionState(false)
-    },
+    previoustrack: prev, nexttrack: next,
+    play: () => { _active.play(); _syncMediaSessionState(true); },
+    pause: () => { _active.pause(); _syncMediaSessionState(false); },
     seekto: (e) => {
-      if (e.seekTime != null && _active.duration && !isIOS) {
-        _active.currentTime = e.seekTime
-        _updatePositionState()
-      }
+      if (e.seekTime != null && _active.duration && !isIOS) { _active.currentTime = e.seekTime; _updatePositionState(); }
     },
   }
 
@@ -148,20 +118,9 @@ function _ensureMediaSessionHandlers() {
 function _updatePositionState() {
   if (!('mediaSession' in navigator)) return
   if (!_active?.duration || !isFinite(_active.duration)) return
-  try {
-    const posState = isIOS
-      ? {
-          playbackRate: _active.playbackRate || 1,
-          position: _active.currentTime,
-        }
-      : {
-          duration: _active.duration,
-          playbackRate: _active.playbackRate || 1,
-          position: Math.min(_active.currentTime, _active.duration),
-        }
-    navigator.mediaSession.setPositionState(posState)
-  } catch {}
+  try { navigator.mediaSession.setPositionState(isIOS ? { playbackRate: _active.playbackRate || 1, position: _active.currentTime } : { duration: _active.duration, playbackRate: _active.playbackRate || 1, position: Math.min(_active.currentTime, _active.duration) }); } catch {}
 }
+
 
 //audio-binding
 function _bindAudio(el) {
@@ -189,12 +148,8 @@ function _bindAudio(el) {
   })
   el.addEventListener('timeupdate', () => {
     if (el !== _active || !el.duration) return
-    const remaining = el.duration - el.currentTime
-    _emit('progress', {
-      pct: (el.currentTime / el.duration) * 100,
-      current: el.currentTime,
-      duration: el.duration,
-    })
+    const remaining = el.duration - el.currentTime;
+    _emit('progress', { pct: (el.currentTime / el.duration) * 100, current: el.currentTime, duration: el.duration });
     if (!_preloading && !_preloaded && remaining <= _preloadLead) {
       if (localStorage.getItem('tt_gapless') !== 'false') _preloadNext()
     }
@@ -207,29 +162,19 @@ _bindAudio(audioB)
 //queue-ended
 function _onEnded() {
   if (_sleepAfterTrack) {
-    _sleepAfterTrack = false
-    _emit('playStateChanged', false)
-    _emit('sleepTimerFired', null)
-    return
+    _sleepAfterTrack = false; _emit('playStateChanged', false); _emit('sleepTimerFired', null); return;
   }
-  if (State.get('player.isRepeat')) {
-    _active.currentTime = 0
-    _active.play()
-    return
-  }
-  if (_preloaded && !_swapping) {
-    _swapToPreloaded()
-    return
-  }
-  if (_swapping) return
-  const hasNext = Queue.getNext()
-  if (hasNext) {
-    next()
-    return
-  }
-  const current = State.get('player.currentTrack')
-  if (!current) return
-  getTrackRecommendations(current.id).then((recs) => {
+  if (State.get('player.isRepeat')) { _active.currentTime = 0; _active.play(); return; }
+  if (_preloaded && !_swapping) { _swapToPreloaded(); return; }
+  if (_swapping) return;
+
+  const hasNext = Queue.getNext();
+  if (hasNext) { next(); return; }
+
+  const current = State.get('player.currentTrack');
+  if (!current) return;
+
+  getTrackRecommendations(current.id).then(recs => {
     if (!recs.length) return
     recs.forEach((r) => Queue.add(r))
     next()
@@ -240,13 +185,11 @@ function _onEnded() {
 async function _preloadNext() {
   const nextTrack = Queue.getUpcoming()[0]
   if (!nextTrack) return
-  _preloading = true
+  _preloading = true;
   try {
-    const stream = await _getStream(nextTrack)
-    if (stream.type === 'dash') {
-      _preloading = false
-      return
-    }
+    const stream = await _getStream(nextTrack);
+    if (stream.type === 'dash') { _preloading = false; return; }
+
     _inactive.src = stream.url
     _inactive.volume = 0
     _inactive.load()
@@ -258,32 +201,22 @@ async function _preloadNext() {
 //gapless-swap
 function _swapToPreloaded() {
   if (_swapping) return
-  _swapping = true
-  const track = _preloaded.track
+  _swapping = true;
+  const track = _preloaded.track;
 
-  _inactive.volume = 1
-  _inactive.play().catch(() => {})
-  _ensureMediaSessionHandlers()
+  _inactive.volume = 1; _inactive.play().catch(() => {});
+  _ensureMediaSessionHandlers();
 
-  _active.pause()
-  _active.src = ''
-  _active.volume = 1
-  ;[_active, _inactive] = [_inactive, _active]
+  _active.pause(); _active.src = ''; _active.volume = 1;
+  [_active, _inactive] = [_inactive, _active];
 
-  Queue.advance(1)
-  State.set('player.currentTrack', track)
-  _emit('trackChanged', track)
-  _emit('queueUpdated', {
-    tracks: State.get('queue.tracks'),
-    position: State.get('player.queuePosition'),
-  })
-  History.push(track)
-  _updateMediaSession(track)
+  Queue.advance(1);
+  State.set('player.currentTrack', track); _emit('trackChanged', track);
+  _emit('queueUpdated', { tracks: State.get('queue.tracks'), position: State.get('player.queuePosition') });
+  History.push(track); _updateMediaSession(track);
 
-  _preloaded = null
-  _preloading = false
-  _swapping = false
-  _preloadNext()
+  _preloaded = null; _preloading = false; _swapping = false;
+  _preloadNext();
 }
 
 //dash-support
@@ -293,10 +226,8 @@ async function _loadDashJs() {
       res()
       return
     }
-    const s = document.createElement('script')
-    s.src =
-      'https://cdnjs.cloudflare.com/ajax/libs/dashjs/4.7.4/dash.all.min.js'
-    s.onload = res
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/dashjs/4.7.4/dash.all.min.js'; s.onload = res;
     s.onerror = rej
     document.head.appendChild(s)
   })
@@ -304,17 +235,11 @@ async function _loadDashJs() {
 
 async function _playDash(manifestXml) {
   await _loadDashJs()
-  if (_dash) {
-    try {
-      _dash.destroy()
-    } catch {}
-  }
-  _dash = dashjs.MediaPlayer().create()
-  const blob = new Blob([manifestXml], { type: 'application/dash+xml' })
-  _dash.initialize(_active, URL.createObjectURL(blob), true)
-  _dash.updateSettings({
-    streaming: { abr: { autoSwitchBitrate: { audio: false } } },
-  })
+  if (_dash) { try { _dash.destroy(); } catch {} }
+  _dash = dashjs.MediaPlayer().create();
+  const blob = new Blob([manifestXml], { type: 'application/dash+xml' });
+  _dash.initialize(_active, URL.createObjectURL(blob), true);
+  _dash.updateSettings({ streaming: { abr: { autoSwitchBitrate: { audio: false } } } });
 }
 
 //stream-resolver
@@ -329,34 +254,19 @@ async function _getStream(track) {
 }
 
 //public-play
-export async function play(track, tracks, startIndex) {
-  if (tracks) Queue.load(tracks, startIndex ?? 0)
+export async function play(track, tracks, startIndex = 0) {
+  if (tracks) Queue.load(tracks, startIndex);
 
-  _switching = true
-  _pauseVideo()
-  _preloaded = null
-  _preloading = false
-  _swapping = false
+  _switching = true; _pauseVideo(); _preloaded = null; _preloading = false; _swapping = false;
 
-  audioA.pause()
-  audioA.volume = 1
-  audioA.src = ''
-  audioB.pause()
-  audioB.volume = 1
-  audioB.src = ''
-  _active = audioA
-  _inactive = audioB
-  _switching = false 
+  audioA.pause(); audioA.volume = 1; audioA.src = '';
+  audioB.pause(); audioB.volume = 1; audioB.src = '';
+  _active = audioA; _inactive = audioB; _switching = false;
   
-  if (_dash) {
-    try {
-      _dash.destroy()
-    } catch {}
-    _dash = null
-  }
+  if (_dash) { try { _dash.destroy(); } catch {} _dash = null; }
 
-  State.set('player.currentTrack', track)
-  _emit('trackChanged', track)
+  State.set('player.currentTrack', track);
+  _emit('trackChanged', track);
 
   try {
     const stream = await _getStream(track)
@@ -366,13 +276,9 @@ export async function play(track, tracks, startIndex) {
       _active.src = stream.url
       await _active.play()
       _ensureMediaSessionHandlers() //ios: register after user gesture
-    }
-    History.push(track)
-    _emit('queueUpdated', {
-      tracks: State.get('queue.tracks'),
-      position: State.get('player.queuePosition'),
-    })
-    _updateMediaSession(track)
+    } History.push(track);
+    _emit('queueUpdated', { tracks: State.get('queue.tracks'), position: State.get('player.queuePosition') });
+    _updateMediaSession(track);
   } catch (e) {
     _emit('error', e.message || 'Playback error')
   }
@@ -412,9 +318,7 @@ export function seek(pct) {
 export function seekSeconds(delta) {
   if (!_active.duration) return
   _active.currentTime = Math.max(
-    0,
-    Math.min(_active.duration, _active.currentTime + delta)
-  )
+    0, Math.min(_active.duration, _active.currentTime + delta));
 }
 
 export function getCurrentTime() {
@@ -425,40 +329,29 @@ export function getDuration() {
 }
 
 export function setVolume(v) {
-  const vol = Math.max(0, Math.min(1, v))
-  _active.volume = vol
-  State.set('player.volume', vol)
-  localStorage.setItem('tt_vol', vol)
-  _emit('volumeChanged', vol)
+  const vol = Math.max(0, Math.min(1, v));
+  _active.volume = vol; State.set('player.volume', vol); localStorage.setItem('tt_vol', vol); _emit('volumeChanged', vol);
 }
 
 let _muted = false
 let _volBeforeMute = 1
 export function toggleMute() {
   if (_muted) {
-    setVolume(_volBeforeMute)
-    _muted = false
+    setVolume(_volBeforeMute); _muted = false;
   } else {
-    _volBeforeMute = _active.volume || State.get('player.volume') || 0.8
-    _active.volume = 0
-    _muted = true
-    _emit('volumeChanged', 0)
+    _volBeforeMute = _active.volume || State.get('player.volume') || 0.8;
+    _active.volume = 0; _muted = true; _emit('volumeChanged', 0);
   }
 }
 
 export function toggleShuffle() {
-  const val = !State.get('player.isShuffle')
-  State.set('player.isShuffle', val)
-  val ? Queue.onShuffleEnabled() : Queue.onShuffleDisabled()
-  _emit('shuffleChanged', val)
+  const val = !State.get('player.isShuffle'); State.set('player.isShuffle', val); val ? Queue.onShuffleEnabled() : Queue.onShuffleDisabled(); _emit('shuffleChanged', val);
 }
 
 export function toggleRepeat() {
-  const val = !State.get('player.isRepeat')
-  State.set('player.isRepeat', val)
-  _active.loop = val
-  _emit('repeatChanged', val)
+  const val = !State.get('player.isRepeat'); State.set('player.isRepeat', val); _active.loop = val; _emit('repeatChanged', val);
 }
+
 
 export function getCurrentTrack() {
   return State.get('player.currentTrack')
@@ -475,20 +368,12 @@ function _pauseVideo() {
 }
 
 //nowplaying-ui
-const _npPanel = document.getElementById('now-playing')
-
-export function openNowPlaying() {
-  _npPanel?.classList.add('open')
-  _emit('panelOpened', null)
-}
-
-export function closeNowPlaying() {
-  _npPanel?.classList.remove('open')
-  _emit('panelClosed', null)
-}
+const _npPanel = document.getElementById('now-playing');
+export const openNowPlaying = () => { _npPanel?.classList.add('open'); _emit('panelOpened', null); };
+export const closeNowPlaying = () => { _npPanel?.classList.remove('open'); _emit('panelClosed', null); };
 
 document.addEventListener('DOMContentLoaded', () => {
-  const $el = (id) => document.getElementById(id)
+  const $el = id => document.getElementById(id);
 
   $el('player-bar')?.addEventListener('click', (e) => {
     if (

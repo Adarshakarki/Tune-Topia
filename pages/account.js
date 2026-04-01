@@ -4,115 +4,75 @@ import * as Capsule from './capsule.js'
 
 const $ = (id) => document.getElementById(id)
 
-let _editing = false
-let _showPage = null
+let _editing = false, _showPage = null;
 
-function _sanitizeImageUrl(url) {
-  if (!url) return ''
+const _safeImg = (url) => {
+  if (!url) return '';
   try {
-    const { protocol, href } = new URL(url)
-    return protocol === 'https:' || protocol === 'http:' || protocol === 'data:'
-      ? href
-      : ''
-  } catch {
-    return ''
-  }
-}
+    const { protocol, href } = new URL(url);
+    return ['https:', 'http:', 'data:'].includes(protocol) ? href : '';
+  } catch { return ''; }
+};
 
 export function render() {
-  _syncProfile()
-  Capsule.render()
+  _sync();
+  Capsule.render();
 }
 
-export function initEvents(showPageFn) {
-  _showPage = showPageFn
+export function initEvents(showFn) {
+  _showPage = showFn;
 
-  $('home-account-btn')?.addEventListener('click', () => {
-    _syncProfile()
-    $('profile-popup-sheet')?.classList.add('open')
-  })
-  $('profile-popup-overlay')?.addEventListener('click', _closePopup)
-  $('popup-goto-profile')?.addEventListener('click', () => {
-    _closePopup()
-    _showPage('account')
-  })
-  $('popup-goto-settings')?.addEventListener('click', () => {
-    _closePopup()
-    _showPage('settings')
-  })
-  $('popup-signin')?.addEventListener('click', () => {
-    _closePopup()
-    UI.toast('Sign in coming soon')
-  })
+  $('home-account-btn')?.addEventListener('click', () => { _sync(); $('profile-popup-sheet')?.classList.add('open'); });
+  $('profile-popup-overlay')?.addEventListener('click', _close);
+  
+  // Popup actions
+  const routes = { 'popup-goto-profile': 'account', 'popup-goto-settings': 'settings', 'About': 'about' };
+  Object.entries(routes).forEach(([id, pg]) => $(id)?.addEventListener('click', () => { _close(); _showPage(pg); }));
 
-  $('profile-settings-btn')?.addEventListener('click', () =>
-    _showPage('settings')
-  )
+  $('popup-signin')?.addEventListener('click', () => { _close(); UI.toast('Sign in coming soon'); });
+  $('profile-settings-btn')?.addEventListener('click', () => _showPage('settings'));
 
+  // Profile Edit
   $('profile-edit-btn')?.addEventListener('click', () => {
-    _editing = !_editing
-    $('profile-edit-section').style.display = _editing ? 'block' : 'none'
+    _editing = !_editing;
+    $('profile-edit-section').style.display = _editing ? 'block' : 'none';
     if (_editing) {
-      const ni = $('username-input')
-      if (ni) ni.value = State.get('user.name') || ''
-      const pi = $('pfp-url-input')
-      if (pi) pi.value = State.get('user.pfp') || ''
-      _syncPfpEl('pfp-edit-img', 'pfp-edit-preview', State.get('user.pfp') || '')
+      const u = State.get('user');
+      if ($('username-input')) $('username-input').value = u.name || '';
+      if ($('pfp-url-input')) $('pfp-url-input').value = u.pfp || '';
+      _syncEl('pfp-edit-img', 'pfp-edit-preview', u.pfp || '');
     }
-  })
+  });
 
-  $('profile-cancel-btn')?.addEventListener('click', () => {
-    _editing = false
-    $('profile-edit-section').style.display = 'none'
-  })
-
-  $('pfp-url-input')?.addEventListener('input', () => {
-    _syncPfpEl('pfp-edit-img', 'pfp-edit-preview', $('pfp-url-input').value.trim())
-  })
+  $('profile-cancel-btn')?.addEventListener('click', () => { _editing = false; $('profile-edit-section').style.display = 'none'; });
+  $('pfp-url-input')?.addEventListener('input', () => _syncEl('pfp-edit-img', 'pfp-edit-preview', $('pfp-url-input').value.trim()));
 
   $('profile-save-btn')?.addEventListener('click', () => {
-    const name = $('username-input')?.value.trim() || 'Friend'
-    const pfp = $('pfp-url-input')?.value.trim() || ''
-    State.setUser(name, pfp)
-    UI.renderGreeting()
-    import('../app/init.js').then((m) => m.renderAccountBtn())
-    _editing = false
-    $('profile-edit-section').style.display = 'none'
-    _syncProfile()
-    UI.toast('Profile saved')
-  })
+    const n = $('username-input')?.value.trim() || 'Friend', p = $('pfp-url-input')?.value.trim() || '';
+    State.setUser(n, p); UI.renderGreeting();
+    import('../app/init.js').then(m => m.renderAccountBtn());
+    _editing = false; $('profile-edit-section').style.display = 'none'; _sync();
+    UI.toast('Profile saved');
+  });
 
-  $('profile-signin-btn')?.addEventListener('click', () =>
-    UI.toast('Sign in coming soon')
-  )
-
-  Capsule.initEvents()
+  $('profile-signin-btn')?.addEventListener('click', () => UI.toast('Sign in coming soon'));
+  Capsule.initEvents();
 }
 
-function _closePopup() {
-  $('profile-popup-sheet')?.classList.remove('open')
+const _close = () => $('profile-popup-sheet')?.classList.remove('open');
+
+function _syncEl(imgId, wrapId, url) {
+  const img = $(imgId), wrap = $(wrapId), safe = _safeImg(url);
+  if (!img || !wrap) return;
+  img.src = safe; img.style.display = safe ? 'block' : 'none';
+  const ph = wrap.querySelector('.pfp-placeholder');
+  if (ph) ph.style.display = safe ? 'none' : 'flex';
 }
 
-function _syncPfpEl(imgId, wrapId, url) {
-  const img = $(imgId)
-  const wrap = $(wrapId)
-  if (!img || !wrap) return
-  const safeUrl = _sanitizeImageUrl(url)
-  img.src = safeUrl
-  img.style.display = safeUrl ? 'block' : 'none'
-  const ph = wrap.querySelector('.pfp-placeholder')
-  if (ph) ph.style.display = safeUrl ? 'none' : 'flex'
-}
-
-function _syncProfile() {
-  const name = State.get('user.name') || 'Friend'
-  const pfp = State.get('user.pfp') || ''
-
-  const nameEl = $('profile-display-name')
-  if (nameEl) nameEl.textContent = name
-  _syncPfpEl('pfp-img', 'pfp-preview', pfp)
-
-  const popupName = $('pfp-popup-name')
-  if (popupName) popupName.textContent = name
-  _syncPfpEl('pfp-popup-img', 'pfp-popup-wrap', pfp)
+function _sync() {
+  const n = State.get('user.name') || 'Friend', p = State.get('user.pfp') || '';
+  if ($('profile-display-name')) $('profile-display-name').textContent = n;
+  _syncEl('pfp-img', 'pfp-preview', p);
+  if ($('pfp-popup-name')) $('pfp-popup-name').textContent = n;
+  _syncEl('pfp-popup-img', 'pfp-popup-wrap', p);
 }

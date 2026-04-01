@@ -1,101 +1,69 @@
 import * as Player from '../modules/player.js'
 
 export let currentId = null
+let _cur = null, _start = null
 
+// Start track playback
 export function playTrack(tracks, index) {
-  const track = tracks[index]
-  if (!track) return
-  // Record actual listen time for previous track before switching
-  _flushCurrentTrack()
-  currentId = track.id
-  _trackStart = Date.now()
-  _currentTrack = track
-  Player.play(track, tracks, index)
-  _recordPlay(track)
+  const t = tracks[index];
+  if (!t) return;
+  _flush();
+  currentId = t.id;
+  _start = Date.now();
+  _cur = t;
+  Player.play(t, tracks, index);
+  _record(t);
   refreshActiveTracks()
 }
 
+// Update UI playing states
 export function refreshActiveTracks() {
-  document.querySelectorAll('[data-tid]').forEach((el) => {
-    const isActive = el.dataset.tid === currentId
-    if (
-      el.classList.contains('track-card') ||
-      el.classList.contains('alb-track')
-    ) {
-      el.classList.toggle('playing', isActive)
-      el.querySelector('.alb-track-title, .track-name')?.classList.toggle(
-        'playing',
-        isActive
-      )
+  document.querySelectorAll('[data-tid]').forEach(el => {
+    const act = el.dataset.tid === currentId;
+    if (el.classList.contains('track-card') || el.classList.contains('alb-track')) {
+      el.classList.toggle('playing', act);
+      el.querySelector('.alb-track-title, .track-name')?.classList.toggle('playing', act);
     } else {
-      const card = el.querySelector('.track-card')
-      card?.classList.toggle('playing', isActive)
-      card?.querySelector('.track-name')?.classList.toggle('playing', isActive)
+      const c = el.querySelector('.track-card');
+      c?.classList.toggle('playing', act);
+      c?.querySelector('.track-name')?.classList.toggle('playing', act);
     }
-  })
+  });
 }
 
-export function setCurrentId(id) {
-  currentId = id
-}
+export function setCurrentId(id) { currentId = id; }
 
-// ── History recording ─────────────────────────────────────────────────────────
-
-let _currentTrack = null
-let _trackStart = null
-
-// Called when a new track starts — records the entry immediately.
-// Duration is updated to actual listen time when the next track starts.
-function _recordPlay(track) {
-  if (!track?.id) return
+// Record start in history
+function _record(t) {
+  if (!t?.id) return;
   try {
-    const history = JSON.parse(localStorage.getItem('tt_play_history') || '[]')
-    history.unshift({
-      id: track.id,
-      title: track.title || '',
-      artist: track.artist || '',
-      album: track.album || '',
-      cover: track.cover || '',
-      coverSmall: track.coverSmall || '',
-      duration: track.duration || '0:00',
-      listenedMs: 0,
-      playedAt: Date.now(),
-    })
-    localStorage.setItem(
-      'tt_play_history',
-      JSON.stringify(history.slice(0, 2000))
-    )
+    const h = JSON.parse(localStorage.getItem('tt_play_history') || '[]');
+    h.unshift({ ...t, listenedMs: 0, playedAt: Date.now() });
+    localStorage.setItem('tt_play_history', JSON.stringify(h.slice(0, 2000)));
   } catch {}
-  // Notify capsule if profile page is open
-  _notifyCapsule()
+  _notify();
 }
 
-// Called before switching tracks — patches the previous entry with real listen time
-function _flushCurrentTrack() {
-  if (!_currentTrack || !_trackStart) return
-  const listenedMs = Date.now() - _trackStart
-  // Only count if listened for more than 10 seconds (skip spam)
-  if (listenedMs < 10000) return
+// Finalize listen duration
+function _flush() {
+  if (!_cur || !_start) return;
+  const ms = Date.now() - _start;
+  if (ms < 10000) return;
   try {
-    const history = JSON.parse(localStorage.getItem('tt_play_history') || '[]')
-    const entry = history.find(
-      (e) => e.id === _currentTrack.id && e.listenedMs === 0
-    )
+    const h = JSON.parse(localStorage.getItem('tt_play_history') || '[]');
+    const entry = h.find(e => e.id === _cur.id && e.listenedMs === 0);
     if (entry) {
-      entry.listenedMs = listenedMs
-      // Convert to mm:ss for compatibility
-      const secs = Math.floor(listenedMs / 1000)
-      entry.duration = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`
-      localStorage.setItem('tt_play_history', JSON.stringify(history))
+      entry.listenedMs = ms;
+      const s = Math.floor(ms / 1000);
+      entry.duration = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+      localStorage.setItem('tt_play_history', JSON.stringify(h));
     }
   } catch {}
 }
 
-// Live update capsule charts if profile page is currently visible
-function _notifyCapsule() {
+// Update capsule if active
+function _notify() {
   if (document.getElementById('page-account')?.classList.contains('active')) {
-    import('./router.js').then((R) => {
-      import('../pages/capsule.js').then((C) => C.render())
-    })
+    import('./router.js').then(R => import('../pages/capsule.js').then(C => C.render()));
   }
 }

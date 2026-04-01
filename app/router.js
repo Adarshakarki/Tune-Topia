@@ -1,67 +1,31 @@
 import * as UI from './ui.js'
 
-const $ = (id) => document.getElementById(id)
+const $ = id => document.getElementById(id);
+let _prev = 'home', _isPop = false;
+const _loaders = {}, _loaded = new Set(), CACHE = new Set(['home', 'new']);
 
-let _prevPage = 'home'
-let _isPopping = false
+export function registerLoader(name, fn) { _loaders[name] = fn; }
 
-const _pageLoaders = {}
-const _loadedPages = new Set()
-
-// pages where the loader does heavy network work — skip on revisit
-const CACHE_PAGES = new Set(['home', 'new'])
-
-export function registerLoader(name, fn) {
-  _pageLoaders[name] = fn
+// Navigate to page
+export function showPage(name, push = true) {
+  _prev = document.querySelector('.page.active')?.id?.replace('page-', '') || 'home';
+  if (push && !_isPop) history.pushState({ page: name }, '', `?p=${name}`);
+  UI.showPage(name);
+  closeSidebar();
+  $('main-content')?.scrollTo(0, 0);
+  if (_loaders[name] && !(CACHE.has(name) && _loaded.has(name))) { _loaders[name](); _loaded.add(name); }
+  if (name === 'search') setTimeout(() => $('search-input')?.focus(), 100);
 }
 
-export function showPage(name, pushState = true) {
-  _prevPage =
-    document.querySelector('.page.active')?.id?.replace('page-', '') || 'home'
-  if (pushState && !_isPopping) {
-    history.pushState({ page: name }, '', `?p=${name}`)
-  }
-  UI.showPage(name)
-  closeSidebar()
-  $('main-content')?.scrollTo(0, 0)
-  if (_pageLoaders[name] && !(CACHE_PAGES.has(name) && _loadedPages.has(name))) {
-    _pageLoaders[name]()
-    _loadedPages.add(name)
-  }
-  if (name === 'search') setTimeout(() => $('search-input')?.focus(), 100)
-}
+export function goBack(fb = 'home') { history.length > 1 ? history.back() : showPage(_prev || fb); }
 
-export function goBack(fallback = 'home') {
-  if (history.length > 1) {
-    history.back()
-  } else {
-    showPage(_prevPage || fallback)
-  }
-}
+export function openSidebar() { $('sidebar')?.classList.add('open'); $('sidebar-overlay')?.classList.add('visible'); }
 
-export function openSidebar() {
-  $('sidebar')?.classList.add('open')
-  $('sidebar-overlay')?.classList.add('visible')
-}
+export function closeSidebar() { $('sidebar')?.classList.remove('open'); $('sidebar-overlay')?.classList.remove('visible'); }
 
-export function closeSidebar() {
-  $('sidebar')?.classList.remove('open')
-  $('sidebar-overlay')?.classList.remove('visible')
-}
+// Popstate handling
+window.addEventListener('popstate', e => { _isPop = true; showPage(e.state?.page || 'home', false); _isPop = false; });
 
-// handle browser back/forward
-window.addEventListener('popstate', (e) => {
-  _isPopping = true
-  const page = e.state?.page || 'home'
-  showPage(page, false)
-  _isPopping = false
-})
+export function invalidatePage(name) { _loaded.delete(name); }
 
-export function invalidatePage(name) {
-  _loadedPages.delete(name)
-}
-
-// initialize history state for current page
-if (!history.state) {
-  history.replaceState({ page: 'home' }, '', '?p=home')
-}
+if (!history.state) history.replaceState({ page: 'home' }, '', '?p=home');

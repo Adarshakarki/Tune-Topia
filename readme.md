@@ -1,27 +1,29 @@
 # TuneTopia
 
-A clean, modular music streaming web app built on Tidal's open API and YouTube. No subscriptions, no ads, no tracking - just music.
+**TuneTopia** is a high-fidelity, privacy-focused music streaming web application. Built with a "no-framework" philosophy, it leverages Vanilla JavaScript and modern Web APIs to deliver a premium experience using Tidal and YouTube as backends - without subscriptions, advertisements, or tracking.
 
 ---
 
-## Features
+# Key Features
 
-- **Lossless & Hi-Res streaming** via Tidal's open proxy network (FLAC, Hi-Res FLAC, AAC)
-- **YouTube fallback** — audio and video playback through Invidious when Tidal fails
-- **Gapless playback** — dual audio buffer with crossfade
-- **10-band equalizer** with presets
-- **Smart queue** — shuffle, repeat, add-next, drag-to-reorder
-- **Library** — liked songs, saved albums, followed artists, custom playlists
-- **Sound Capsule** — listening stats, top tracks, peak hours, heatmap, artist discovery
-- **Synced lyrics** via lrclib.net
-- **19 genre pages** — playlists, albums, top tracks per genre
-- **Video player** — fullscreen with Tidal and YouTube videos
-- **PWA** — installable, offline shell, media session API, keyboard shortcuts
-- **Dark & light mode** — warm espresso palette
+### Audiophile Grade Streaming
+- **Lossless & Hi-Res:** Direct access to FLAC (16-bit/24-bit) and AAC streams via Tidal's open proxy network.
+- **Hybrid Engine:** Automatic fallback to YouTube (Invidious) when Tidal tracks are unavailable.
+- **Advanced Playback:** True gapless playback using dual-buffer logic and custom crossfade support.
+- **10-Band EQ:** Integrated parametric equalizer with genre-based presets.
+
+### Sound Capsule (Local Analytics)
+- **Privacy-First:** All listening history and stats are stored locally on your device.
+- **Deep Insights:** Visualize your music journey with peak hour charts, artist discovery counters, and interactive listening heatmaps.
+
+### Modern Web Experience
+- **PWA Support:** Install TuneTopia on mobile or desktop for an app-like experience with offline shell support.
+- **Synced Lyrics:** Real-time, time-synced lyrics powered by LRCLIB.
+- **Responsive Design:** A beautiful "Warm Espresso" palette that scales from small mobile screens to ultra-wide monitors.
 
 ---
 
-## Screenshots
+## 📸 Screenshots
 
 | Mobile | Desktop |
 |--------|---------|

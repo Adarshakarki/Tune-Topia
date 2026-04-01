@@ -21,151 +21,109 @@ import * as PlaylistPage from '../pages/playlist.js'
 import * as UserPlaylistPage from '../pages/userplaylist.js'
 import * as LikedVideosPage from '../pages/likedVideos.js'
 import * as VideoPage from '../pages/video.js'
+import * as AboutPage from '../pages/about.js'
 import { playTrack } from './playback.js'
+import { ICONS } from './icons.js'
 
 const $ = (id) => document.getElementById(id)
 
-function openVideo(track) {
-  VideoPage.open(track)
-}
-
+// Update account PFP
 export function renderAccountBtn() {
-  const btn = $('home-account-btn')
-  if (!btn) return
-  const pfp = State.get('user.pfp') || ''
-  btn.innerHTML = pfp
-    ? `<img src="${pfp}" alt="Profile" style="width:100%;height:100%;object-fit:cover;border-radius:var(--r-full);" onerror="this.parentElement.innerHTML='<i class=\\'bi bi-person-circle\\'></i>'"/>`
-    : '<i class="bi bi-person-circle" id="home-account-icon"></i>'
+  const btn = $('home-account-btn'), pfp = State.get('user.pfp');
+  if (!btn) return;
+  if (!pfp) return btn.innerHTML = `<i class="bi ${ICONS.person}" id="home-account-icon"></i>`;
+
+  const img = new Image();
+  img.src = pfp;
+  img.style.cssText = "width:100%;height:100%;object-fit:cover;border-radius:var(--r-full);";
+  img.onload = () => { btn.innerHTML = ''; btn.appendChild(img); };
+  img.onerror = () => btn.innerHTML = `<i class="bi ${ICONS.person}"></i>`;
 }
 
 function _stripBackButtonText() {
-  document.querySelectorAll('.back-btn').forEach((btn) => {
-    const icon = btn.querySelector('i.bi')
-    if (icon) {
-      while (btn.firstChild) btn.removeChild(btn.firstChild)
-      btn.appendChild(icon)
-    }
-  })
+  document.querySelectorAll('.back-btn').forEach(btn => {
+    const icon = btn.querySelector('i.bi');
+    if (icon) { btn.textContent = ''; btn.appendChild(icon); }
+  });
 }
 
 function init() {
-  State.init()
-  UI.applyTheme(State.get('ui.theme') || 'light')
-  UI.renderGreeting()
-  renderAccountBtn()
+  State.init();
+  UI.applyTheme(State.get('ui.theme') || 'light');
+  UI.renderGreeting();
+  renderAccountBtn();
 
-  Playlists.init(State)
-  AlbumPage.init(playTrack)
-  ArtistPage.init(playTrack, (album) => AlbumPage.open(album))
-  PlaylistPage.init(playTrack)
-  UserPlaylistPage.init(playTrack, () => {
-    PlaylistsUI.renderPage()
-    Library.render()
-  })
-  LikedVideosPage.init(openVideo)
-  GenrePage.init(
-    (pl) => PlaylistPage.open(pl),
-    (album) => AlbumPage.open(album),
-    playTrack
-  )
-  PlayerEvents.bind()
-  SearchPage.init()
-  Liked.initEvents()
-  Settings.initEvents()
-  AccountPage.initEvents(Router.showPage)
-  PlaylistsUI.initEvents()
-  Sheets.initEvents()
-  NowPlaying.init()
+  // Page Inits
+  Playlists.init(State);
+  AlbumPage.init(playTrack);
+  ArtistPage.init(playTrack, AlbumPage.open);
+  PlaylistPage.init(playTrack);
+  UserPlaylistPage.init(playTrack, () => { PlaylistsUI.renderPage(); Library.render(); });
+  LikedVideosPage.init(VideoPage.open);
+  GenrePage.init(PlaylistPage.open, AlbumPage.open, playTrack);
+  
+  PlayerEvents.bind();
+  SearchPage.init();
+  Liked.initEvents();
+  Settings.initEvents();
+  AccountPage.initEvents(Router.showPage);
+  PlaylistsUI.initEvents();
+  Sheets.initEvents();
+  NowPlaying.init();
+  UI.updateVolume(State.get('player.volume') ?? 0.8);
 
-  Router.registerLoader('home', Home.load)
-  Router.registerLoader('library', Library.render)
-  Router.registerLoader('liked', Liked.render)
-  Router.registerLoader('account', AccountPage.render)
-  Router.registerLoader('settings', Settings.render)
-  Router.registerLoader('albums', Library.loadAlbums)
-  Router.registerLoader('artists', Library.loadArtists)
-  Router.registerLoader('history', Library.loadHistory)
-  Router.registerLoader('recent', Library.loadRecent)
-  Router.registerLoader('new', Library.loadNew)
-  Router.registerLoader('playlists', PlaylistsUI.renderPage)
-  Router.registerLoader('liked-videos', LikedVideosPage.onEnter)
+  // Routes
+  const routes = {
+    'home': Home.load, 'library': Library.render, 'liked': Liked.render,
+    'account': AccountPage.render, 'settings': Settings.render, 'albums': Library.loadAlbums,
+    'artists': Library.loadArtists, 'history': Library.loadHistory, 'recent': Library.loadRecent,
+    'new': Library.loadNew, 'playlists': PlaylistsUI.renderPage, 'liked-videos': LikedVideosPage.onEnter,
+    'about': AboutPage.render
+  };
+  Object.entries(routes).forEach(([k, v]) => Router.registerLoader(k, v));
 
-  UI.updateVolume(State.get('player.volume') ?? 0.8)
-  setTimeout(() => {
-    Home.load()
-    Library.render()
-    _stripBackButtonText()
-  }, 0)
+  // App Load
+  requestAnimationFrame(() => {
+    Home.load();
+    const next = () => { Library.render(); _stripBackButtonText(); };
+    'requestIdleCallback' in window ? requestIdleCallback(next) : setTimeout(next, 200);
+  });
 
-  const _refreshQueue = () =>
-    UI.renderQueue(
-      State.get('queue.tracks') || [],
-      State.get('player.queuePosition') || 0,
-      Queue.getUpcoming()
-    )
-  State.subscribe('queue.tracks', _refreshQueue)
-  State.subscribe('player.queuePosition', _refreshQueue)
-  State.subscribe('library.followedArtists', () => Library.render())
+  // Subscriptions
+  const _refreshQueue = () => UI.renderQueue(State.get('queue.tracks') || [], State.get('player.queuePosition') || 0, Queue.getUpcoming());
+  State.subscribe('queue.tracks', _refreshQueue);
+  State.subscribe('player.queuePosition', _refreshQueue);
+  State.subscribe('library.followedArtists', Library.render);
   State.subscribe('library.savedAlbums', () => {
-    Library.render()
-    if (document.querySelector('#page-albums.active')) Library.loadAlbums()
-  })
+    Library.render();
+    if (document.querySelector('#page-albums.active')) Library.loadAlbums();
+  });
 
-  document
-    .querySelectorAll('.nav-btn[data-page]')
-    .forEach((btn) =>
-      btn.addEventListener('click', () => Router.showPage(btn.dataset.page))
-    )
-  document
-    .querySelectorAll('.sb-item[data-page]')
-    .forEach((item) =>
-      item.addEventListener('click', () => Router.showPage(item.dataset.page))
-    )
-  document.querySelectorAll('[data-page]').forEach((el) => {
-    if (el.classList.contains('sb-item') || el.classList.contains('nav-btn'))
-      return
-    el.addEventListener('click', () => Router.showPage(el.dataset.page))
-  })
-  document.querySelectorAll('[data-back]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      if (window.history.length > 1) window.history.back()
-      else Router.showPage(btn.dataset.back)
-    })
-  })
+  // Nav
+  document.body.addEventListener('click', e => {
+    const p = e.target.closest('[data-page]'), b = e.target.closest('[data-back]');
+    if (p) Router.showPage(p.dataset.page);
+    else if (b) window.history.length > 1 ? window.history.back() : Router.showPage(b.dataset.back);
+  });
 
-  $('sidebar-overlay')?.addEventListener('click', Router.closeSidebar)
-  ;(function () {
-    const shell = document.getElementById('shell')
-    const btn = $('sb-collapse-btn')
-    if (!shell || !btn) return
-    const collapsed = localStorage.getItem('tt_sb_collapsed') === 'true'
-    if (collapsed) shell.classList.add('sb-collapsed')
-    btn.addEventListener('click', () => {
-      const next = !shell.classList.contains('sb-collapsed')
-      shell.classList.toggle('sb-collapsed', next)
-      localStorage.setItem('tt_sb_collapsed', String(next))
-    })
-  })()
-
-  $('lib-liked')?.addEventListener('click', () => Router.showPage('liked'))
-  $('lib-playlists')?.addEventListener('click', () =>
-    Router.showPage('playlists')
-  )
-  $('lib-albums')?.addEventListener('click', () => Router.showPage('albums'))
-  $('lib-artists')?.addEventListener('click', () => Router.showPage('artists'))
-  $('lib-history')?.addEventListener('click', () => Router.showPage('history'))
-  $('lib-liked-videos')?.addEventListener('click', () =>
-    Router.showPage('liked-videos')
-  )
+  $('sidebar-overlay')?.addEventListener('click', Router.closeSidebar);
+  
+  const shell = $('shell'), sbBtn = $('sb-collapse-btn');
+  if (shell && sbBtn) {
+    shell.classList.toggle('sb-collapsed', localStorage.getItem('tt_sb_collapsed') === 'true');
+    sbBtn.addEventListener('click', () => localStorage.setItem('tt_sb_collapsed', String(shell.classList.toggle('sb-collapsed'))));
+  }
 
   $('sb-theme-btn')?.addEventListener('click', () => {
-    const next = State.get('ui.theme') === 'dark' ? 'light' : 'dark'
-    State.setTheme(next)
-    UI.applyTheme(next)
-  })
+    const theme = State.get('ui.theme') === 'dark' ? 'light' : 'dark';
+    State.setTheme(theme); UI.applyTheme(theme);
+  });
 
-  NowPlaying.syncMoreSheetPosition()
-  window.addEventListener('resize', NowPlaying.syncMoreSheetPosition)
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(NowPlaying.syncMoreSheetPosition, 150);
+  });
 }
 
 document.addEventListener('DOMContentLoaded', init)

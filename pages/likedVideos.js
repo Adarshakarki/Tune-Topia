@@ -1,79 +1,84 @@
 import * as LikedVideos from '../modules/likedVideos.js'
 import { escHtml } from '../api/utils.js'
 
-// re-exports used by search.js
+const $ = (id) => document.getElementById(id)
+
+let _playVideo = null
+let _query = ''
+let _sortMode = 'recent' // 'recent' | 'az'
+
+// Re-exports used by search.js
 export const toggle = (video) => {
-  const r = LikedVideos.toggle(video)
-  _updateCount()
-  return r
+  const result = LikedVideos.toggle(video)
+  _updateGlobalCount()
+  return result
 }
 export const isLiked = LikedVideos.has
 
-const $ = (id) => document.getElementById(id)
-
-function _updateCount() {
-  const n = LikedVideos.count()
-  const lbl = $('liked-videos-count-label')
-  if (lbl) lbl.textContent = `${n} video${n !== 1 ? 's' : ''}`
-}
-
-let _playVideo = null
-let _filterQ = ''
-let _sort = 'recent'
-
 export function init(playVideoFn) {
   _playVideo = playVideoFn
-  _updateCount()
+  _updateGlobalCount()
 
   $('lv-filter-input')?.addEventListener('input', (e) => {
-    _filterQ = e.target.value.trim().toLowerCase()
+    _query = e.target.value.trim().toLowerCase()
     _render()
   })
 
   $('lv-sort-label')?.addEventListener('click', () => {
-    _sort = _sort === 'recent' ? 'az' : 'recent'
-    const lbl = $('lv-sort-label')
-    if (lbl) lbl.textContent = _sort === 'recent' ? 'Recent' : 'A–Z'
+    _sortMode = _sortMode === 'recent' ? 'az' : 'recent'
+    _updateSortLabel()
     _render()
   })
 }
 
 export function onEnter() {
-  _filterQ = ''
-  _sort = 'recent'
-  const inp = $('lv-filter-input')
-  if (inp) inp.value = ''
+  _query = ''
+  _sortMode = 'recent'
+  
+  const input = $('lv-filter-input')
+  if (input) input.value = ''
+  
+  _updateSortLabel()
+  _render()
+}
+
+export const refresh = () => _render()
+
+function _updateSortLabel() {
   const lbl = $('lv-sort-label')
-  if (lbl) lbl.textContent = 'Recent'
-  _render()
+  if (lbl) lbl.textContent = _sortMode === 'recent' ? 'Recent' : 'A–Z'
 }
 
-export function refresh() {
-  _render()
-}
+function _getFilteredVideos() {
+  let items = [...LikedVideos.getAll()]
 
-function _getVideos() {
-  let videos = LikedVideos.getAll()
-  if (_filterQ)
-    videos = videos.filter(
-      (v) =>
-        v.title?.toLowerCase().includes(_filterQ) ||
-        v.artist?.toLowerCase().includes(_filterQ)
+  if (_query) {
+    items = items.filter(v => 
+      v.title?.toLowerCase().includes(_query) || 
+      v.artist?.toLowerCase().includes(_query)
     )
-  if (_sort === 'az')
-    videos.sort((a, b) => (a.title || '').localeCompare(b.title || ''))
-  return videos
+  }
+
+  if (_sortMode === 'az') {
+    items.sort((a, b) => (a.title || '').localeCompare(b.title || ''))
+  } else {
+    items.reverse() // Default: newest first
+  }
+
+  return items
 }
 
 function _render() {
   const list = $('lv-list')
   if (!list) return
+
   const all = LikedVideos.getAll()
-  const videos = _getVideos()
+  const filtered = _getFilteredVideos()
 
   const countEl = $('lv-count')
-  if (countEl)
+  if (countEl) {
     countEl.textContent = `${all.length} video${all.length !== 1 ? 's' : ''}`
+  }
 
   if (!all.length) {
     list.innerHTML = `
@@ -85,12 +90,16 @@ function _render() {
     return
   }
 
-  if (!videos.length) {
-    list.innerHTML = `<div class="empty"><i class="bi bi-search"></i><p>No results</p></div>`
+  if (!filtered.length) {
+    list.innerHTML = `
+      <div class="empty">
+        <i class="bi bi-search"></i>
+        <p>No results</p>
+      </div>`
     return
   }
 
-  list.innerHTML = videos
+  list.innerHTML = filtered
     .map(
       (v) => `
     <div class="vc-row lv-row" data-id="${escHtml(v.id)}">
@@ -115,23 +124,29 @@ function _render() {
 
   list.querySelectorAll('.lv-row').forEach((row) => {
     row.addEventListener('click', (e) => {
-      if (e.target.closest('.lv-unlike-btn')) return
-      const id = row.dataset.id
-      const vid = LikedVideos.getAll().find((v) => v.id === id)
-      if (vid && _playVideo) _playVideo(vid)
+      if (e.target.closest('.lv-unlike-btn')) return;
+      const video = all.find(v => v.id === row.dataset.id)
+      if (video && _playVideo) _playVideo(video)
     })
   })
 
   list.querySelectorAll('.lv-unlike-btn').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation()
-      const id = btn.dataset.id
-      const vid = LikedVideos.getAll().find((v) => v.id === id)
-      if (vid) {
-        LikedVideos.toggle(vid)
-        _updateCount()
+      const video = all.find(v => v.id === btn.dataset.id)
+      if (video) {
+        LikedVideos.toggle(video)
+        _updateGlobalCount()
         _render()
       }
     })
   })
+}
+
+function _updateGlobalCount() {
+  const count = LikedVideos.count()
+  const label = $('liked-videos-count-label')
+  if (label) {
+    label.textContent = `${count} video${count !== 1 ? 's' : ''}`
+  }
 }

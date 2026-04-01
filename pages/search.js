@@ -19,6 +19,7 @@ import {
   attachArtistEvents,
 } from './home.js'
 const $ = (id) => document.getElementById(id)
+import { getIcon } from '../app/icons.js'
 let _searchTimer
 
 export function init() {
@@ -140,8 +141,8 @@ function _renderVideos(results, container) {
   const _badge = (v) => {
     const isTidal = v.source === 'tidal-video' || v.source === 'tidal'
     return isTidal
-      ? `<span class="vc-source-badge vc-badge-tidal">Tidal</span>`
-      : `<span class="vc-source-badge vc-badge-yt">YT</span>`
+      ? `<span class="vc-source-badge vc-badge-tidal">Tidal</span>` //
+      : `<span class="vc-source-badge vc-badge-yt">YT</span>` //
   }
 
   const _heart = (v) =>
@@ -155,7 +156,7 @@ function _renderVideos(results, container) {
     <div class="vc-row" data-index="${i}">
       <div class="vc-thumb-wrap">
         <img src="${escHtml(v.thumbnail || v.cover || '')}" alt="" onerror="this.src=\'\'" class="vc-thumb"/>
-        <div class="vc-overlay"><i class="bi bi-play-fill" style="font-size:22px;color:#fff"></i></div>
+        <div class="vc-overlay">${getIcon('play', '', 'font-size:22px;color:#fff')}</div>
         ${_badge(v)}
         ${v.dur ? `<span class="vc-dur">${escHtml(v.dur)}</span>` : ''}
       </div>
@@ -203,7 +204,7 @@ function _renderPlaylists(results, container) {
   container.innerHTML = `<div class="pls-grid">${results
     .map(
       (p, i) => `
-      <div class="pls-card" data-index="${i}">
+      <div class="pls-card" data-index="${i}"> 
         <div class="pls-art-wrap">
           <img src="${escHtml(p.coverSmall || p.cover || '')}" alt="" onerror="this.src=''" class="pls-art"/>
           <div class="pls-overlay"><i class="bi bi-play-fill" style="font-size:26px;color:#fff"></i></div>
@@ -248,19 +249,16 @@ function _attachSearchTrackEvents(container) {
 }
 
 function _showBrowse() {
-  const b = $('search-empty-state'),
-    r = $('search-results')
-  if (b) b.style.display = ''
-  if (r) r.style.display = 'none'
-  const gs = $('genre-results-section')
-  if (gs) gs.style.display = 'none'
+  const b = $('search-empty-state'), r = $('search-results'), gs = $('genre-results-section');
+  if (b) b.style.display = '';
+  if (r) r.style.display = 'none';
+  if (gs) gs.style.display = 'none';
 }
 
 function _showResults() {
-  const b = $('search-empty-state'),
-    r = $('search-results')
-  if (b) b.style.display = 'none'
-  if (r) r.style.display = ''
+  const b = $('search-empty-state'), r = $('search-results');
+  if (b) b.style.display = 'none';
+  if (r) r.style.display = '';
 }
 
 // ── Genre ─────────────────────────────────────────────────────
@@ -385,7 +383,7 @@ function _renderGenreCards(grid, items, onClick, getDisplay) {
       <div class="genre-card" data-index="${i}">
         <div style="position:relative;aspect-ratio:1;overflow:hidden;background:var(--surface-2,#222)">
           <img src="${escHtml(d.cover)}" onerror="this.src=''" alt="" style="width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s"/>
-          <div class="genre-card-play" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.45);opacity:0;transition:opacity .2s">
+          <div class="genre-card-play" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.45);opacity:0;transition:opacity .2s"> 
             <i class="bi bi-play-fill" style="font-size:30px;color:#fff"></i>
           </div>
         </div>

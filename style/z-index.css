@@ -1,37 +1,40 @@
 :root {
-  /* within sub-pages / now-playing (internal layering) */
-  --z-bg: 0;
-  --z-art: 1;
-  --z-gradient: 2;
-  --z-controls: 3;
-  --z-panel: 15;
-  --z-topbar: 20;
+  /* internal panel layers */
+  --z-bg:          0;
+  --z-art:         1;
+  --z-gradient:    2;
+  --z-controls:    3;
+  --z-panel:       15;
+  --z-topbar:      20;
   --z-sheet-inner: 25;
 
-  /* main page chrome */
+  /* page chrome */
   --z-sticky: 30;
-  --z-tabs: 38;
+  --z-tabs:   38;
   --z-header: 40;
   --z-filter: 45;
-  --z-nav: 50;
 
-  /* overlays covering main content */
+  /* overlay surfaces */
   --z-sidebar-backdrop: 190;
-  --z-sidebar: 200;
+  --z-sidebar:          200;
 
-  /* sub-pages (slide in over main) */
-  --z-subpage: 250;
+  /* sub-pages (Artist, Album) slide over main content */
+  --z-subpage:   250;
   --z-subpage-2: 255;
 
-  /* player bar: always floats above sub-pages */
-  --z-player: 270;
+  /* bottom navigation group (container for mini-player + nav-bar) */
+  /* sits above sub-pages but below fullscreen views */
+  --z-player: 5000;
 
-  /* full screen views */
-  --z-fullscreen: 300;
+  /* internal nav layering within the container */
+  --z-nav:    5001;
 
-  /* global overlapping UI */
-  --z-sheet: 400;
-  --z-modal: 500;
-  --z-picker: 550;
-  --z-toast: 600;
+  /* fullscreen views (Now Playing, Video) - usually covers player bar */
+  --z-fullscreen: 10000;
+
+  /* global ui */
+  --z-sheet:  11000;
+  --z-modal:  12000;
+  --z-picker: 13000;
+  --z-toast:  14000;
 }

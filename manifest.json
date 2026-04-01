@@ -1,16 +1,18 @@
 {
   "id": "tunetopia-music",
-  "name": "Tune Topia",
-  "short_name": "Tune Topia",
-  "description": "Music streaming with TIDAL and YouTube",
+  "name": "TuneTopia",
+  "short_name": "TuneTopia",
+  "description": "Premium high-fidelity music streaming with Tidal and YouTube integration. Privacy-focused and ad-free.",
   "start_url": "/Tune-Topia/?source=pwa",
   "scope": "/Tune-Topia/",
+  "lang": "en-US",
+  "dir": "ltr",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "minimal-ui"],
   "orientation": "portrait-primary",
   "background_color": "#F5F0E8",
   "theme_color": "#F5F0E8",
-  "theme_color_dark": "#0E0C0A",
+  "categories": ["music", "entertainment"],
   "icons": [
     {
       "src": "assets/logo192.jpeg",
@@ -22,25 +24,21 @@
       "src": "assets/logo512.jpeg",
       "sizes": "512x512",
       "type": "image/jpeg",
-      "purpose": "any maskable"
+      "purpose": "maskable"
     }
   ],
-  "categories": ["music", "entertainment"],
   "shortcuts": [
     {
       "name": "Search",
-      "url": "/Tune-Topia/?page=search",
-      "description": "Search for music"
+      "url": "/Tune-Topia/?page=search"
     },
     {
       "name": "Library",
-      "url": "/Tune-Topia/?page=library",
-      "description": "Your library"
+      "url": "/Tune-Topia/?page=library"
     },
     {
       "name": "Sound Capsule",
-      "url": "/Tune-Topia/?page=capsule",
-      "description": "View your listening stats"
+      "url": "/Tune-Topia/?page=account"
     }
   ]
 }

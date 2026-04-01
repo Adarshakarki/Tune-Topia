@@ -1,4 +1,4 @@
-/* - library menu - */
+/* library menu */
 .lib-menu {
   background: var(--surface);
   border-top: 0.5px solid var(--border);
@@ -13,15 +13,11 @@
   border-bottom: 0.5px solid var(--border);
   cursor: pointer;
   transition: background 0.12s;
-  /*alignment: force text left, chevron right */
   text-align: left;
 }
-.lib-item:last-child {
-  border-bottom: none;
-}
-.lib-item:active {
-  background: var(--surface-2);
-}
+.lib-item:last-child { border-bottom: none; }
+.lib-item:active { background: var(--surface-2); }
+
 .lib-item-icon {
   width: 32px;
   height: 32px;
@@ -33,15 +29,14 @@
   color: var(--bg) !important;
   background: var(--accent) !important;
 }
-.lib-item-icon .bi {
-  font-size: 14px;
-}
-#lib-liked .lib-item-icon { background: var(--accent) !important; }
-#lib-playlists .lib-item-icon { background: var(--accent-mid) !important; }
-#lib-albums .lib-item-icon { background: var(--accent) !important; opacity: 0.9; }
-#lib-artists .lib-item-icon { background: var(--accent-mid) !important; opacity: 0.9; }
+.lib-item-icon .bi { font-size: 14px; }
+
+#lib-liked .lib-item-icon        { background: var(--accent) !important; }
+#lib-playlists .lib-item-icon    { background: var(--accent-mid) !important; }
+#lib-albums .lib-item-icon       { background: var(--accent) !important; opacity: 0.9; }
+#lib-artists .lib-item-icon      { background: var(--accent-mid) !important; opacity: 0.9; }
 #lib-liked-videos .lib-item-icon { background: oklch(0.45 0.12 20) !important; }
-#lib-history .lib-item-icon { background: var(--text-2) !important; }
+#lib-history .lib-item-icon      { background: var(--text-2) !important; }
 
 .lib-item-body {
   display: flex;
@@ -49,30 +44,13 @@
   gap: 2px;
   flex: 1;
   min-width: 0;
-  /*alignment: ensure text stays left */
   text-align: left;
 }
-.lib-item-name {
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--text);
-  /*alignment: prevent centering */
-  text-align: left;
-}
-.lib-item-sub {
-  font-size: 12px;
-  color: var(--text-3);
-  text-align: left;
-}
-.lib-chevron {
-  font-size: 13px;
-  color: var(--text-3);
-  flex-shrink: 0;
-  /*alignment: push chevron to far right */
-  margin-left: auto;
-}
+.lib-item-name { font-size: 16px; font-weight: 500; color: var(--text); text-align: left; }
+.lib-item-sub  { font-size: 12px; color: var(--text-3); text-align: left; }
+.lib-chevron   { font-size: 13px; color: var(--text-3); flex-shrink: 0; margin-left: auto; }
 
-/* liked page */
+/* liked hero */
 .liked-hero {
   display: flex;
   align-items: center;
@@ -93,24 +71,12 @@
   color: var(--bg);
   box-shadow: 0 6px 20px var(--accent-shadow);
 }
-.liked-hero-icon .bi {
-  font-size: 26px;
-}
-.liked-hero-info {
-  flex: 1;
-  min-width: 0;
-}
-.liked-hero-title {
-  font-family: 'Playfair Display', serif;
-  font-size: 22px;
-  font-weight: 700;
-}
-.liked-hero-sub {
-  font-size: 13px;
-  color: var(--text-2);
-  margin-top: 3px;
-}
+.liked-hero-icon .bi { font-size: 26px; }
+.liked-hero-info { flex: 1; min-width: 0; }
+.liked-hero-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; }
+.liked-hero-sub   { font-size: 13px; color: var(--text-2); margin-top: 3px; }
 
+/* filter row */
 .liked-filter-row {
   display: flex;
   align-items: center;
@@ -136,13 +102,9 @@
   font-size: 14px;
   color: var(--text);
 }
-.filter-bar input::placeholder {
-  color: var(--text-3);
-}
-.filter-bar .bi {
-  font-size: 13px;
-  color: var(--text-3);
-}
+.filter-bar input::placeholder { color: var(--text-3); }
+.filter-bar .bi { font-size: 13px; color: var(--text-3); }
+
 .sort-badge {
   font-size: 12px;
   font-weight: 700;
@@ -161,14 +123,9 @@
   gap: 20px var(--s4);
   padding: var(--s4) var(--s5) var(--s5);
 }
-.card-item {
-  cursor: pointer;
-  min-width: 0;
-}
-.card-item:active .card-art {
-  transform: scale(0.96);
-  opacity: 0.8;
-}
+.card-item { cursor: pointer; min-width: 0; }
+.card-item:active .card-art { transform: scale(0.96); opacity: 0.8; }
+
 .card-art {
   width: 100%;
   aspect-ratio: 1;
@@ -176,14 +133,10 @@
   object-fit: cover;
   background: var(--surface-2);
   box-shadow: var(--shadow-md);
-  transition:
-    transform 0.2s var(--spring),
-    opacity 0.15s;
+  transition: transform 0.2s var(--spring), opacity 0.15s;
   display: block;
 }
-.card-art.round {
-  border-radius: var(--r-full);
-}
+.card-art.round { border-radius: var(--r-full); }
 .card-title {
   font-family: 'Playfair Display', serif;
   font-size: 13px;
@@ -210,47 +163,10 @@
   text-align: center;
 }
 @media (min-width: 420px) {
-  .artist-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+  .artist-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
-.track-list-header {
-  display: none;
-}
-
-/* user playlists */
-.lib-playlists-empty {
-  display: flex;
-  align-items: center;
-  gap: var(--s3);
-  padding: var(--s4) var(--s5);
-  font-size: 13px;
-  color: var(--text-3);
-}
-.lib-playlists-empty .bi {
-  font-size: 18px;
-  opacity: 0.5;
-}
-.lib-pl-cover {
-  background: var(--accent-dim);
-  background-size: cover;
-  background-position: center;
-}
-.lib-pl-delete {
-  padding: var(--s2);
-  color: var(--text-3);
-  display: flex;
-  align-items: center;
-  transition: color 0.15s;
-  flex-shrink: 0;
-}
-.lib-pl-delete:hover {
-  color: #ff453a;
-}
-.lib-pl-delete .bi {
-  font-size: 15px;
-}
+.track-list-header { display: none; }
 
 /* sort chips */
 .sort-chips-row {
@@ -268,10 +184,7 @@
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition:
-    background 0.15s,
-    color 0.15s,
-    border-color 0.15s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 .sort-chip.active {
   background: var(--accent);
@@ -279,6 +192,7 @@
   border-color: var(--accent);
 }
 
+/* more button */
 .track-more-btn {
   background: none;
   border: none;
@@ -291,11 +205,32 @@
   opacity: 0.7;
   transition: opacity 0.15s;
 }
-.track-more-btn:hover {
-  opacity: 1;
-}
+.track-more-btn:hover { opacity: 1; }
 
-/* desktop */
+/* playlists */
+.lib-playlists-empty {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s4) var(--s5);
+  font-size: 13px;
+  color: var(--text-3);
+}
+.lib-playlists-empty .bi { font-size: 18px; opacity: 0.5; }
+
+.lib-pl-cover { background: var(--accent-dim); background-size: cover; background-position: center; }
+
+.lib-pl-delete {
+  padding: var(--s2);
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+  flex-shrink: 0;
+}
+.lib-pl-delete:hover { color: #ff453a; }
+.lib-pl-delete .bi { font-size: 15px; }
+
 @media (min-width: 900px) {
   .card-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -307,16 +242,10 @@
     padding: var(--s4) 28px var(--s5);
     gap: 20px var(--s4);
   }
-  .card-item:hover .card-art {
-    transform: scale(1.04);
-    box-shadow: var(--shadow-lg);
-  }
-  .liked-hero {
-    padding: var(--s6) 28px;
-  }
-  .liked-filter-row {
-    padding: var(--s3) 28px;
-  }
+  .card-item:hover .card-art { transform: scale(1.04); box-shadow: var(--shadow-lg); }
+  .liked-hero       { padding: var(--s6) 28px; }
+  .liked-filter-row { padding: var(--s3) 28px; }
+
   .track-list-header {
     display: grid;
     grid-template-columns: 36px 1fr 180px 80px 60px;
@@ -336,7 +265,8 @@
     text-transform: uppercase;
     color: var(--text-3);
   }
-  .track-list-header span:last-child {
-    text-align: right;
-  }
+  .track-list-header span:last-child { text-align: right; }
 }
+
+/* liked-videos list padding */
+#lv-list { padding: var(--s3) var(--s5); }

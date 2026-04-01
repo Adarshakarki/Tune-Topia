@@ -18,88 +18,48 @@ const HARDCODED_BASES = [
   'https://tidal-api.binimum.org',
 ]
 
-const PLAYLIST_PRIORITY_BASE = 'https://eu-central.monochrome.tf'
-const ALBUM_PRIORITY_BASE = 'https://lossless.wtf'
+const P_PLAYLIST = 'https://eu-central.monochrome.tf', P_ALBUM = 'https://lossless.wtf';
+const UPTIMES = ['https://tidal-uptime.jiffy-puffs-1j.workers.dev/', 'https://tidal-uptime.props-76styles.workers.dev/'];
+const BLOCKED = [];
+let _resolved = null;
 
-const UPTIME_URLS = [
-  'https://tidal-uptime.jiffy-puffs-1j.workers.dev/',
-  'https://tidal-uptime.props-76styles.workers.dev/',
-]
-
-const BLOCKED_HOSTNAMES = new Set(['spotisaver.net'])
-
-function _isSafeBase(url) {
+// Safety check for bases
+const _isSafe = u => {
   try {
-    const { protocol, hostname } = new URL(url)
-    if (protocol !== 'https:') return false
-    if (BLOCKED_HOSTNAMES.has(hostname)) return false
-    for (const blocked of BLOCKED_HOSTNAMES) {
-      if (hostname.endsWith('.' + blocked)) return false
-    }
-    return true
-  } catch {
-    return false
-  }
-}
+    const { protocol, hostname } = new URL(u);
+    return protocol === 'https:' && !BLOCKED.some(b => hostname === b || hostname.endsWith('.' + b));
+  } catch { return false; }
+};
 
-let _resolvedBases = null
-
+// Resolve live API instances
 export async function getBases() {
-  if (_resolvedBases) return _resolvedBases
-  const urls = [...UPTIME_URLS]
-for (let i = urls.length - 1; i > 0; i--) {
-  const j = Math.floor(Math.random() * (i + 1))
-  ;[urls[i], urls[j]] = [urls[j], urls[i]]
-}
-  for (const url of urls) {
+  if (_resolved) return _resolved;
+  const urls = UPTIMES.sort(() => Math.random() - 0.5);
+  for (const u of urls) {
     try {
-      const d = await fetchJSON(url)
-      const instances = (d.api || [])
-        .map((item) => (item.url || item).replace(/\/$/, ''))
-        .filter(_isSafeBase)
-      if (instances.length >= 3) {
-        _resolvedBases = instances
-        return instances
-      }
+      const d = await fetchJSON(u);
+      const ins = (d.api || []).map(i => (i.url || i).replace(/\/$/, '')).filter(_isSafe);
+      if (ins.length >= 3) return _resolved = ins;
     } catch {}
   }
-  return HARDCODED_BASES
+  return HARDCODED_BASES;
 }
 
-export async function get(path, bases, options = {}) {
-  const live = bases || (await getBases())
-  const seen = new Set(live)
-  let all = [...live, ...HARDCODED_BASES.filter((b) => !seen.has(b))]
-  if (options.allowedDomains?.length) {
-    const filtered = all.filter((b) => {
-      try {
-        const hostname = new URL(b).hostname
-        return options.allowedDomains.some((d) => hostname === d || hostname.endsWith('.' + d))
-      } catch {
-        return false
-      }
-    })
-    if (filtered.length) all = filtered
+// Generic fetcher
+export async function get(path, bases, opts = {}) {
+  let all = [...(bases || await getBases()), ...HARDCODED_BASES];
+  all = [...new Set(all)];
+  if (opts.allowedDomains?.length) {
+    all = all.filter(b => opts.allowedDomains.some(d => new URL(b).hostname.endsWith(d)));
   }
-  return tryBases(all, path)
+  return tryBases(all, path);
 }
 
-export async function getAlbum(path) {
-  const bases = await getBases()
-  const ordered = [
-    ALBUM_PRIORITY_BASE,
-    ...bases.filter((b) => b !== ALBUM_PRIORITY_BASE),
-  ]
-  return tryBases(ordered, path)
-}
+const _pri = async (p, path) => {
+  const b = await getBases();
+  return tryBases([p, ...b.filter(x => x !== p)], path);
+};
 
-export async function getPlaylist(path) {
-  const bases = await getBases()
-  const ordered = [
-    PLAYLIST_PRIORITY_BASE,
-    ...bases.filter((b) => b !== PLAYLIST_PRIORITY_BASE),
-  ]
-  return tryBases(ordered, path)
-}
-
-export { HARDCODED_BASES }
+export const getAlbum = path => _pri(P_ALBUM, path);
+export const getPlaylist = path => _pri(P_PLAYLIST, path);
+export { HARDCODED_BASES };

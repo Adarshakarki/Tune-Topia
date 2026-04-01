@@ -1,62 +1,44 @@
-// modules/cache.js — in-memory + localStorage TTL cache
-const _mem = new Map()
-const LS_PRE = 'tt_c_'
+const _mem = new Map(), LS = 'tt_c_';
 
+// Check if key exists and is not expired
 export function hasValid(key) {
-  const m = _mem.get(key)
-  if (m && Date.now() < m.e) return true
-  try {
-    const raw = localStorage.getItem(LS_PRE + key)
-    if (!raw) return false
-    const { e } = JSON.parse(raw)
-    return Date.now() < e
-  } catch {
-    return false
-  }
+  return get(key) !== null;
 }
 
+// Retrieve value from memory or localStorage
 export function get(key) {
-  const m = _mem.get(key)
-  if (m) {
-    if (Date.now() < m.e) return m.v
-    _mem.delete(key)
-  }
+  let m = _mem.get(key);
   try {
-    const raw = localStorage.getItem(LS_PRE + key)
-    if (!raw) return null
-    const { v, e } = JSON.parse(raw)
-    if (Date.now() < e) {
-      _mem.set(key, { v, e })
-      return v
+    if (!m) {
+      const raw = localStorage.getItem(LS + key);
+      if (raw) m = JSON.parse(raw);
     }
-    localStorage.removeItem(LS_PRE + key)
+    if (m && Date.now() < m.e) {
+      _mem.set(key, m);
+      return m.v;
+    }
   } catch {}
+  remove(key);
   return null
 }
 
+// Persist value with expiration (default 5m)
 export function set(key, val, ttl = 5 * 60 * 1000) {
-  const e = Date.now() + ttl
-  _mem.set(key, { v: val, e })
-  try {
-    localStorage.setItem(LS_PRE + key, JSON.stringify({ v: val, e }))
-  } catch {
-  }
+  const data = { v: val, e: Date.now() + ttl };
+  _mem.set(key, data);
+  try { localStorage.setItem(LS + key, JSON.stringify(data)); } catch {}
 }
 
 export function remove(key) {
-  _mem.delete(key)
-  try {
-    localStorage.removeItem(LS_PRE + key)
-  } catch {}
+  _mem.delete(key);
+  localStorage.removeItem(LS + key);
 }
 
 export function clear() {
-  _mem.clear()
-  Object.keys(localStorage)
-    .filter(k => k.startsWith(LS_PRE))
-    .forEach(k => localStorage.removeItem(k))
+  _mem.clear();
+  Object.keys(localStorage).filter(k => k.startsWith(LS)).forEach(k => localStorage.removeItem(k));
 }
 
 export function size() {
-  return Object.keys(localStorage).filter(k => k.startsWith(LS_PRE)).length
+  return Object.keys(localStorage).filter(k => k.startsWith(LS)).length;
 }

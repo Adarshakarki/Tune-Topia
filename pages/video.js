@@ -4,8 +4,7 @@ import * as Router from '../app/router.js'
 import { toggle as toggleLike, isLiked } from './likedVideos.js'
 
 const PAGE_ID = 'page-video'
-const HLS_CDN =
-  'https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.4.12/hls.min.js'
+const HLS_CDN = 'https://cdn.jsdelivr.net/npm/hls.js@latest'
 
 let _hls = null
 let _hideTimer = null
@@ -16,14 +15,10 @@ let _current = null
 const $ = (id) => document.getElementById(id)
 
 function _pauseMusic() {
-  // Pause audio player when video starts
   import('../modules/player.js')
-    .then((P) => {
-      if (P.getCurrentTrack && P.getDuration() > 0) {
-        // Only pause if actually playing
-        const audio = document.getElementById('audio')
-        if (audio && !audio.paused) audio.pause()
-      }
+    .then(() => {
+      const audio = document.getElementById('audio')
+      if (audio && !audio.paused) audio.pause()
     })
     .catch(() => {})
 }
@@ -71,7 +66,6 @@ function _ensurePage() {
           <span class="vp-time" id="vp-current">0:00</span>
           <div class="vp-progress-bar" id="vp-progress-bar">
             <div class="vp-progress-fill" id="vp-progress-fill"></div>
-            <div class="vp-progress-thumb" id="vp-progress-thumb"></div>
           </div>
           <span class="vp-time vp-time-right" id="vp-duration">0:00</span>
         </div>
@@ -82,16 +76,12 @@ function _ensurePage() {
         </div>
       </div>
     </div>`
-  // Append to body so it's above everything
   document.body.appendChild(div)
 }
 
 function _loadHls() {
   return new Promise((res, rej) => {
-    if (window.Hls) {
-      res()
-      return
-    }
+    if (window.Hls) { res(); return }
     const s = document.createElement('script')
     s.src = HLS_CDN
     s.onload = res
@@ -133,7 +123,6 @@ export async function open(track) {
     badge.className = 'vp-source-badge ' + (isTidal ? 'tidal' : 'yt')
   }
 
-  // Show the page using fixed positioning
   const page = document.getElementById(PAGE_ID)
   if (page) {
     page.style.cssText = `
@@ -154,19 +143,19 @@ export async function open(track) {
     if (stream.type === 'hls') await _playHls(video, stream)
     else {
       video.src = stream.url
-      await video.play()
+      video.addEventListener('canplaythrough', () => video.play(), { once: true })
     }
   } catch (e) {
     $('vp-spinner')?.classList.add('hidden')
     $('vp-error')?.classList.add('visible')
-    if ($('vp-error-msg'))
-      $('vp-error-msg').textContent = e.message || 'Video unavailable'
+    if ($('vp-error-msg')) $('vp-error-msg').textContent = e.message || 'Video unavailable'
   }
+
+  $(PAGE_ID).style.display = 'flex'
 }
 
 export function close() {
-  const page = document.getElementById(PAGE_ID)
-  if (page) page.style.display = 'none'
+  if ($(PAGE_ID)) $(PAGE_ID).style.display = 'none'
   const video = $('vp-video')
   if (video) {
     video.pause()
@@ -178,34 +167,25 @@ export function close() {
 async function _playHls(video, stream) {
   await _loadHls()
   if (Hls.isSupported()) {
-    _hls = new Hls({ enableWorker: true })
-    const url = stream.url?.startsWith('http')
-      ? stream.url
-      : URL.createObjectURL(
-          new Blob([stream.manifest], { type: 'application/vnd.apple.mpegurl' })
-        )
-    _hls.loadSource(url)
+    _destroyHls()
+    _hls = new Hls({
+      enableWorker: true,
+      lowLatencyMode: false,
+      maxBufferLength: 60,
+      maxMaxBufferLength: 120,
+    })
+    _hls.loadSource(stream.url)
     _hls.attachMedia(video)
-    _hls.on(Hls.Events.MANIFEST_PARSED, () => video.play())
+    video.addEventListener('canplay', () => video.play(), { once: true })
     _hls.on(Hls.Events.ERROR, (_, data) => {
-      if (!data.fatal) return
-      if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-        _hls.startLoad()
-        return
+      if (data.fatal) {
+        if (data.type === Hls.ErrorTypes.NETWORK_ERROR) _hls.startLoad()
+        else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) _hls.recoverMediaError()
       }
-      if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
-        _hls.recoverMediaError()
-        return
-      }
-      $('vp-spinner')?.classList.add('hidden')
-      $('vp-error')?.classList.add('visible')
-      if ($('vp-error-msg'))
-        $('vp-error-msg').textContent =
-          'Stream error — ' + (data.details || 'unknown')
     })
   } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
     video.src = stream.url
-    video.play()
+    video.addEventListener('canplaythrough', () => video.play(), { once: true })
   } else {
     throw new Error('HLS not supported in this browser')
   }
@@ -213,9 +193,7 @@ async function _playHls(video, stream) {
 
 function _destroyHls() {
   if (_hls) {
-    try {
-      _hls.destroy()
-    } catch {}
+    try { _hls.destroy() } catch {}
     _hls = null
   }
 }
@@ -254,6 +232,7 @@ function _bindControls() {
   $('vp-seek-back').addEventListener('click', () => {
     video.currentTime = Math.max(0, video.currentTime - 10)
   })
+
   $('vp-seek-fwd').addEventListener('click', () => {
     video.currentTime = Math.min(video.duration || 0, video.currentTime + 10)
   })
@@ -263,12 +242,10 @@ function _bindControls() {
     if (!document.fullscreenElement) wrap.requestFullscreen?.()
     else document.exitFullscreen?.()
   })
+
   document.addEventListener('fullscreenchange', () => {
     const icon = $('vp-fs-icon')
-    if (icon)
-      icon.className = document.fullscreenElement
-        ? 'bi bi-fullscreen-exit'
-        : 'bi bi-fullscreen'
+    if (icon) icon.className = document.fullscreenElement ? 'bi bi-fullscreen-exit' : 'bi bi-fullscreen'
   })
 
   const bar = $('vp-progress-bar')
@@ -278,34 +255,13 @@ function _bindControls() {
     const pct = Math.max(0, Math.min(1, (clientX - r.left) / r.width))
     video.currentTime = pct * video.duration
   }
-  bar.addEventListener('mousedown', (e) => {
-    _seeking = true
-    _seekTo(e.clientX)
-  })
-  bar.addEventListener(
-    'touchstart',
-    (e) => {
-      _seeking = true
-      _seekTo(e.touches[0].clientX)
-    },
-    { passive: true }
-  )
-  document.addEventListener('mousemove', (e) => {
-    if (_seeking) _seekTo(e.clientX)
-  })
-  document.addEventListener(
-    'touchmove',
-    (e) => {
-      if (_seeking) _seekTo(e.touches[0].clientX)
-    },
-    { passive: true }
-  )
-  document.addEventListener('mouseup', () => {
-    _seeking = false
-  })
-  document.addEventListener('touchend', () => {
-    _seeking = false
-  })
+
+  bar.addEventListener('mousedown', (e) => { _seeking = true; _seekTo(e.clientX) })
+  bar.addEventListener('touchstart', (e) => { _seeking = true; _seekTo(e.touches[0].clientX) }, { passive: true })
+  document.addEventListener('mousemove', (e) => { if (_seeking) _seekTo(e.clientX) })
+  document.addEventListener('touchmove', (e) => { if (_seeking) _seekTo(e.touches[0].clientX) }, { passive: true })
+  document.addEventListener('mouseup', () => { _seeking = false })
+  document.addEventListener('touchend', () => { _seeking = false })
 
   const _showCtrls = () => {
     $('vp-controls')?.classList.remove('hidden')
@@ -320,6 +276,7 @@ function _bindControls() {
       }, 3500)
     }
   }
+
   $('vp-wrap')?.addEventListener('mousemove', _showCtrls)
   $('vp-wrap')?.addEventListener('touchstart', _showCtrls, { passive: true })
   $('vp-video-wrap')?.addEventListener('click', () => {
@@ -327,24 +284,11 @@ function _bindControls() {
     video.paused ? video.play() : video.pause()
   })
 
-  video.addEventListener('play', () => {
-    _setPlayIcon(true)
-    _showCtrls()
-    _pauseMusic() // Pause audio player when video plays
-  })
-  video.addEventListener('pause', () => {
-    _setPlayIcon(false)
-    _showCtrls()
-  })
-  video.addEventListener('waiting', () =>
-    $('vp-spinner')?.classList.remove('hidden')
-  )
-  video.addEventListener('playing', () =>
-    $('vp-spinner')?.classList.add('hidden')
-  )
-  video.addEventListener('canplay', () =>
-    $('vp-spinner')?.classList.add('hidden')
-  )
+  video.addEventListener('play', () => { _setPlayIcon(true); _showCtrls(); _pauseMusic() })
+  video.addEventListener('pause', () => { _setPlayIcon(false); _showCtrls() })
+  video.addEventListener('waiting', () => $('vp-spinner')?.classList.remove('hidden'))
+  video.addEventListener('playing', () => $('vp-spinner')?.classList.add('hidden'))
+  video.addEventListener('canplay', () => $('vp-spinner')?.classList.add('hidden'))
   video.addEventListener('loadedmetadata', () => {
     if ($('vp-duration')) $('vp-duration').textContent = _fmt(video.duration)
     $('vp-spinner')?.classList.add('hidden')

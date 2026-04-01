@@ -1,34 +1,5 @@
-export {
-  searchTracks,
-  searchAlbums,
-  searchArtists,
-  searchPlaylists,
-  searchTidalVideos,
-  getTidalVideoStream,
-  getAlbumTracks,
-  getArtistTopTracks,
-  getArtistAlbums,
-  getPlaylist,
-  getHomeTrending,
-  getStream,
-  getTrackRecommendations,
-} from './services/tidal.service.js'
-
-export {
-  searchVideos,
-  getAudioStream,
-  getVideoStream,
-  normalizeVideo,
-} from './services/youtube.service.js'
-
-export {
-  fetchJSON,
-  tryBases,
-  tidalCover,
-  decodeManifest,
-  normalizeTrack,
-  qualityBadge,
-  fmtDur,
-  fmtTime,
-  escHtml,
-} from './utils.js'
+// Central API entry
+export * from './services/tidal.service.js';
+export * from './services/youtube.service.js';
+export * from './utils.js';
+export * from './status.js';

@@ -1,3 +1,4 @@
+/* period filter */
 .capsule-period-row {
   display: flex;
   gap: 8px;
@@ -20,6 +21,7 @@
   border-color: var(--accent);
 }
 
+/* grid */
 .capsule-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -36,13 +38,8 @@
   gap: var(--s2);
   overflow: hidden;
 }
-/* - image cards: art bleeds to all edges - */
-.capsule-card.capsule-img-card {
-  background: var(--surface-3);
-}
-.capsule-card-wide {
-  grid-column: 1 / -1;
-}
+.capsule-card.capsule-img-card { background: var(--surface-3); }
+.capsule-card-wide  { grid-column: 1 / -1; }
 .capsule-card-title {
   font-size: 11px;
   font-weight: 700;
@@ -50,30 +47,12 @@
   text-transform: uppercase;
   color: var(--text-3);
 }
-.capsule-empty-note {
-  font-size: 13px;
-  color: var(--text-3);
-  text-align: center;
-  padding: var(--s3) 0;
-}
+.capsule-empty-note { font-size: 13px; color: var(--text-3); text-align: center; padding: var(--s3) 0; }
 
-/* - ring chart - */
-.capsule-ring-wrap {
-  position: relative;
-  width: 120px;
-  height: 120px;
-  margin: 0 auto;
-}
-.capsule-ring {
-  width: 100%;
-  height: 100%;
-  transform: rotate(-90deg);
-}
-.capsule-ring-bg {
-  fill: none;
-  stroke: var(--surface-3);
-  stroke-width: 10;
-}
+/* ring chart */
+.capsule-ring-wrap { position: relative; width: 120px; height: 120px; margin: 0 auto; }
+.capsule-ring { width: 100%; height: 100%; transform: rotate(-90deg); }
+.capsule-ring-bg   { fill: none; stroke: var(--surface-3); stroke-width: 10; }
 .capsule-ring-fill {
   fill: none;
   stroke: var(--accent);
@@ -89,28 +68,12 @@
   align-items: center;
   justify-content: center;
 }
-.capsule-ring-value {
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--text);
-  line-height: 1;
-}
-.capsule-ring-unit {
-  font-size: 12px;
-  color: var(--text-3);
-}
-.capsule-ring-sub {
-  font-size: 12px;
-  color: var(--text-3);
-  text-align: center;
-}
+.capsule-ring-value { font-size: 28px; font-weight: 700; color: var(--text); line-height: 1; }
+.capsule-ring-unit  { font-size: 12px; color: var(--text-3); }
+.capsule-ring-sub   { font-size: 12px; color: var(--text-3); text-align: center; }
 
-/* - bar chart - */
-.capsule-bars {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s2);
-}
+/* bar chart */
+.capsule-bars { display: flex; flex-direction: column; gap: var(--s2); }
 .capsule-bar-row {
   display: flex;
   align-items: center;
@@ -138,26 +101,16 @@
   border-radius: var(--r-full);
   transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.capsule-bar-count {
-  font-size: 11px;
-  color: var(--text-3);
-  min-width: 24px;
-  text-align: right;
-}
+.capsule-bar-count { font-size: 11px; color: var(--text-3); min-width: 24px; text-align: right; }
 
-/* - peak hours - */
+/* peak hours */
 .capsule-hours-bars {
   display: flex;
   align-items: flex-end;
   gap: 2px;
   height: 60px;
 }
-.capsule-hour-bar-wrap {
-  flex: 1;
-  height: 100%;
-  display: flex;
-  align-items: flex-end;
-}
+.capsule-hour-bar-wrap { flex: 1; height: 100%; display: flex; align-items: flex-end; }
 .capsule-hour-bar {
   width: 100%;
   background: var(--surface-3);
@@ -165,24 +118,14 @@
   min-height: 4px;
   transition: height 0.4s ease;
 }
-.capsule-hour-bar.peak {
-  background: var(--accent);
-}
-.capsule-peak-label {
-  font-size: 12px;
-  color: var(--text-3);
-  text-align: center;
-}
+.capsule-hour-bar.peak { background: var(--accent); }
+.capsule-peak-label { font-size: 12px; color: var(--text-3); text-align: center; }
 
-/* - image stat cards (top artist / top album) - */
-.capsule-img-card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s3);
-}
+/* image stat cards */
+.capsule-img-card { display: flex; flex-direction: column; gap: var(--s3); }
 .capsule-img-thumb-wrap {
   width: 100%;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 1;
   border-radius: var(--r-md);
   overflow: hidden;
   background: var(--surface-3);
@@ -205,24 +148,17 @@
   text-overflow: ellipsis;
   line-height: 1.2;
 }
-.capsule-img-card-sub {
-  font-size: 11px;
-  color: var(--text-3);
-}
+.capsule-img-card-sub { font-size: 11px; color: var(--text-3); }
 
-/* - heatmap: compact - */
+/* heatmap */
 .capsule-heatmap-grid {
   display: grid;
   grid-template-columns: repeat(14, 1fr);
   gap: 2px;
 }
-.capsule-heat-cell {
-  aspect-ratio: 1;
-  border-radius: 2px;
-  background: var(--surface-3);
-}
+.capsule-heat-cell { aspect-ratio: 1; border-radius: 2px; background: var(--surface-3); }
 
-/* - stat number cards - */
+/* stat numbers */
 .capsule-stat-big {
   font-family: 'Playfair Display', serif;
   font-size: 16px;
@@ -232,26 +168,14 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.capsule-stat-number {
-  font-size: 36px;
-  font-weight: 700;
-  color: var(--accent);
-  line-height: 1;
-}
-.capsule-stat-sub {
-  font-size: 12px;
-  color: var(--text-3);
-}
+.capsule-stat-number { font-size: 36px; font-weight: 700; color: var(--accent); line-height: 1; }
+.capsule-stat-sub    { font-size: 12px; color: var(--text-3); }
 
 @media (min-width: 900px) {
   .capsule-grid {
     grid-template-columns: 1fr 1fr 1fr;
     padding: 0 28px var(--s5);
   }
-  .capsule-card-wide {
-    grid-column: unset;
-  }
-  .capsule-period-row {
-    padding: 4px 28px var(--s3);
-  }
+  .capsule-card-wide { grid-column: unset; }
+  .capsule-period-row { padding: 4px 28px var(--s3); }
 }

@@ -1,0 +1,96 @@
+#page-about {
+    background-color: var(--surface-1);
+    color: var(--text-1);
+}
+
+.about-hero {
+    text-align: center;
+    padding: var(--s8) var(--s5) var(--s6);
+    background: linear-gradient(to bottom, var(--surface-2), transparent);
+}
+
+.about-logo {
+    font-size: 48px;
+    color: var(--accent);
+    margin-bottom: var(--s3);
+}
+
+.about-hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    margin-bottom: var(--s1);
+}
+
+.about-tagline {
+    color: var(--text-3);
+    font-size: 16px;
+}
+
+.about-section {
+    padding: var(--s5);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.about-section h2 {
+    font-size: 20px;
+    margin-bottom: var(--s3);
+    color: var(--accent);
+}
+
+.about-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--s4);
+    padding: var(--s5);
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.about-card {
+    background: var(--surface-2);
+    padding: var(--s5);
+    border-radius: var(--r-lg);
+    border: 1px solid var(--border);
+    transition: transform 0.2s;
+}
+
+.about-card i {
+    font-size: 24px;
+    color: var(--accent);
+    display: block;
+    margin-bottom: var(--s3);
+}
+
+.about-card h3 {
+    font-size: 16px;
+    margin-bottom: var(--s2);
+}
+
+.about-card p {
+    font-size: 13px;
+    color: var(--text-2);
+    line-height: 1.5;
+}
+
+.about-footer {
+    text-align: center;
+    padding: var(--s8) var(--s5);
+    color: var(--text-3);
+    font-size: 13px;
+}
+
+.about-links {
+    margin-top: var(--s4);
+    display: flex;
+    justify-content: center;
+    gap: var(--s5);
+}
+
+.about-links a {
+    color: var(--text-1);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: var(--s1);
+}

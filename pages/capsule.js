@@ -1,17 +1,11 @@
 const $ = (id) => document.getElementById(id)
 let _period = '7d'
 
-const THEME = {
-  text: 'oklch(0.15 0.018 48)',
-  muted: 'oklch(0.15 0.018 48 / 0.1)',
-  bars: [
-    'oklch(0.20 0.018 48)',
-    'oklch(0.35 0.018 48)',
-    'oklch(0.50 0.018 48)',
-    'oklch(0.65 0.018 48)',
-    'oklch(0.80 0.018 48)',
-  ],
-}
+const THEME = { 
+  text: 'var(--text)', 
+  muted: 'var(--surface-3)', 
+  bars: ['var(--accent)', 'var(--accent-mid)', 'var(--text)', 'var(--text-2)', 'var(--text-3)'] 
+};
 
 export function render() {
   _renderAll(_getHistory())
@@ -19,13 +13,9 @@ export function render() {
 
 export function initEvents() {
   document.querySelectorAll('.capsule-period-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      document
-        .querySelectorAll('.capsule-period-btn')
-        .forEach((b) => b.classList.remove('active'))
-      btn.classList.add('active')
-      _period = btn.dataset.period
-      render()
+    btn.addEventListener('click', () => { 
+      document.querySelectorAll('.capsule-period-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active'); _period = btn.dataset.period; render();
     })
   })
 }
@@ -33,13 +23,9 @@ export function initEvents() {
 function _getHistory() {
   try {
     const all = JSON.parse(localStorage.getItem('tt_play_history') || '[]')
-    const now = Date.now(),
-      ms = 86400000
-    let filtered = all
-    if (_period === '7d')
-      filtered = all.filter((e) => e.playedAt && now - e.playedAt < 7 * ms)
-    if (_period === '30d')
-      filtered = all.filter((e) => e.playedAt && now - e.playedAt < 30 * ms)
+    const now = Date.now(), ms = 86400000; let filtered = all;
+    if (_period === '7d') filtered = all.filter(e => e.playedAt && now - e.playedAt < 7 * ms);
+    if (_period === '30d') filtered = all.filter(e => e.playedAt && now - e.playedAt < 30 * ms);
     return filtered.sort((a, b) => b.playedAt - a.playedAt)
   } catch (e) {
     console.error('Capsule: storage error', e)
@@ -58,40 +44,17 @@ function _renderAll(h) {
 }
 
 function _renderListeningTime(history) {
-  const totalSecs = history.reduce((s, e) => {
-    if (e.listenedMs) return s + Number(e.listenedMs) / 1000
-    const rawDur = e.duration ?? '0:00'
-    if (typeof rawDur === 'number') return s + rawDur
-    const p = String(rawDur).split(':').map(Number)
-    if (p.some(isNaN)) return s
-    if (p.length >= 3) return s + (p[0] * 3600 + p[1] * 60 + p[2])
-    if (p.length === 2) return s + (p[0] * 60 + p[1])
-    return s + (p[0] || 0)
-  }, 0)
+  // Only sum actual time spent listening.
+  // This prevents skipped tracks (where listenedMs is 0) from inflating the total.
+  const totalSecs = history.reduce((s, e) => s + (Number(e.listenedMs || 0) / 1000), 0);
 
-  const hrs = Math.floor(totalSecs / 3600)
-  const mins = Math.floor((totalSecs % 3600) / 60)
+  const hrs = Math.floor(totalSecs / 3600), mins = Math.floor((totalSecs % 3600) / 60);
+  const valEl = $('capsule-hours'), unitEl = $('capsule-ring-unit'), subEl = $('capsule-time-sub'), fill = $('capsule-ring-fill');
 
-  const valEl = $('capsule-hours')
-  const unitEl = $('capsule-ring-unit')
-  const subEl = $('capsule-time-sub')
-  const fill = $('capsule-ring-fill')
-
-  if (valEl) valEl.textContent = hrs || mins || '0'
-  if (unitEl) unitEl.textContent = hrs ? 'hrs' : 'min'
-  if (subEl)
-    subEl.textContent = history.length
-      ? hrs
-        ? `${hrs} hr${hrs !== 1 ? 's' : ''} ${mins} min`
-        : `${mins} minutes`
-      : 'No listening data yet'
-
-  if (fill) {
-    const circ = 239
-    const progress = Math.min(totalSecs / 36000, 1)
-    fill.style.stroke = THEME.text
-    fill.style.strokeDashoffset = String((circ - circ * progress).toFixed(2))
-  }
+  if (valEl) valEl.textContent = hrs || mins || '0';
+  if (unitEl) unitEl.textContent = hrs ? 'hrs' : 'min';
+  if (subEl) subEl.textContent = history.length ? (hrs ? `${hrs} hr${hrs !== 1 ? 's' : ''} ${mins} min` : `${mins} minutes`) : 'No listening data yet';
+  if (fill) { const circ = 239, progress = Math.min(totalSecs / 36000, 1); fill.style.stroke = THEME.text; fill.style.strokeDashoffset = String((circ - circ * progress).toFixed(2)); }
 }
 
 function _renderTopTracks(history) {
@@ -100,6 +63,8 @@ function _renderTopTracks(history) {
   const counts = {}
 
   history.forEach((e) => {
+    // Only count tracks that were actually listened to (flushed)
+    if (!e.listenedMs) return;
     const key = e.id || `${e.title}-${e.artist}`
     if (!key || key.includes('undefined')) return
     if (!counts[key]) counts[key] = { title: e.title || 'Unknown', count: 0 }
@@ -169,7 +134,8 @@ function _renderTopArtist(history) {
 
   const data = {}
   history.forEach((e) => {
-    if (!e.artist) return
+    // Only count artists where tracks were actually listened to
+    if (!e.artist || !e.listenedMs) return
     if (!data[e.artist]) data[e.artist] = { count: 0, cover: '' }
     data[e.artist].count++
     if (!data[e.artist].cover && e.cover) data[e.artist].cover = e.cover
@@ -194,7 +160,8 @@ function _renderTopAlbum(history) {
 
   const data = {}
   history.forEach((e) => {
-    if (!e.album) return
+    // Only count albums where tracks were actually listened to
+    if (!e.album || !e.listenedMs) return
     if (!data[e.album]) data[e.album] = { count: 0, cover: '' }
     data[e.album].count++
     if (!data[e.album].cover && e.cover) data[e.album].cover = e.cover
@@ -214,13 +181,11 @@ function _renderTopAlbum(history) {
 }
 
 function _renderHeatmap(history) {
-  const el = $('capsule-heatmap')
-  if (!el) return
-  const days = {}
+  const el = $('capsule-heatmap');
+  if (!el) return;
+  const days = {};
 
-  history.forEach((e) => {
-    if (!e.playedAt) return
-    const d = new Date(e.playedAt)
+  history.forEach(e => { if (!e.playedAt) return; const d = new Date(e.playedAt);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     days[key] = (days[key] || 0) + 1
   })
@@ -247,6 +212,8 @@ function _renderHeatmap(history) {
 function _renderDiscovery(history) {
   const el = $('capsule-discovery')
   if (!el) return
-  el.textContent = new Set(history.map((e) => e.artist).filter(Boolean)).size
+  // Only count artists from tracks that weren't skipped
+  const uniqueArtists = new Set(history.filter(e => e.listenedMs > 0).map(e => e.artist).filter(Boolean));
+  el.textContent = uniqueArtists.size;
   el.style.color = THEME.text
 }

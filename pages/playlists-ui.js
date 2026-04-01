@@ -2,6 +2,7 @@ import * as UI from '../app/ui.js'
 import * as Playlists from '../modules/playlists.js'
 import { escHtml } from '../api/utils.js'
 import * as UserPlaylistPage from './userplaylist.js'
+import { getIcon, ICONS } from '../app/icons.js'
 import * as LibraryPage from './library.js'
 
 const $ = (id) => document.getElementById(id)
@@ -13,7 +14,7 @@ export function renderPage() {
   if (!el) return
   const all = Playlists.getAll()
   if (!all.length) {
-    el.innerHTML = `<div class="empty"><i class="bi bi-collection"></i><p>No playlists yet</p><small>Tap + to create your first playlist</small></div>`
+    el.innerHTML = `<div class="empty">${getIcon('collection')}<p>No playlists yet</p><small>Tap + to create your first playlist</small></div>`
     return
   }
   el.innerHTML = `<div class="pl-page-grid">${all
@@ -21,8 +22,8 @@ export function renderPage() {
       (pl) => `
     <div class="pl-page-card" data-pl-id="${pl.id}">
       <div class="pl-page-art" style="${pl.cover ? `background-image:url(${pl.cover});background-size:cover;background-position:center` : 'background:linear-gradient(135deg,#5b21b6,#7c3aed)'}">
-        ${pl.cover ? '' : '<i class="bi bi-music-note-list"></i>'}
-        <button class="lib-pl-delete pl-page-delete" data-pl-id="${pl.id}" title="Delete"><i class="bi bi-trash"></i></button>
+        ${pl.cover ? '' : getIcon('queue')}
+        <button class="lib-pl-delete pl-page-delete" data-pl-id="${pl.id}" title="Delete">${getIcon('trash')}</button>
       </div>
       <div class="pl-page-info">
         <span class="pl-page-name">${escHtml(pl.name)}</span>
@@ -54,13 +55,10 @@ export function renderPage() {
 }
 
 export function openCreateModal() {
-  _editingId = null
-  $('pl-modal-name-input').value = ''
-  $('pl-modal-desc-input').value = ''
-  $('pl-modal-cover-input').value = ''
-  _updateModalCover('')
-  const title = $('pl-modal-title')
-  const btn = $('pl-modal-create')
+  _editingId = null;
+  ['pl-modal-name-input', 'pl-modal-desc-input', 'pl-modal-cover-input'].forEach(id => $(id).value = '');
+  _updateModalCover('');
+  const title = $('pl-modal-title'), btn = $('pl-modal-create');
   if (title) title.textContent = 'New Playlist'
   if (btn) btn.textContent = 'Create'
   $('playlist-modal-overlay').style.display = 'flex'
@@ -69,14 +67,13 @@ export function openCreateModal() {
 
 export function openEditModal(playlistId) {
   const pl = Playlists.get(playlistId)
-  if (!pl) return
-  _editingId = playlistId
-  $('pl-modal-name-input').value = pl.name || ''
-  $('pl-modal-desc-input').value = pl.description || ''
-  $('pl-modal-cover-input').value = pl.cover || ''
-  _updateModalCover(pl.cover || '')
-  const title = $('pl-modal-title')
-  const btn = $('pl-modal-create')
+  if (!pl) return;
+  _editingId = playlistId;
+  $('pl-modal-name-input').value = pl.name || '';
+  $('pl-modal-desc-input').value = pl.description || '';
+  $('pl-modal-cover-input').value = pl.cover || '';
+  _updateModalCover(pl.cover || '');
+  const title = $('pl-modal-title'), btn = $('pl-modal-create');
   if (title) title.textContent = 'Edit Playlist'
   if (btn) btn.textContent = 'Save'
   $('playlist-modal-overlay').style.display = 'flex'
@@ -88,15 +85,13 @@ export function closeCreateModal() {
 }
 
 function _updateModalCover(url) {
-  const el = $('pl-modal-cover-preview')
-  if (!el) return
+  const el = $('pl-modal-cover-preview');
+  if (!el) return;
   if (url) {
-    el.style.backgroundImage = `url(${url})`
-    el.style.backgroundSize = 'cover'
-    el.innerHTML = ''
+    Object.assign(el.style, { backgroundImage: `url(${url})`, backgroundSize: 'cover' });
+    el.innerHTML = '';
   } else {
-    el.style.backgroundImage = ''
-    el.innerHTML = '<i class="bi bi-music-note-list"></i>'
+    el.style.backgroundImage = ''; el.innerHTML = getIcon('queue');
   }
 }
 
@@ -106,8 +101,7 @@ function _createPlaylist() {
     $('pl-modal-name-input')?.focus()
     return
   }
-  const desc = $('pl-modal-desc-input')?.value.trim() || ''
-  const cover = $('pl-modal-cover-input')?.value.trim() || ''
+  const desc = $('pl-modal-desc-input')?.value.trim() || '', cover = $('pl-modal-cover-input')?.value.trim() || '';
   if (_editingId) {
     Playlists.update(_editingId, { name, description: desc, cover })
     // Refresh the open userplaylist page in-place if it's the one being edited
@@ -128,9 +122,9 @@ function _createPlaylist() {
 
 export function openPicker(track) {
   _pickerTrack = track
-  const listEl = $('playlist-picker-list')
-  if (!listEl) return
-  const all = Playlists.getAll()
+  const listEl = $('playlist-picker-list');
+  if (!listEl) return;
+  const all = Playlists.getAll();
   if (!all.length) {
     listEl.innerHTML = `<div class="pl-picker-empty">No playlists yet</div>`
   } else {
@@ -138,8 +132,7 @@ export function openPicker(track) {
       .map(
         (pl) => `
       <button class="sheet-action pl-picker-item" data-pl-id="${pl.id}">
-        <div class="pl-picker-cover" style="${pl.cover ? `background-image:url(${pl.cover});background-size:cover` : 'background:linear-gradient(135deg,#6d28d9,#4f46e5)'}">
-          ${pl.cover ? '' : '<i class="bi bi-music-note-list"></i>'}
+        <div class="pl-picker-cover" style="${pl.cover ? `background-image:url(${pl.cover});background-size:cover` : 'background:linear-gradient(135deg,#6d28d9,#4f46e5)'}">${pl.cover ? '' : getIcon('queue')}
         </div>
         <div class="pl-picker-info">
           <span class="pl-picker-name">${escHtml(pl.name)}</span>
@@ -168,23 +161,12 @@ export function closePicker() {
 }
 
 export function initEvents() {
-  $('lib-create-btn')?.addEventListener('click', openCreateModal)
-  $('playlists-create-btn')?.addEventListener('click', openCreateModal)
-  $('pl-modal-close')?.addEventListener('click', closeCreateModal)
-  $('pl-modal-cancel')?.addEventListener('click', closeCreateModal)
-  $('pl-modal-create')?.addEventListener('click', _createPlaylist)
-  $('playlist-modal-overlay')?.addEventListener('click', (e) => {
-    if (e.target === $('playlist-modal-overlay')) closeCreateModal()
-  })
-  $('pl-modal-cover-input')?.addEventListener('input', (e) =>
-    _updateModalCover(e.target.value.trim())
-  )
-  $('pl-modal-name-input')?.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') _createPlaylist()
-  })
-  $('playlist-picker-overlay')?.addEventListener('click', closePicker)
-  $('playlist-picker-new')?.addEventListener('click', () => {
-    closePicker()
-    openCreateModal()
-  })
+  ['lib-create-btn', 'playlists-create-btn'].forEach(id => $(id)?.addEventListener('click', openCreateModal));
+  ['pl-modal-close', 'pl-modal-cancel'].forEach(id => $(id)?.addEventListener('click', closeCreateModal));
+  $('pl-modal-create')?.addEventListener('click', _createPlaylist);
+  $('playlist-modal-overlay')?.addEventListener('click', e => { if (e.target === $('playlist-modal-overlay')) closeCreateModal(); });
+  $('pl-modal-cover-input')?.addEventListener('input', e => _updateModalCover(e.target.value.trim()));
+  $('pl-modal-name-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') _createPlaylist(); });
+  $('playlist-picker-overlay')?.addEventListener('click', closePicker);
+  $('playlist-picker-new')?.addEventListener('click', () => { closePicker(); openCreateModal(); });
 }

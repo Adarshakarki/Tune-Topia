@@ -1,20 +1,12 @@
-import { fetchJSON } from '../utils.js'
+import { fetchJSON } from '../utils.js';
 
-export const IV_BASE = 'https://iv.melmac.space'
+export const IV_BASE = 'https://iv.melmac.space';
 
-// Raw search results from Invidious
-export async function searchRaw(query) {
-  return fetchJSON(
-    `${IV_BASE}/api/v1/search?q=${encodeURIComponent(query)}&type=video&page=1`
-  )
-}
+// Search Invidious
+export const searchRaw = q => fetchJSON(`${IV_BASE}/api/v1/search?q=${encodeURIComponent(q)}&type=video&page=1`);
 
-// Raw video data including adaptive formats
-export async function getVideoData(videoId) {
-  return fetchJSON(`${IV_BASE}/api/v1/videos/${videoId}?local=true`)
-}
+// Get video data
+export const getVideoData = id => fetchJSON(`${IV_BASE}/api/v1/videos/${id}?local=true`);
 
-// Invidious thumbnail URL
-export function ivThumb(videoId, q = 'mqdefault') {
-  return `${IV_BASE}/vi/${videoId}/${q}.jpg`
-}
+// Video thumbnail
+export const ivThumb = (id, q = 'mqdefault') => `${IV_BASE}/vi/${id}/${q}.jpg`;

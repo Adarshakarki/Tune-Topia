@@ -4,23 +4,19 @@ import { toggle } from '../modules/likedSongs.js'
 
 const $ = (id) => document.getElementById(id)
 
+// Handle like toggle
 export function onLike(track) {
-  if (!track) return
-  const nowLiked = toggle(track)
-  UI.syncLikeButtons(track.id)
-  UI.toast(nowLiked ? `♥ Liked "${track.title}"` : 'Removed from Liked Songs')
-  _updateLikedCount()
+  if (!track) return;
+  const liked = toggle(track);
+  UI.syncLikeButtons(track.id);
+  UI.toast(liked ? `♥ Liked "${track.title}"` : 'Removed from Liked Songs');
+  updateLikedCount();
 }
 
+// Update count labels
 export function updateLikedCount() {
-  _updateLikedCount()
-}
-
-function _updateLikedCount() {
-  const n = State.get('library.likedSongs').length
-  const label = `${n} song${n !== 1 ? 's' : ''}`
-  ;['liked-count-label', 'liked-hero-sub'].forEach((id) => {
-    const el = $(id)
-    if (el) el.textContent = label
-  })
+  const n = State.get('library.likedSongs').length, txt = `${n} song${n !== 1 ? 's' : ''}`;
+  ['liked-count-label', 'liked-hero-sub'].forEach(id => {
+    const el = $(id); if (el) el.textContent = txt;
+  });
 }

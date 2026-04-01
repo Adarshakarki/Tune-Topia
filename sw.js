@@ -1,4 +1,6 @@
-const CACHE = 'tunetopia-v1'
+const CACHE = 'tunetopia-v2'
+
+// Core assets for offline shell
 const PRECACHE = [
   '/',
   '/index.html',
@@ -23,75 +25,92 @@ const PRECACHE = [
   '/style/genre.css',
   '/style/video.css',
   '/style/responsive.css',
+  '/app/init.js',
+  '/app/state.js',
+  '/app/ui.js',
+  '/app/router.js',
+  '/app/playback.js',
+  '/app/playerEvents.js',
+  '/app/icons.js',
+  '/app/constants.js',
   '/assets/logo.JPEG',
 ]
 
-// ── install: precache shell assets ──────────────────────────
-self.addEventListener('install', (e) => {
+// Cache assets on install
+self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then((c) =>
-      Promise.all(
-        PRECACHE.map((url) =>
-          c.add(url).catch((err) => console.warn('[SW] precache miss:', url, err))
-        )
-      )
-    ).then(() => self.skipWaiting())
+    caches.open(CACHE)
+      .then(c => Promise.all(
+        PRECACHE.map(url => c.add(url).catch(err => console.warn('[SW] precache miss:', url, err)))
+      ))
   )
 })
 
-// ── activate: clear old caches ───────────────────────────────
-self.addEventListener('activate', (e) => {
+// Cleanup old caches
+self.addEventListener('activate', e => {
   e.waitUntil(
-    caches
-      .keys()
-      .then((keys) =>
-        Promise.all(
-          keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))
-        )
-      )
+    caches.keys()
+      .then(keys => Promise.all(
+        keys.filter(k => k !== CACHE).map(k => {
+          console.log('[SW] deleting old cache:', k);
+          return caches.delete(k)
+        })
+      ))
       .then(() => self.clients.claim())
   )
 })
 
-// ── fetch strategy ───────────────────────────────────────────
-self.addEventListener('fetch', (e) => {
-  const { request } = e
+// Handle update trigger
+self.addEventListener('message', e => {
+  if (e.data?.type === 'SKIP_WAITING') {
+    console.log('[SW] SKIP_WAITING received — activating now')
+    self.skipWaiting()
+  }
+})
 
-  // pass through non-GET — SW cannot clone/cache POST etc.
+// Fetch strategy: Network-first for HTML, Cache-first for assets
+self.addEventListener('fetch', e => {
+  const { request } = e
   if (request.method !== 'GET') return
 
   const url = new URL(request.url)
-
-  // pass through non-http(s) — e.g. chrome-extension://, data:, blob:
   if (!url.protocol.startsWith('http')) return
 
-  // pass through cross-origin, API calls, audio streams, range requests
-  // wrap in catch so CORS failures (e.g. maus.qqdl.site) don't crash the SW
+  // Bypass streaming, API, and range requests
   if (
     url.origin !== self.location.origin ||
     url.pathname.startsWith('/api/') ||
+    url.pathname.endsWith('.m3u8') ||
+    url.pathname.endsWith('.ts') ||
     request.destination === 'audio' ||
+    request.destination === 'video' ||
     request.headers.get('range')
-  ) {
+  ) return
+
+  if (request.destination === 'document' || url.pathname === '/' || url.pathname.endsWith('.html')) {
     e.respondWith(
-      fetch(request).catch(() => new Response(null, { status: 503, statusText: 'SW passthrough failed' }))
+      fetch(request)
+        .then(res => {
+          if (res && res.status === 200) {
+            const clone = res.clone()
+            caches.open(CACHE).then(c => c.put(request, clone))
+          }
+          return res
+        })
+        .catch(() => caches.match(request).then(c => c || caches.match('/index.html')))
     )
     return
   }
 
-  // app shell: cache first, fall back to network, fall back to /index.html
   e.respondWith(
-    caches.match(request).then((cached) => {
+    caches.match(request).then(cached => {
       if (cached) return cached
-      return fetch(request)
-        .then((response) => {
-          if (!response || response.status !== 200 || response.type !== 'basic')
-            return response
-          const clone = response.clone()
-          caches.open(CACHE).then((c) => c.put(request, clone))
-          return response
-        })
-        .catch(() => caches.match('/index.html'))
+      return fetch(request).then(res => {
+        if (!res || res.status !== 200 || res.type !== 'basic') return res
+        const clone = res.clone()
+        caches.open(CACHE).then(c => c.put(request, clone))
+        return res
+      }).catch(() => caches.match('/index.html'))
     })
   )
 })

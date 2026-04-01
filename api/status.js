@@ -1,76 +1,38 @@
+// Instance monitoring
 const INSTANCES = {
   api: {
     label: 'API Instances',
-    urls: [
-      'https://eu-central.monochrome.tf',
-      'https://us-west.monochrome.tf',
-      'https://arran.monochrome.tf',
-      'https://api.monochrome.tf',
-      'https://monochrome-api.samidy.com',
-      'https://triton.squid.wtf',
-      'https://wolf.qqdl.site',
-      'https://maus.qqdl.site',
-      'https://vogel.qqdl.site',
-      'https://hund.qqdl.site',
-      'https://tidal.kinoplus.online',
-    ],
+    urls: ['https://eu-central.monochrome.tf', 'https://us-west.monochrome.tf', 'https://arran.monochrome.tf', 'https://api.monochrome.tf', 'https://monochrome-api.samidy.com', 'https://triton.squid.wtf', 'https://wolf.qqdl.site', 'https://maus.qqdl.site', 'https://vogel.qqdl.site', 'https://hund.qqdl.site', 'https://tidal.kinoplus.online'],
   },
   streaming: {
     label: 'Streaming Instances',
-    urls: [
-      'https://arran.monochrome.tf',
-      'https://triton.squid.wtf',
-      'https://wolf.qqdl.site',
-      'https://maus.qqdl.site',
-      'https://vogel.qqdl.site',
-      'https://katze.qqdl.site',
-      'https://hund.qqdl.site',
-      'https://hifi.p1nkhamster.xyz',
-    ],
+    urls: ['https://arran.monochrome.tf', 'https://triton.squid.wtf', 'https://wolf.qqdl.site', 'https://maus.qqdl.site', 'https://vogel.qqdl.site', 'https://katze.qqdl.site', 'https://hund.qqdl.site', 'https://hifi.p1nkhamster.xyz'],
   },
 }
 
-async function pingInstance(url) {
+// Ping instance
+export async function pingInstance(url) {
+  const ctrl = new AbortController(), tid = setTimeout(() => ctrl.abort(), 6000);
   try {
-    const ctrl = new AbortController()
-    const tid = setTimeout(() => ctrl.abort(), 6000)
-    const res = await fetch(url, {
-      method: 'GET',
-      signal: ctrl.signal,
-      cache: 'no-store',
-    })
-    clearTimeout(tid)
-    return { url, online: res.ok }
-  } catch {
-    return { url, online: false }
-  }
+    const res = await fetch(url, { signal: ctrl.signal, cache: 'no-store' });
+    return { url, online: res.ok };
+  } catch { return { url, online: false }; }
+  finally { clearTimeout(tid); }
 }
 
-export function checkGroup(groupKey) {
-  const group = INSTANCES[groupKey]
-  if (!group) return Promise.resolve([])
-  return Promise.all(group.urls.map(pingInstance))
-}
+export const checkGroup = k => INSTANCES[k] ? Promise.all(INSTANCES[k].urls.map(pingInstance)) : Promise.resolve([]);
 
 export async function checkAll() {
-  const [api, streaming] = await Promise.all([
-    checkGroup('api'),
-    checkGroup('streaming'),
-  ])
-  return { api, streaming }
+  const [api, streaming] = await Promise.all([checkGroup('api'), checkGroup('streaming')]);
+  return { api, streaming };
 }
 
-export function startLiveCheck(callback, interval = 30000) {
-  let running = true
-  async function run() {
-    if (running) callback(await checkAll())
-  }
-  run()
-  const id = setInterval(run, interval)
-  return () => {
-    running = false
-    clearInterval(id)
-  }
+// Status loop
+export function startLiveCheck(cb, ms = 30000) {
+  let active = true;
+  const run = async () => { if (active) { cb(await checkAll()); setTimeout(run, ms); } };
+  run();
+  return () => active = false;
 }
 
-export { INSTANCES, pingInstance }
+export { INSTANCES }

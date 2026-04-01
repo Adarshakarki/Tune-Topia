@@ -1,36 +1,18 @@
-const KEY = 'tt_history'
-const MAX = 80
+const KEY = 'tt_history', MAX = 80;
 
-const History = (() => {
-  function load() {
-    try {
-      return JSON.parse(localStorage.getItem(KEY) || '[]')
-    } catch {
-      return []
-    }
-  }
+// Persistent storage helpers
+const _load = () => { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch { return []; } };
+const _save = (v) => { try { localStorage.setItem(KEY, JSON.stringify(v)); } catch {} };
 
-  function save(arr) {
-    localStorage.setItem(KEY, JSON.stringify(arr))
-  }
+const History = {
+  // Add track to head, remove duplicate, and cap size
+  push: (t) => {
+    if (!t?.id) return;
+    const list = [t, ..._load().filter(x => String(x.id) !== String(t.id))].slice(0, MAX);
+    _save(list);
+  },
+  getAll: () => _load(),
+  clear: () => _save([])
+};
 
-  function push(track) {
-    const updated = [track, ...load().filter((t) => t.id !== track.id)].slice(
-      0,
-      MAX
-    )
-    save(updated)
-  }
-
-  function getAll() {
-    return load()
-  }
-
-  function clear() {
-    save([])
-  }
-
-  return { push, getAll, clear }
-})()
-
-export default History
+export default History;

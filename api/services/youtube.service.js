@@ -6,70 +6,37 @@ import {
 } from '../client/youtube.client.js'
 import { fmtDur } from '../utils.js'
 
-// Normalize raw Invidious video into app track shape
-export function normalizeVideo(v) {
-  return {
-    id: v.videoId,
-    title: v.title || 'Unknown',
-    artist: v.author || '',
-    album: '',
-    cover: ivThumb(v.videoId, 'maxresdefault'),
-    coverSmall: ivThumb(v.videoId, 'mqdefault'),
-    duration: v.lengthSeconds || 0,
-    dur: fmtDur(v.lengthSeconds),
-    quality: 'YT',
-    tags: [],
-    explicit: false,
-    source: 'youtube',
-  }
+// Map Invidious video to app track
+export const normalizeVideo = v => ({
+  id: v.videoId,
+  title: v.title || 'Unknown',
+  artist: v.author || '',
+  album: '',
+  cover: ivThumb(v.videoId, 'maxresdefault'),
+  coverSmall: ivThumb(v.videoId, 'mqdefault'),
+  duration: v.lengthSeconds || 0,
+  dur: fmtDur(v.lengthSeconds),
+  quality: 'YT',
+  tags: [],
+  explicit: false,
+  source: 'youtube',
+});
+
+export const searchVideos = async q => (await searchRaw(q) || []).slice(0, 40).map(normalizeVideo);
+
+// Get best audio stream
+export async function getAudioStream(id) {
+  const d = await getVideoData(id);
+  const af = (d.adaptiveFormats || []).filter(f => f.type?.startsWith('audio/'))
+    .sort((a, b) => (b.type.includes('opus') - a.type.includes('opus')) || (b.bitrate - a.bitrate));
+  const u = af[0]?.url || d.formatStreams?.at(-1)?.url || `${IV_BASE}/videoplayback?id=${id}&itag=140&local=true`;
+  return { type: 'direct', url: u, mimeType: af[0]?.type?.split(';')[0] || 'audio/webm' };
 }
 
-export async function searchVideos(query) {
-  const data = await searchRaw(query)
-  return (data || []).slice(0, 40).map(normalizeVideo)
-}
-
-// Returns best audio stream URL for background playback
-export async function getAudioStream(videoId) {
-  const data = await getVideoData(videoId)
-  const audio = (data.adaptiveFormats || [])
-    .filter((f) => f.type?.startsWith('audio/'))
-    .sort((a, b) => {
-      const aOp = a.type.includes('opus') ? 1 : 0
-      const bOp = b.type.includes('opus') ? 1 : 0
-      if (aOp !== bOp) return bOp - aOp
-      return (b.bitrate || 0) - (a.bitrate || 0)
-    })
-
-  const url =
-    audio[0]?.url ||
-    data.formatStreams?.[data.formatStreams.length - 1]?.url ||
-    `${IV_BASE}/videoplayback?id=${videoId}&itag=140&local=true`
-
-  return {
-    type: 'direct',
-    url,
-    mimeType: audio[0]?.type?.split(';')[0] || 'audio/webm',
-  }
-}
-
-// Returns best video+audio stream URL for video player
-export async function getVideoStream(videoId) {
-  const data = await getVideoData(videoId)
-
-  // Prefer a combined format stream for simplicity
-  const combined = (data.formatStreams || []).sort(
-    (a, b) => (parseInt(b.resolution) || 0) - (parseInt(a.resolution) || 0)
-  )
-
-  if (combined.length) {
-    return {
-      type: 'direct',
-      url: combined[0].url,
-      mimeType: combined[0].type?.split(';')[0] || 'video/mp4',
-    }
-  }
-
-  // Fallback to adaptive video + audio (will need MediaSource — future work)
-  throw new Error('No combined video stream available')
+// Get best combined video stream
+export async function getVideoStream(id) {
+  const d = await getVideoData(id);
+  const cs = (d.formatStreams || []).sort((a, b) => (parseInt(b.resolution) || 0) - (parseInt(a.resolution) || 0));
+  if (!cs.length) throw new Error('No combined stream');
+  return { type: 'direct', url: cs[0].url, mimeType: cs[0].type?.split(';')[0] || 'video/mp4' };
 }

@@ -13,6 +13,7 @@ import {
   attachHorizEvents,
 } from './home.js'
 import * as AlbumPage from './album.js'
+import { getIcon } from '../app/icons.js'
 
 const $ = (id) => document.getElementById(id)
 const NEW_RELEASES_PLAYLIST_ID = '1b418bb8-90a7-4f87-901d-707993838346'
@@ -66,7 +67,7 @@ export async function loadNew() {
   } catch {
     try {
       const results = await Promise.allSettled(
-        ['Sabrina Carpenter', 'Billie Eilish', 'SZA', 'Bad Bunny'].map((q) =>
+        ['new music', 'new albums'].map((q) =>
           searchTracks(q).catch(() => [])
         )
       )
@@ -74,7 +75,7 @@ export async function loadNew() {
         r.status === 'fulfilled' ? r.value : []
       )
       if (!tracks.length)
-        tracks = await searchVideos('new music 2025').catch(() => [])
+        tracks = await searchVideos('new music').catch(() => [])
       if (!tracks.length) throw new Error('No results')
       UI.renderAlbums(
         tracks.map((t) => ({
@@ -95,7 +96,7 @@ export async function loadNew() {
 export function loadAlbums() {
   const el = $('albums-grid')
   if (!el) return
-  const albums = [...(State.get('library.savedAlbums') || [])]
+  const albums = [...(State.get('library.savedAlbums') || [])];
 
   if (!albums.length) {
     el.innerHTML = UI.emptyState(
@@ -131,7 +132,7 @@ export function loadAlbums() {
 export function loadArtists() {
   const el = $('artists-grid')
   if (!el) return
-  const artists = [...(State.get('library.followedArtists') || [])]
+  const artists = [...(State.get('library.followedArtists') || [])];
 
   if (!artists.length) {
     el.innerHTML = UI.emptyState(
@@ -188,7 +189,7 @@ export function loadHistory() {
   if (!el) return
   const hist = History.getAll()
   if (!hist.length) {
-    el.innerHTML = UI.emptyState(
+    el.innerHTML = UI.emptyState(getIcon('history'),
       'bi-clock-history',
       'No history yet',
       'Play some music to see it here'

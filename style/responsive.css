@@ -1,60 +1,26 @@
-/* ── TABLET (600–899) ── */
+/* tablet 600-899 */
 @media (min-width: 600px) and (max-width: 899px) {
-  .card-grid, .mood-grid {
-    /* Optimization: Use auto-fill for smoother scaling */
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: var(--s4);
-  }
-  
-  .artist-grid {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  }
-
-  .horiz-card, .horiz-art {
-    width: 150px;
-    height: 150px; /* Force height to match for aspect ratio consistency */
-  }
-
-  .horiz-inner {
-    min-height: 205px; /* Adjust for larger tablet cards */
-  }
+  .card-grid   { grid-template-columns: repeat(3, 1fr); }
+  .artist-grid { grid-template-columns: repeat(4, 1fr); }
+  .mood-grid   { grid-template-columns: repeat(3, 1fr); }
+  .horiz-card  { width: 150px; }
+  .horiz-art   { width: 150px; height: 150px; }
 }
 
-/* ── WIDE DESKTOP (≥ 1280) ── */
+/* wide desktop 1280+ */
 @media (min-width: 1280px) {
-  :root {
-    --sb-w: 240px;
-  }
-  
-  .card-grid {
-    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-    /* Performance: Tell browser grid items are independent */
-    contain: layout style; 
-  }
+  :root { --sb-w: 240px; }
 
-  .artist-grid {
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  }
-
-  .horiz-card, .horiz-art {
-    width: 175px;
-    height: 175px;
-  }
-
-  .horiz-inner {
-    min-height: 230px; /* Adjust for desktop card heights */
-  }
+  .card-grid   { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+  .artist-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+  .horiz-card  { width: 175px; }
+  .horiz-art   { width: 175px; height: 175px; }
 }
 
-/* ── REFINED REDUCED MOTION ── */
+/* reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  *, ::before, ::after {
-    animation-delay: -1ms !important;
-    animation-duration: 1ms !important;
-    animation-iteration-count: 1 !important;
-    background-attachment: initial !important;
-    scroll-behavior: auto !important;
-    transition-duration: 0s !important;
-    transition-delay: 0s !important;
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }

@@ -1,92 +1,49 @@
-const STATE_KEY = 'library.playlists'
-let _State = null
+const KEY = 'library.playlists';
+let _S = null;
 
-export function init(State) {
-  _State = State
-  if (!_State.get(STATE_KEY)) _State.set(STATE_KEY, [])
+export function init(S) {
+  _S = S;
+  if (!_S.get(KEY)) _S.set(KEY, []);
 }
 
-export function getAll() {
-  return _State.get(STATE_KEY) || []
-}
-export function get(id) {
-  return getAll().find((p) => p.id === id) || null
-}
+// Retrieval
+export const getAll = () => _S.get(KEY) || [];
+export const get = (id) => getAll().find(p => String(p.id) === String(id)) || null;
 
+// Lifecycle
 export function create({ name, description = '', cover = '' }) {
-  const playlist = {
-    id: _uid(),
-    name: name.trim(),
-    description: description.trim(),
-    cover: cover.trim(),
-    createdAt: Date.now(),
-    tracks: [],
-  }
-  _State.set(STATE_KEY, [...getAll(), playlist])
-  return playlist
+  const pl = { id: _uid(), name: name.trim(), description: description.trim(), cover: cover.trim(), createdAt: Date.now(), tracks: [] };
+  _S.set(KEY, [...getAll(), pl]);
+  return pl;
 }
 
 export function update(id, { name, description, cover }) {
-  const all = getAll().map((p) => {
-    if (p.id !== id) return p
-    return {
-      ...p,
-      ...(name !== undefined && { name: name.trim() }),
-      ...(description !== undefined && { description: description.trim() }),
-      ...(cover !== undefined && { cover: cover.trim() }),
-    }
-  })
-  _State.set(STATE_KEY, all)
+  _S.set(KEY, getAll().map(p => String(p.id) === String(id) ? { ...p, ...(name && { name: name.trim() }), ...(description !== undefined && { description: description.trim() }), ...(cover !== undefined && { cover: cover.trim() }) } : p));
 }
 
-export function deletePlaylist(id) {
-  _State.set(
-    STATE_KEY,
-    getAll().filter((p) => p.id !== id)
-  )
+export const deletePlaylist = (id) => _S.set(KEY, getAll().filter(p => String(p.id) !== String(id)));
+
+// Track Management
+export function addTrack(id, track) {
+  _S.set(KEY, getAll().map(p => {
+    if (String(p.id) !== String(id) || p.tracks.some(t => t.id === track.id)) return p;
+    return { ...p, tracks: [...p.tracks, track] };
+  }));
 }
 
-export function addTrack(playlistId, track) {
-  _State.set(
-    STATE_KEY,
-    getAll().map((p) => {
-      if (p.id !== playlistId) return p
-      if (p.tracks.some((t) => t.id === track.id)) return p // no duplicates
-      return { ...p, tracks: [...p.tracks, track] }
-    })
-  )
+export function removeTrack(id, tid) {
+  _S.set(KEY, getAll().map(p => String(p.id) === String(id) ? { ...p, tracks: p.tracks.filter(t => t.id !== tid) } : p));
 }
 
-export function removeTrack(playlistId, trackId) {
-  _State.set(
-    STATE_KEY,
-    getAll().map((p) => {
-      if (p.id !== playlistId) return p
-      return { ...p, tracks: p.tracks.filter((t) => t.id !== trackId) }
-    })
-  )
+export function moveTrack(id, from, to) {
+  _S.set(KEY, getAll().map(p => {
+    if (String(p.id) !== String(id)) return p;
+    const ts = [...p.tracks];
+    if (from < 0 || to < 0 || from >= ts.length || to >= ts.length) return p;
+    const [t] = ts.splice(from, 1);
+    ts.splice(to, 0, t);
+    return { ...p, tracks: ts };
+  }));
 }
 
-export function moveTrack(playlistId, fromIdx, toIdx) {
-  _State.set(
-    STATE_KEY,
-    getAll().map((p) => {
-      if (p.id !== playlistId) return p
-      const tracks = [...p.tracks]
-      if (
-        fromIdx < 0 ||
-        toIdx < 0 ||
-        fromIdx >= tracks.length ||
-        toIdx >= tracks.length
-      )
-        return p
-      const [track] = tracks.splice(fromIdx, 1)
-      tracks.splice(toIdx, 0, track)
-      return { ...p, tracks }
-    })
-  )
-}
-
-function _uid() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7)
-}
+const _uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);

@@ -1,92 +1,52 @@
-/* ── PROFILE HERO ─────────────────────────────────────────────────────────── */
+/* profile hero */
 .profile-hero-card {
   display: flex;
   align-items: center;
   gap: var(--s4);
-  padding: var(--s5) var(--s5);
+  padding: var(--s5);
   background: var(--surface);
   border-top: 0.5px solid var(--border);
   border-bottom: 0.5px solid var(--border);
 }
-.pfp-large {
-  width: 72px !important;
-  height: 72px !important;
-}
-.profile-hero-info {
-  flex: 1;
-  min-width: 0;
-}
+.pfp-large { width: 72px !important; height: 72px !important; }
+
+.profile-hero-info { flex: 1; min-width: 0; }
 .profile-hero-name {
   font-family: 'Playfair Display', serif;
   font-size: 22px;
   font-weight: 700;
   color: var(--text);
 }
-.profile-hero-sub {
-  font-size: 13px;
-  color: var(--text-3);
-  margin-top: 4px;
-}
+.profile-hero-sub { font-size: 13px; color: var(--text-3); margin-top: 4px; }
 
-/* ── PAGE BODY PADDING ────────────────────────────────────────────────────── */
-/* Give the profile page consistent vertical rhythm */
-#page-account .page-body {
-  padding-bottom: var(--s6);
-}
-#page-account .settings-section {
-  margin-bottom: var(--s3);
-}
+#page-account .page-body    { padding-bottom: var(--s6); }
+#page-account .settings-section { margin-bottom: var(--s3); }
 
-/* ── PAGE HEADER RIGHT SLOT ───────────────────────────────────────────────── */
-.page-header-right {
-  margin-left: auto;
-}
+.page-header-right { margin-left: auto; }
 
-/* ── PROFILE POPUP SHEET ──────────────────────────────────────────────────── */
+/* profile popup sheet */
 .profile-popup-hero {
   display: flex;
   align-items: center;
   gap: var(--s4);
   padding: var(--s3) var(--s5) var(--s4);
 }
-.pfp-popup {
-  width: 48px !important;
-  height: 48px !important;
-}
-.profile-popup-name {
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--text);
-}
-.profile-popup-sub {
-  font-size: 12px;
-  color: var(--text-3);
-  margin-top: 2px;
-}
+.pfp-popup { width: 48px !important; height: 48px !important; }
+.profile-popup-name { font-size: 17px; font-weight: 700; color: var(--text); }
+.profile-popup-sub  { font-size: 12px; color: var(--text-3); margin-top: 2px; }
 
-/* ── DESKTOP ──────────────────────────────────────────────────────────────── */
 @media (min-width: 900px) {
-  /* All top-level cards in profile page get same margin/radius as capsule cards */
   .profile-hero-card {
     margin: var(--s3) 28px 0;
     border-radius: var(--r-lg);
     border: 0.5px solid var(--border);
     padding: var(--s4) var(--s5);
   }
-
-  /* Sync nudge card + edit form card */
   #page-account .settings-card {
     border: 0.5px solid var(--border);
     border-radius: var(--r-lg);
     margin: 0 28px;
   }
-  #page-account .settings-section-title {
-    padding-left: 28px;
-    padding-right: 28px;
-  }
-
-  /* Tighten spacing between sections on desktop */
-  #page-account .settings-section {
-    margin-bottom: var(--s2);
-  }
+  #page-account .settings-section-title { padding-left: 28px; padding-right: 28px; }
+  #page-account .settings-section { margin-bottom: var(--s2); }
 }
