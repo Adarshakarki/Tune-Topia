@@ -315,6 +315,10 @@ export function seek(pct) {
   if (_active.duration) _active.currentTime = (pct / 100) * _active.duration
 }
 
+export function seekToTime(seconds) {
+  if (_active) _active.currentTime = seconds;
+}
+
 export function seekSeconds(delta) {
   if (!_active.duration) return
   _active.currentTime = Math.max(

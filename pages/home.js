@@ -17,14 +17,16 @@ const NEW_RELEASES_PLAYLIST_ID = '1b418bb8-90a7-4f87-901d-707993838346'
 const _recs = (id) => getTrackRecommendations(id).then(rs => rs.length && import('../modules/queue.js').then(Q => rs.forEach(r => Q.default.add(r))));
 
 export async function load() {
-  const tEl = $('home-tracks'), nRow = $('home-new-row'), pRow = $('home-playlists-row');
+  const tEl = $('home-tracks'), nRow = $('home-new-row'), pRow = $('home-playlists-row'), fRow = $('home-foryou-row'), aRow = $('home-artists-row');
   UI.renderHeroSkeleton();
   if (tEl) tEl.innerHTML = UI.skeletons(10);
   if (nRow) nRow.innerHTML = UI.skeletons(6, 'horiz');
   if (pRow) pRow.innerHTML = UI.skeletons(6, 'horiz');
+  if (fRow) fRow.innerHTML = UI.skeletons(6, 'horiz');
+  if (aRow) aRow.innerHTML = UI.skeletons(6, 'horiz');
 
   const h = History.getAll();
-  if (h.length && $('home-recent-section')) { $('home-recent-section').style.display = 'block'; $('home-recent-row').innerHTML = UI.skeletons(6, 'horiz'); }
+  if (h.length && $('home-recent-section')) { $('home-recent-section').style.display = 'block'; if ($('home-recent-row')) $('home-recent-row').innerHTML = UI.skeletons(6, 'horiz'); } else if ($('home-recent-section')) { $('home-recent-section').style.display = 'none'; }
 
   const [newTs, recTs] = await Promise.all([_fetchNew(), _fetchRecs()]);
 
@@ -37,13 +39,9 @@ export async function load() {
 
     if (tEl) { UI.renderTracks(recTs.slice(0, 10), tEl, null); attachTrackEvents(tEl); }
 
-    // Ensure layout stability: Only show conditional sections after content is ready
-    [
-      { id: 'home-recent-section', data: h },
-      { id: 'home-foryou-section', data: recTs.slice(6, 20) }
-    ].forEach(s => {
-      if (s.data.length && $(s.id)) $(s.id).style.display = 'block';
-    });
+    // Hide sections only if they end up empty to prevent layout shifts
+    if (!h.length && $('home-recent-section')) $('home-recent-section').style.display = 'none';
+    if (recTs.length < 6 && $('home-foryou-section')) $('home-foryou-section').style.display = 'none';
 
     _loadForYou(recTs);
     _loadArtists(recTs);
@@ -117,12 +115,6 @@ async function _loadArtists(recTracks) {
 
 async function _loadFeaturedPlaylists() {
   const r = $('home-playlists-row'); if (!r) return;
-  r.innerHTML = PLAYLIST_QUERIES.map((q, i) => `
-    <div class="horiz-card playlist-card" data-pl-index="${i}">
-      <div class="horiz-art skeleton" style="border-radius:var(--r-sm)"></div>
-      <div class="horiz-title">${q}</div>
-      <div class="horiz-sub">Loading…</div>
-    </div>`).join('');
   const rs = await Promise.allSettled(PLAYLIST_QUERIES.map(q => searchPlaylists(q, 1)));
   const resolved = rs.map(x => (x.status === 'fulfilled' && x.value?.[0]) || null).filter(Boolean);
   if (!resolved.length) return r.innerHTML = '<div class="empty"><i class="bi bi-collection"></i><p>No playlists found</p></div>';

@@ -3,6 +3,7 @@ import * as UI from './ui.js'
 import State from './state.js'
 import Queue from '../modules/queue.js';
 import { setCurrentId, refreshActiveTracks } from './playback.js';
+import { fetchLyrics } from '../modules/lyrics.js';
 
 let _amEl, _cleanup;
 
@@ -58,10 +59,10 @@ function _getAm() {
   if (!b) return null;
   if (!_amEl) {
     _amEl = document.createElement('am-lyrics');
-    Object.assign(_amEl, { autoscroll: true, interpolate: true });
+    Object.assign(_amEl, { autoscroll: true, interpolate: true, lyrics: [] });
     _amEl.style.cssText = 'display:block;width:100%;height:100%';
     _amEl.addEventListener('line-click', e => {
-      if (e.detail?.timestamp !== undefined) { Player.seekTo(e.detail.timestamp / 1000); Player.play(); }
+      if (e.detail?.timestamp !== undefined) { Player.seekToTime(e.detail.timestamp / 1000); }
     });
   }
   if (!b.contains(_amEl)) { b.innerHTML = ''; b.appendChild(_amEl); }
@@ -77,18 +78,35 @@ async function _loadLyrics(track) {
   const title = _clean(track.title ?? ''), artist = _primary(track);
   const dur = track.duration > 5000 ? Math.round(track.duration / 1000) : Math.round(track.duration ?? 0);
 
-  Object.assign(el, { innerHTML: '', songTitle: title, songArtist: artist, highlightColor: _getHi() });
-  if (track.album) el.setAttribute('song-album', _clean(track.album));
-  if (dur > 0) el.setAttribute('song-duration', String(dur));
-  if (track.isrc) el.setAttribute('isrc', track.isrc);
-  el.setAttribute('query', `${title} ${artist}`.trim());
+  // Clear previous lyrics and satisfy .every() checks by initializing as an empty array.
+  // We avoid setting songTitle/Artist as attributes to prevent the component's slow internal fetch.
+  el.lyrics = [];
+  Object.assign(el, { 
+    songTitle: title, 
+    songArtist: artist, 
+    highlightColor: _getHi() 
+  });
+
+  // Use our app's optimized lyrics module (LRCLIB)
+  fetchLyrics(title, artist, track.album, track.duration).then(res => {
+    if (res.synced && res.synced.length > 0) {
+      // The parser now ensures every synced line has a .words array, 
+      // forcing the component into word-by-word mode consistently.
+      el.lyrics = res.synced;
+    } else if (res.plain) {
+      el.lyrics = res.plain.split('\n').map(text => ({ text, time: 0 }));
+    }
+  });
 
   const audio = document.querySelector('audio');
   if (!audio) return;
 
-  let frame, last = performance.now(), base = audio.currentTime * 1000;
-  const tick = () => { if (!audio.paused) { const n = performance.now(); el.currentTime = base + (n - last); frame = requestAnimationFrame(tick); } };
-  const sync = () => { base = audio.currentTime * 1000; last = performance.now(); el.currentTime = base; };
+  let frame;
+  const tick = () => { 
+    el.currentTime = audio.currentTime * 1000;
+    if (!audio.paused) frame = requestAnimationFrame(tick);
+  };
+  const sync = () => { el.currentTime = audio.currentTime * 1000; };
   const onPlay = () => { sync(); if (!frame) tick(); };
   const onPause = () => { cancelAnimationFrame(frame); frame = null; };
 

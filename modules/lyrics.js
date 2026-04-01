@@ -31,7 +31,7 @@ export async function fetchLyrics(title, artist, album = '', duration = 0) {
     }
 
     if (!data) return { plain: null, synced: [] };
-    return { plain: data.plainLyrics || null, synced: parseSynced(data.syncedLyrics) };
+    return { plain: data.plainLyrics || null, synced: parseSynced(data.syncedLyrics), raw: data.syncedLyrics || null };
   } catch (err) { 
     console.warn('Lyrics fetch failed:', err.message); 
     return { plain: null, synced: [] }; 
@@ -49,7 +49,7 @@ export function parseSynced(raw) {
     return p?.length === 2 ? parseInt(p[0]) * 60 + parseFloat(p[1]) : 0;
   };
 
-  return raw.split('\n')
+  const lines = raw.split('\n')
     .map(line => {
       // Extract timestamp [mm:ss.xx] and content
       const match = line.match(/^\[(\d+:\d+\.\d+)\](.*)/);
@@ -66,7 +66,26 @@ export function parseSynced(raw) {
         words: ws.length > 0 ? ws : null,
       };
     })
-    .filter(l => l && (l.text || l.words));
+    .filter(l => l && (l.text || l.words))
+    .sort((a, b) => a.time - b.time);
+
+  // Generate synthetic word sync for lines that only have line-level timestamps
+  return lines.map((line, i) => {
+    if (line.words) return line;
+
+    const next = lines[i + 1];
+    const duration = next ? next.time - line.time : 5; // Assume 5s for the last line
+    const parts = line.text.split(/\s+/).filter(Boolean);
+    
+    if (parts.length > 0) {
+      const wordDur = duration / parts.length;
+      line.words = parts.map((text, j) => ({
+        time: line.time + (j * wordDur),
+        text: text
+      }));
+    }
+    return line;
+  });
 }
 
 export function getActiveLine(syncedLyrics, currentTime) {
