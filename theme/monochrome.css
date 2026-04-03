@@ -1,0 +1,49 @@
+:root[data-skin='monochrome'] {
+  /* Dark Mode Palette */
+  --bg: #000000;
+  --bg-shell: #000000;
+  --surface: #121212;
+  --surface-2: #1e1e1e;
+  --surface-3: #2a2a2a;
+  --accent: #e0e0e0;
+  --accent-dim: rgba(255, 255, 255, 0.1);
+  --border: rgba(255, 255, 255, 0.08);
+
+  /* Typography */
+  --text: #ffffff;
+  --text-2: #a0a0a0;
+  --text-3: #666666;
+
+  /* UI Elements */
+  --sidebar-bg: #000000;
+  --player-bg: rgba(10, 10, 10, 0.95);
+  --nav-item-active: #ffffff;
+  --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.8);
+  --r-lg: 12px;
+}
+
+/* Ensure toggle switch background is black for monochrome theme */
+:root[data-skin='monochrome'] .toggle-btn {
+  background: #000000;
+}
+
+:root[data-skin='monochrome'][data-theme='light'] {
+  /* Light Mode Palette */
+  --bg: #ffffff;
+  --bg-shell: #f8f9fa;
+  --surface: #ffffff;
+  --surface-2: #f1f3f5;
+  --surface-3: #e9ecef;
+  --accent: #000000;
+  --accent-dim: rgba(0, 0, 0, 0.05);
+  --border: rgba(0, 0, 0, 0.06);
+  --text: #000000;
+  --text-2: #495057;
+  --text-3: #000000;
+  --sidebar-bg: #ffffff;
+  --player-bg: rgba(248, 249, 250, 0.95);
+  --nav-item-active: #000000;
+
+  /* Explicitly set glass to white for light monochrome navbar */
+  --glass: #ffffff;
+}

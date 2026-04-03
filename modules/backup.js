@@ -1,7 +1,7 @@
 const BACKUP_VERSION = 1
 
-const STATE_KEYS = ['library.likedSongs', 'library.savedAlbums', 'library.followedArtists', 'library.playlists', 'user.name', 'user.pfp', 'ui.theme'];
-const LS_KEYS = ['tt_quality'];
+const STATE_KEYS = ['library.likedSongs', 'library.savedAlbums', 'library.followedArtists', 'library.playlists', 'user.name', 'user.pfp', 'ui.theme', 'ui.themeMode', 'ui.fontPrimaryLink', 'ui.fontSecondaryLink']
+const LS_KEYS = ['tt_quality', 'tt_speed', 'tt_gapless', 'tt_vol']
 
 export function exportBackup(State) {
   const state = {}

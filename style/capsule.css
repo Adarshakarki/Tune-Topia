@@ -160,7 +160,7 @@
 
 /* stat numbers */
 .capsule-stat-big {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-primary);
   font-size: 16px;
   font-weight: 700;
   color: var(--text);

@@ -46,7 +46,7 @@
 }
 .search-tab {
   flex: 1;
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-primary);
   font-size: 12px;
   font-weight: 700;
   padding: 7px 4px;
@@ -69,7 +69,7 @@
 
 /* browse */
 .browse-title {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-primary);
   font-size: 22px;
   font-weight: 700;
   padding: var(--s5) var(--s5) var(--s3);
@@ -92,7 +92,7 @@
   padding: var(--s4);
   font-size: 15px;
   font-weight: 800;
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-primary);
   color: #fff;
   cursor: pointer;
   box-shadow: var(--shadow-md);
@@ -174,7 +174,7 @@
   margin-bottom: 4px;
 }
 .top-result-title {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-primary);
   font-size: 18px;
   font-weight: 700;
   color: var(--text);
@@ -327,7 +327,7 @@
 
 .pls-info { padding: 7px 2px 0; }
 .pls-title {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-primary);
   font-size: 13px;
   font-weight: 600;
   color: var(--text);

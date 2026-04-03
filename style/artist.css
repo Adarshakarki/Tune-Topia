@@ -103,7 +103,7 @@
   text-align: center;
 }
 #artist-hero-name {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-primary);
   font-size: 32px;
   font-weight: 800;
   color: oklch(1 0 0);

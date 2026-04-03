@@ -18,7 +18,12 @@ const _getPos = (id, e) => {
 const _scroll = () => requestAnimationFrame(() => $('np-queue-list')?.querySelector('.npq-item.active')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
 
 export function init() {
-  UI.updatePlayerPosition(); window.addEventListener('resize', UI.updatePlayerPosition);
+  UI.updatePlayerPosition();
+  syncMoreSheetPosition();
+  window.addEventListener('resize', () => {
+    UI.updatePlayerPosition();
+    syncMoreSheetPosition();
+  });
   // Mini player open triggers
   $('bar-track')?.addEventListener('click', () => !isDesk() && UI.openPlayer());
   $('bar-art')?.addEventListener('click', () => isDesk() && UI.openPlayer());
@@ -43,21 +48,37 @@ export function init() {
   // Global Action helper
   const act = (id, fn) => $(id)?.addEventListener('click', fn);
   act('bar-prev-btn', Player.prev); act('bar-play-btn', Player.toggle); act('bar-next-btn', Player.next);
-  act('bar-shuffle-btn', Player.toggleShuffle); act('bar-repeat-btn', Player.toggleRepeat);
   act('bar-lyrics-btn', () => { UI.openPlayer(); UI.openPanel('np-lyrics-panel'); });
   act('bar-add-playlist-btn', () => { const t = Player.getCurrentTrack(); if (t) PlaylistsUI.openPicker(t); });
-  act('bar-more-btn', () => { const t = Player.getCurrentTrack(); if (t) UI.openMoreSheet(t); });
+  act('bar-more-btn', () => { 
+    const t = Player.getCurrentTrack(); 
+    if (t) { syncMoreSheetPosition(); UI.openMoreSheet(t); } 
+  });
   act('bar-queue-btn', () => { UI.openPlayer(); UI.openPanel('np-queue-panel'); _scroll(); });
 
   // Bars
-  act('bar-progress-bar', e => Player.seek(_getPos('bar-progress-bar', e) * 100));
-  act('bar-vol-bar', e => Player.setVolume(_getPos('bar-vol-bar', e)));
+  act('bar-progress-bar', e => {
+    e.stopPropagation();
+    Player.seek(_getPos('bar-progress-bar', e) * 100);
+  });
+  act('bar-vol-bar', e => {
+    e.stopPropagation();
+    Player.setVolume(_getPos('bar-vol-bar', e));
+  });
+  // Add seeking functionality to the mobile progress bar and prevent event propagation
+  act('bar-progress-mobile', e => {
+    e.stopPropagation();
+    Player.seek(_getPos('bar-progress-mobile', e) * 100);
+  });
 
   // Now Playing Controls
   act('np-close-btn', () => { const o = document.querySelector('.np-overlay.open'); o ? UI.closePanel(o.id) : UI.closePlayer(); });
   act('np-play-btn', Player.toggle); act('np-prev-btn', Player.prev); act('np-next-btn', Player.next);
   act('np-love-btn', () => onLike(Player.getCurrentTrack()));
-  ['np-more-btn', 'np-np-more-btn'].forEach(id => act(id, () => { const t = Player.getCurrentTrack(); if (t) UI.openMoreSheet(t); }));
+  ['np-more-btn', 'np-np-more-btn'].forEach(id => act(id, () => { 
+    const t = Player.getCurrentTrack(); 
+    if (t) { syncMoreSheetPosition(); UI.openMoreSheet(t); } 
+  }));
   act('np-progress-bar', e => Player.seek(_getPos('np-progress-bar', e) * 100));
   act('vol-bar', e => Player.setVolume(_getPos('vol-bar', e)));
 
@@ -71,7 +92,8 @@ export function init() {
 export function syncMoreSheetPosition() {
   const s = $('np-more-sheet'), np = $('now-playing');
   if (!s) return;
-  window.innerWidth >= 900 
-    ? (s.parentNode !== document.body && document.body.appendChild(s)) 
-    : (s.parentNode !== np && np.appendChild(s));
+  const isDesktop = window.innerWidth >= 900;
+  const target = isDesktop ? document.body : np;
+
+  if (s.parentElement !== target) target.appendChild(s);
 }

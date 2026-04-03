@@ -377,14 +377,48 @@
               <div class="settings-section">
                 <div class="settings-section-title">Appearance</div>
                 <div class="settings-card">
-                  <div class="settings-row no-border">
+                  <div class="settings-row">
                     <div class="settings-row-info">
                       <span class="settings-row-label">Dark Mode</span>
-                      <span class="settings-row-sub">Warm dark theme</span>
+                      <span class="settings-row-sub">Switch between light and dark</span>
                     </div>
-                    <button class="toggle-btn" id="theme-toggle-btn" role="switch" aria-checked="false">
+                    <button class="toggle-btn" id="appearance-toggle" role="switch" aria-checked="false">
                       <div class="toggle-thumb"></div>
                     </button>
+                  </div>
+                  <div class="settings-row no-border">
+                    <div class="settings-row-info">
+                      <span class="settings-row-label">Theme Skin</span>
+                      <span class="settings-row-sub">Select a style from your themes folder</span>
+                    </div>
+                    <select class="settings-select" id="theme-select"></select>
+                  </div>
+                </div>
+              </div>
+              <div class="settings-section">
+                <div class="settings-section-title">Typography</div>
+                <div class="settings-card">
+                  <div class="settings-row">
+                    <div class="settings-row-info">
+                      <span class="settings-row-label">Primary Font Link</span>
+                      <span class="settings-row-sub">Google Fonts URL for headers</span>
+                    </div>
+                  </div>
+                  <div class="profile-pfp-row" style="padding-top: 0">
+                    <input class="settings-input" id="primary-font-input" type="url" placeholder="https://fonts.googleapis.com/css2?family=..." />
+                  </div>
+                  <div class="settings-row no-border">
+                    <div class="settings-row-info">
+                      <span class="settings-row-label">Secondary Font Link</span>
+                      <span class="settings-row-sub">Google Fonts URL for body text</span>
+                    </div>
+                  </div>
+                  <div class="profile-pfp-row" style="padding-top: 0">
+                    <input class="settings-input" id="secondary-font-input" type="url" placeholder="https://fonts.googleapis.com/css2?family=..." />
+                  </div>
+                  <div class="settings-row no-border" style="justify-content: flex-end; padding-top: 0; gap: var(--s2);">
+                    <button class="settings-save-btn settings-cancel-btn" id="fonts-clear-btn">Clear Font</button>
+                    <button class="settings-save-btn" id="fonts-save-btn">Apply Typography</button>
                   </div>
                 </div>
               </div>
@@ -725,20 +759,11 @@
         <div class="bottom-sheet-card">
           <div class="bottom-sheet-handle"></div>
           <div class="bottom-sheet-track-row" id="sheet-track-preview"></div>
-          <button class="sheet-action sheet-toggle" id="sheet-shuffle">
-            <div class="sheet-action-left"><i class="bi bi-shuffle"></i> Shuffle</div>
-            <span class="sheet-toggle-state" id="sheet-shuffle-state">Off</span>
-          </button>
-          <button class="sheet-action sheet-toggle" id="sheet-repeat">
-            <div class="sheet-action-left"><i class="bi bi-repeat"></i> Repeat</div>
-            <span class="sheet-toggle-state" id="sheet-repeat-state">Off</span>
-          </button>
-          <button class="sheet-action" id="sheet-add-queue"><i class="bi bi-list-ul"></i> Add to Queue</button>
-          <button class="sheet-action" id="sheet-add-playlist"><i class="bi bi-collection"></i> Add to Playlist</button>
+          <button class="sheet-action" id="sheet-add-queue"><i class="bi bi-music-note-list"></i> Add to Queue</button>
+          <button class="sheet-action" id="sheet-add-playlist"><i class="bi bi-plus-lg"></i> Add to Playlist</button>
           <button class="sheet-action" id="sheet-share"><i class="bi bi-share-fill"></i> Share</button>
           <button class="sheet-action" id="sheet-open-source"><i class="bi bi-box-arrow-up-right"></i> Open on Tidal / YouTube</button>
           <button class="sheet-action" id="sheet-download"><i class="bi bi-download"></i> Download</button>
-          <button class="sheet-action" id="sheet-sleep-timer"><i class="bi bi-moon-stars"></i> Sleep Timer</button>
         </div>
       </div>
     </div>
@@ -945,10 +970,10 @@
         <div class="bottom-sheet-handle"></div>
         <div id="track-sheet-preview" class="bottom-sheet-track-row"></div>
         <button class="sheet-action" id="tsheet-like"><i class="bi bi-heart"></i> <span id="tsheet-like-label">Like</span></button>
-        <button class="sheet-action" id="tsheet-add-queue"><i class="bi bi-list-ul"></i> Add to Queue</button>
-        <button class="sheet-action" id="tsheet-add-playlist"><i class="bi bi-collection"></i> Add to Playlist</button>
-        <button class="sheet-action" id="tsheet-go-artist"><i class="bi bi-person"></i> Go to Artist</button>
-        <button class="sheet-action" id="tsheet-go-album"><i class="bi bi-disc"></i> Go to Album</button>
+        <button class="sheet-action" id="tsheet-add-queue"><i class="bi bi-music-note-list"></i> Add to Queue</button>
+        <button class="sheet-action" id="tsheet-add-playlist"><i class="bi bi-plus-lg"></i> Add to Playlist</button>
+        <button class="sheet-action" id="tsheet-go-artist"><i class="bi bi-person-circle"></i> Go to Artist</button>
+        <button class="sheet-action" id="tsheet-go-album"><i class="bi bi-disc-fill"></i> Go to Album</button>
         <button class="sheet-action" id="tsheet-download"><i class="bi bi-download"></i> Download</button>
         <button class="sheet-action" id="tsheet-move-up" style="display: none"><i class="bi bi-arrow-up"></i> Move Up</button>
         <button class="sheet-action" id="tsheet-move-down" style="display: none"><i class="bi bi-arrow-down"></i> Move Down</button>
@@ -986,7 +1011,6 @@
               <span id="bar-time-cur">0:00</span>
               <div id="bar-progress-bar">
                 <div id="bar-progress-fill"></div>
-                <div id="bar-progress-tooltip"></div>
               </div>
               <span id="bar-time-tot">0:00</span>
             </div>

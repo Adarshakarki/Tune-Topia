@@ -1,0 +1,35 @@
+:root[data-skin='pink'] {
+  /* Core Palette */
+  --bg: #120a0e;
+  --bg-shell: #0a0508;
+  --surface: #1d1117;
+  --surface-2: #2a1a22;
+  --surface-3: #38242d;
+  --accent: #ff4d94;
+  --accent-dim: rgba(255, 77, 148, 0.15);
+  --border: rgba(255, 77, 148, 0.1);
+
+  /* Typography */
+  --text: #ffeef5;
+  --text-2: #f48fb1;
+  --text-3: #ad1457;
+
+  /* Navigation & Player UI */
+  --sidebar-bg: #0a0508;
+  --player-bg: rgba(29, 17, 23, 0.95);
+  --nav-item-active: #ff4d94;
+  --r-lg: 18px;
+}
+
+:root[data-skin='pink'][data-theme='light'] {
+  --bg: #fff0f6;
+  --bg-shell: #ffdeeb;
+  --surface: #ffffff;
+  --surface-2: #ffdeeb;
+  --surface-3: #fcc2d7;
+  --accent: #d6336c;
+  --accent-dim: rgba(214, 51, 108, 0.1);
+  --text: #20010d;
+  --text-2: #a61e4d;
+  --sidebar-bg: #fff5f8;
+}

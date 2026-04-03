@@ -94,7 +94,10 @@
   gap: var(--s2);
   padding: var(--s2) var(--s4) var(--s3);
 }
-.quality-btn {
+.quality-btn,
+.theme-btn,
+.header-font-btn,
+.body-font-btn {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -107,12 +110,21 @@
   transition: background 0.14s, border-color 0.14s;
   text-align: left;
 }
-.quality-btn:hover  { background: var(--surface-3); }
-.quality-btn:active { opacity: 0.7; }
-.quality-btn.active { background: var(--accent-dim); border-color: var(--accent); }
+.quality-btn:hover,
+.theme-btn:hover,
+.header-font-btn:hover,
+.body-font-btn:hover { background: var(--surface-3); }
+.quality-btn:active,
+.theme-btn:active,
+.header-font-btn:active,
+.body-font-btn:active { opacity: 0.7; }
+.quality-btn.active,
+.theme-btn.active,
+.header-font-btn.active,
+.body-font-btn.active { background: var(--accent-dim); border-color: var(--accent); }
 
 .quality-label { font-size: 13px; font-weight: 700; color: var(--text); }
-.quality-btn.active .quality-label { color: var(--accent); }
+.quality-btn.active .quality-label, .theme-btn.active .quality-label, .header-font-btn.active .quality-label, .body-font-btn.active .quality-label { color: var(--accent); }
 .quality-desc  { font-size: 11px; color: var(--text-3); line-height: 1.3; }
 
 @media (min-width: 900px) {

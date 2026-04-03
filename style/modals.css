@@ -35,7 +35,7 @@
   margin-bottom: var(--s1);
 }
 .pl-modal-title {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-primary);
   font-size: 20px;
   font-weight: 700;
   color: var(--text);
@@ -99,7 +99,7 @@
   border-bottom: 0.5px solid var(--border);
 }
 .pl-picker-title {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-primary);
   font-size: 17px;
   font-weight: 700;
   color: var(--text);
@@ -188,7 +188,7 @@
   gap: 2px;
 }
 .pl-page-name {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-primary);
   font-size: 14px;
   font-weight: 700;
   color: var(--text);

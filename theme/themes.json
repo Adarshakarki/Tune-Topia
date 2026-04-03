@@ -1,0 +1,9 @@
+{
+  "themes": [
+    { "id": "monochrome", "name": "Monochrome" },
+    { "id": "midnight", "name": "Midnight Blue" },
+    { "id": "purple", "name": "Purple Rain" },
+    { "id": "emerald", "name": "Emerald Forest" },
+    { "id": "pink", "name": "Pink Blossom" }
+  ]
+}

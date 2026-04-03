@@ -9,7 +9,7 @@
 ### Audiophile Grade Streaming
 - **Lossless & Hi-Res:** Direct access to FLAC (16-bit/24-bit) and AAC streams via Tidal's open proxy network.
 - **Hybrid Engine:** Automatic fallback to YouTube (Invidious) when Tidal tracks are unavailable.
-- **Advanced Playback:** True gapless playback using dual-buffer logic and custom crossfade support.
+- **Advanced Playback:** True gapless playback using dual-buffer logic.
 - **10-Band EQ:** Integrated parametric equalizer with genre-based presets.
 
 ### Sound Capsule (Local Analytics)

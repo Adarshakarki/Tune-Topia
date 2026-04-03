@@ -33,7 +33,7 @@
 .track-info { flex: 1; min-width: 0; }
 .track-name-row { display: flex; align-items: center; gap: 5px; }
 .track-name {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-primary);
   font-size: 15px;
   font-weight: 600;
   white-space: nowrap;
@@ -102,7 +102,7 @@
 .dt-track-info { min-width: 0; }
 .dt-track-name-row { display: flex; align-items: center; gap: 5px; }
 .dt-track-name {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-primary);
   font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
@@ -157,7 +157,7 @@
 .npq-art { width: 42px; height: 42px; border-radius: var(--r-xs); object-fit: cover; flex-shrink: 0; background: rgba(255,255,255,0.08); }
 .npq-info { flex: 1; min-width: 0; }
 .npq-title {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-primary);
   font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
@@ -168,6 +168,42 @@
 .npq-title.active { color: var(--accent); }
 .npq-artist { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 2px; }
 .npq-dur    { font-size: 12px; color: rgba(255,255,255,0.25); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+
+/* queue action stack */
+.q-stack-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-around; /* Distributes items evenly with space around them */
+  gap: var(--s2);
+  padding: var(--s1) var(--s2) var(--s4);
+  animation: q-actions-entry 0.4s var(--ease);
+}
+
+.q-stack-btn {
+  flex: 1; /* Allows buttons to grow and fill the available space */
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: oklch(1 0 0 / 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: oklch(1 0 0 / 0.65);
+  border: 1px solid oklch(1 0 0 / 0.1);
+  border-radius: var(--r-full); /* Creates the pill shape */
+  transition: all 0.2s var(--ease);
+}
+
+.q-stack-btn:hover { background: oklch(1 0 0 / 0.15); color: #fff; }
+.q-stack-btn:active { transform: scale(0.92); }
+.q-stack-btn.active { background: oklch(1 0 0 / 0.25); color: #fff; border-color: oklch(1 0 0 / 0.3); }
+.q-stack-btn .bi { font-size: 18px; }
+
+@keyframes q-actions-entry {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 /* skeletons */
 .skeleton {
@@ -226,6 +262,7 @@
   transform: translateY(100%);
   transition: transform 0.32s var(--spring);
   box-shadow: var(--highlight);
+  z-index: 2; /* Ensure card is above the overlay */
 }
 .bottom-sheet.open .bottom-sheet-card { transform: translateY(0); }
 
@@ -245,7 +282,7 @@
   margin-bottom: var(--s1);
 }
 .bottom-sheet-track-row img { width: 46px; height: 46px; border-radius: var(--r-sm); object-fit: cover; flex-shrink: 0; }
-.bs-title  { font-family: 'Playfair Display', serif; font-size: 15px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bs-title  { font-family: var(--font-primary); font-size: 15px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bs-artist { font-size: 13px; color: rgba(255,255,255,0.42); margin-top: 2px; }
 
 .sheet-action {
@@ -273,7 +310,7 @@
   align-items: center;
   justify-content: center;
   padding: var(--s4);
-  z-index: var(--z-player);
+  z-index: var(--z-picker);
 }
 #playlist-picker-sheet .bottom-sheet-card {
   position: relative !important;
@@ -286,14 +323,14 @@
   max-width: 420px;
   background: var(--surface);
   border-radius: var(--r-xl);
-  border: 0.5px solid var(--border-mid);
+  border: 0.5px solid var(--border-mid); /* This was already there */
   box-shadow: var(--shadow-lg);
   padding: var(--s2) 0 var(--s4);
   opacity: 0;
   transition: transform 0.28s var(--spring), opacity 0.22s var(--ease);
   margin-bottom: var(--bar-h-mobile);
 }
-#playlist-picker-sheet.open .bottom-sheet-card { transform: scale(1) !important; opacity: 1; }
+#playlist-picker-sheet.open .bottom-sheet-card { transform: scale(1) !important; opacity: 1; z-index: var(--z-picker); }
 #playlist-picker-sheet .bottom-sheet-handle { display: none; }
 #playlist-picker-sheet .bottom-sheet-overlay {
   position: fixed;
@@ -301,14 +338,11 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0,0,0,0.55);
+  background: rgba(0,0,0,0.55); /* This was already there */
   backdrop-filter: var(--blur-sm);
   -webkit-backdrop-filter: var(--blur-sm);
-  z-index: var(--z-player);
+  z-index: calc(var(--z-picker) - 1); /* Ensure picker overlay is behind the picker card */
 }
-#playlist-picker-sheet .sheet-action        { color: var(--text); }
-#playlist-picker-sheet .sheet-action .bi    { color: var(--text-3); }
-#playlist-picker-sheet .sheet-action:active { background: var(--surface-2); }
 
 @media (min-width: 900px) {
   .track-card { padding: 8px 28px; }

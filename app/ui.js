@@ -1,6 +1,7 @@
 import State from './state.js'
 import { has as isLiked } from '../modules/likedSongs.js'
 import { escHtml, fmtTime, qualityBadge } from '../api/utils.js'
+import Queue from '../modules/queue.js'
 import { getActiveLine, getActiveWord } from '../modules/lyrics.js';
 import { ICONS, getIcon } from './icons.js';
 
@@ -236,6 +237,17 @@ export function renderQueue(tracks, position, upcoming) {
       `<div class="queue-section-label">Now Playing</div>` +
       _queueItem(current, position, true)
   }
+
+  const isShuff = State.get('player.isShuffle'), isRep = State.get('player.isRepeat');
+  html += `
+    <div class="q-stack-actions">
+      <button class="q-stack-btn${isShuff ? ' active' : ''}" id="q-shuffle-btn" title="Shuffle">${getIcon('shuffle')}</button>
+      <button class="q-stack-btn${isRep ? ' active' : ''}" id="q-repeat-btn" title="Repeat">${getIcon('repeat')}</button>
+      <button class="q-stack-btn" id="q-add-pl-btn" title="Add to Playlist">${getIcon('plus')}</button>
+      <button class="q-stack-btn" id="q-sleep-btn" title="Sleep Timer">${getIcon('moon')}</button>
+    </div>
+  `;
+
   if (upcoming.length) {
     html +=
       `<div class="queue-section-label">Up Next</div>` +
@@ -463,21 +475,19 @@ export function updateVolume(v) {
 }
 
 export function setShuffle(on) {
-  $('bar-shuffle-btn')?.classList.toggle('active', on)
-  const badge = $('sheet-shuffle-state')
-  if (badge) {
-    badge.textContent = on ? 'On' : 'Off'
-    badge.classList.toggle('on', on)
-  }
+  // When shuffle state changes, re-render the queue to update the button's active state.
+  // The queue rendering logic (renderQueue) already fetches the current shuffle state from State.
+  const tracks = State.get('queue.tracks') || [];
+  const position = State.get('player.queuePosition') || 0;
+  renderQueue(tracks, position, Queue.getUpcoming());
 }
 
 export function setRepeat(on) {
-  $('bar-repeat-btn')?.classList.toggle('active', on)
-  const badge = $('sheet-repeat-state')
-  if (badge) {
-    badge.textContent = on ? 'On' : 'Off'
-    badge.classList.toggle('on', on)
-  }
+  // Similarly, when repeat state changes, re-render the queue.
+  const tracks = State.get('queue.tracks') || [];
+  const position = State.get('player.queuePosition') || 0;
+  // Queue.getUpcoming() is not directly affected by repeat, but re-rendering ensures button state updates.
+  renderQueue(tracks, position, Queue.getUpcoming());
 }
 
 export function syncLikeButtons(trackId) {
@@ -554,18 +564,6 @@ export function openMoreSheet(track) {
         <div class="bs-title">${escHtml(track.title)}</div>
         <div class="bs-artist">${escHtml(track.artist || '')}</div>
       </div>`
-  }
-  const sb = $('sheet-shuffle-state'),
-    rb = $('sheet-repeat-state')
-  const isShuffle = State.get('player.isShuffle') || false
-  const isRepeat = State.get('player.isRepeat') || false
-  if (sb) {
-    sb.textContent = isShuffle ? 'On' : 'Off'
-    sb.classList.toggle('on', isShuffle)
-  }
-  if (rb) {
-    rb.textContent = isRepeat ? 'On' : 'Off'
-    rb.classList.toggle('on', isRepeat)
   }
   sheet.classList.add('open')
 }

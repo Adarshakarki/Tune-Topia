@@ -23,6 +23,7 @@ const PRECACHE = [
   'style/modals.css',
   'style/equalizer.css',
   'style/genre.css',
+  'theme/themes.json',
   'style/video.css',
   'style/responsive.css',
   'app/init.js',
@@ -32,19 +33,32 @@ const PRECACHE = [
   'app/playback.js',
   'app/playerEvents.js',
   'app/icons.js',
+  'modules/theme.js',
   'app/constants.js',
   'assets/logo.JPEG',
 ]
 
 // Cache assets on install
-self.addEventListener('install', e => {
+self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open(CACHE)
-      .then(c => Promise.all(
-        PRECACHE.map(url => c.add(url).catch(err => console.warn('[SW] precache miss:', url, err)))
-      ))
-  )
-})
+    caches.open(CACHE).then(async (cache) => {
+      // 1. Cache static core assets
+      await Promise.all(
+        PRECACHE.map((url) => cache.add(url).catch((err) => console.warn('[SW] precache miss:', url, err)))
+      );
+
+      // 2. Dynamically discover and cache all themes from the manifest
+      try {
+        const res = await fetch('theme/themes.json');
+        const data = await res.json();
+        if (data.themes) {
+          const themeUrls = data.themes.map((t) => `theme/${t.id}.css`);
+          await Promise.all(themeUrls.map((url) => cache.add(url).catch((err) => console.warn('[SW] theme cache miss:', url, err))));
+        }
+      } catch (err) { console.warn('[SW] could not fetch theme manifest during install'); }
+    })
+  );
+});
 
 // Cleanup old caches
 self.addEventListener('activate', e => {

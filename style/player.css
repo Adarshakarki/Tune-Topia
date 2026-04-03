@@ -5,7 +5,7 @@
 #bar-art {
   width: var(--bar-h-mobile);
   height: var(--bar-h-mobile);
-  border-radius: 0;
+  border-radius: var(--r-xs);
   object-fit: cover;
   flex-shrink: 0;
   background: var(--surface-2);
@@ -39,6 +39,7 @@
 .bar-like-btn.liked .bi     { color: oklch(1 0 0); }
 .bar-ctrl                   { color: oklch(1 0 0 / 0.85); }
 .bar-play-btn               { background: transparent; box-shadow: none; color: oklch(1 0 0); margin: 0 var(--s2); }
+#bar-shuffle-btn, #bar-repeat-btn { display: none !important; }
 .bar-play-btn:hover         { opacity: 0.8; }
 .bar-play-btn:active        { opacity: 0.5; transform: scale(0.88); }
 #bar-mini-controls .bar-play-btn { background: transparent; width: 34px; height: 34px; }
@@ -173,7 +174,7 @@
 #np-info-left  { flex: 1; min-width: 0; }
 #np-title-row  { display: flex; align-items: center; gap: var(--s2); }
 #np-title {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-primary);
   font-size: 22px;
   font-weight: 700;
   letter-spacing: -0.3px;
@@ -310,7 +311,7 @@
 }
 .np-overlay-topbar button,
 .np-overlay-topbar .np-icon-btn { color: oklch(1 0 0 / 0.82); }
-.np-overlay-title { flex: 1; font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 700; color: oklch(1 0 0); }
+.np-overlay-title { flex: 1; font-family: var(--font-primary); font-size: 17px; font-weight: 700; color: oklch(1 0 0); }
 
 /* queue */
 #np-queue-list { flex: 1; overflow-y: auto; padding: var(--s2) 0 max(env(safe-area-inset-bottom, 0px), var(--s5)); }
@@ -330,6 +331,7 @@
 .bottom-sheet-global,
 #track-options-sheet,
 #playlist-picker-sheet,
+#np-more-sheet,
 #profile-popup-sheet,
 #playlist-modal-overlay,
 #sleep-timer-popup { position: fixed !important; z-index: var(--z-sheet); }
@@ -403,7 +405,7 @@
 
 /* queue panel header */
 .np-queue-header { display: flex; align-items: center; justify-content: space-between; padding: var(--s3) var(--s5) var(--s2); border-bottom: 0.5px solid oklch(1 0 0 / 0.1); flex-shrink: 0; }
-.np-queue-title  { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 700; color: oklch(1 0 0); }
+.np-queue-title  { font-family: var(--font-primary, 'Playfair Display', serif); font-size: 17px; font-weight: 700; color: oklch(1 0 0); }
 .np-queue-clear-btn {
   font-size: 12px;
   font-weight: 600;
@@ -458,7 +460,7 @@
   border-bottom: 0.5px solid var(--border);
   margin-bottom: var(--s2);
 }
-.sleep-timer-title { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: var(--s2); }
+.sleep-timer-title { font-family: var(--font-primary); font-size: 16px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: var(--s2); }
 .sleep-timer-title .bi { color: var(--accent); }
 .sleep-timer-cancel {
   font-size: 12px;
@@ -532,7 +534,7 @@
 .np-panel-play:hover { background: oklch(1 0 0 / 0.08); }
 
 @media (min-width: 900px) {
-  #np-more-sheet { position: fixed !important; visibility: visible !important; z-index: var(--z-sheet); }
+  #np-more-sheet { position: fixed !important; visibility: visible !important; z-index: 9999; }
   #np-more-sheet .bottom-sheet-card { max-height: 70vh; overflow-y: auto; }
 
   #player-bar { background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; }
@@ -552,7 +554,7 @@
   #bar-art {
     width: 72px;
     height: 72px;
-    border-radius: 0;
+    border-radius: var(--r-xs);
     cursor: pointer;
     -webkit-mask-image:
       linear-gradient(to right, transparent 0%, black 28%, black 72%, transparent 100%),
@@ -623,6 +625,7 @@
   .np-love-btn.liked, .np-love-btn.liked .bi { color: oklch(1 0 0); }
   .np-love-btn .bi { font-size: 22px; }
 
+  #np-more-btn { display: none; }
   #np-progress-wrap { padding: 0 0 6px; }
   #np-progress-bar { height: 3px; background: oklch(1 0 0 / 0.2); transition: height 0.15s; }
   #np-progress-bar:hover { height: 5px; }

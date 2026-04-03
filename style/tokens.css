@@ -1,4 +1,8 @@
 :root {
+  /* typography */
+  --font-primary: 'Playfair Display', serif;
+  --font-secondary: 'DM Sans', 'Helvetica Neue', Arial, sans-serif;
+
   /* bg */
   --bg:   oklch(0.955 0.015 83);
   --bg-2: oklch(0.928 0.016 83);
@@ -92,7 +96,7 @@ body {
   overflow: hidden;
   background: var(--bg);
   color: var(--text);
-  font-family: 'DM Sans', 'Helvetica Neue', Arial, sans-serif;
+  font-family: var(--font-secondary);
   font-size: 15px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;

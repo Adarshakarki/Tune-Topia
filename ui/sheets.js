@@ -106,7 +106,6 @@ export function initEvents() {
   $('tsheet-move-down')?.addEventListener('click', () => { _tsOpts.onMoveDown?.(); _closeTS(); });
   $('tsheet-remove')?.addEventListener('click', () => { _tsOpts.onRemove?.(); _closeTS(); });
 
-  $('sheet-sleep-timer')?.addEventListener('click', _openSleep);
   $('sleep-timer-sheet-overlay')?.addEventListener('click', _closeSleep);
   $('sleep-timer-cancel-btn')?.addEventListener('click', () => { _cancelSleep(); _closeSleep(); });
 
@@ -123,8 +122,6 @@ export function initEvents() {
   }));
 
   $('np-more-sheet-overlay')?.addEventListener('click', UI.closeMoreSheet);
-  $('sheet-shuffle')?.addEventListener('click', () => { Player.toggleShuffle(); UI.closeMoreSheet(); });
-  $('sheet-repeat')?.addEventListener('click', () => { Player.toggleRepeat(); UI.closeMoreSheet(); });
   $('sheet-add-queue')?.addEventListener('click', () => { const t = Player.getCurrentTrack(); if (t) { Queue.addNext(t); UI.toast('Added to queue'); UI.closeMoreSheet(); } });
 
   const _share = t => {
@@ -150,6 +147,8 @@ export function initEvents() {
 
   $('np-queue-item-sheet-overlay')?.addEventListener('click', _closeQS);
   $('np-queue-list')?.addEventListener('click', e => {
+    if (e.target.closest('.q-stack-btn')) return;
+
     const item = e.target.closest('.npq-item'); if (!item) return;
     const idx = parseInt(item.dataset.index), ts = State.get('queue.tracks') || [], t = ts[idx]; if (!t) return;
     _qIdx = idx; const p = $('np-queue-item-preview');

@@ -23,6 +23,7 @@ import * as LikedVideosPage from '../pages/likedVideos.js'
 import * as VideoPage from '../pages/video.js'
 import * as AboutPage from '../pages/about.js'
 import { playTrack } from './playback.js'
+import * as Theme from '../modules/theme.js'
 import { ICONS } from './icons.js'
 
 const $ = (id) => document.getElementById(id)
@@ -47,9 +48,17 @@ function _stripBackButtonText() {
   });
 }
 
-function init() {
+async function init() {
   State.init();
-  UI.applyTheme(State.get('ui.theme') || 'light');
+  await Theme.fetchThemes(); // Wait for manifest so applyTheme knows about specialty skins
+
+  // Apply the "Skin" (Monochrome, Midnight, etc)
+  Theme.applyTheme(State.get('ui.theme') || 'none');
+  
+  // Apply the "Appearance Mode" (Dark vs Light)
+  Theme.applyAppearance(State.get('ui.themeMode') || 'light');
+
+  Theme.loadFonts(); // Apply saved fonts from localStorage
   UI.renderGreeting();
   renderAccountBtn();
 
@@ -93,6 +102,8 @@ function init() {
   const _refreshQueue = () => UI.renderQueue(State.get('queue.tracks') || [], State.get('player.queuePosition') || 0, Queue.getUpcoming());
   State.subscribe('queue.tracks', _refreshQueue);
   State.subscribe('player.queuePosition', _refreshQueue);
+  State.subscribe('player.isShuffle', _refreshQueue);
+  State.subscribe('player.isRepeat', _refreshQueue);
   State.subscribe('library.followedArtists', Library.render);
   State.subscribe('library.savedAlbums', () => {
     Library.render();
@@ -108,6 +119,22 @@ function init() {
 
   $('sidebar-overlay')?.addEventListener('click', Router.closeSidebar);
   
+  // Queue Actions Delegation
+  $('np-queue-list')?.addEventListener('click', e => {
+    const btn = e.target.closest('.q-stack-btn');
+    if (!btn) return;
+    e.stopPropagation();
+    if (btn.id === 'q-shuffle-btn') Player.toggleShuffle();
+    else if (btn.id === 'q-repeat-btn') Player.toggleRepeat();
+    else if (btn.id === 'q-add-pl-btn') {
+      const t = Player.getCurrentTrack();
+      if (t) PlaylistsUI.openPicker(t);
+    }
+    else if (btn.id === 'q-sleep-btn') {
+      $('sleep-timer-popup')?.classList.add('open');
+    }
+  });
+
   const shell = $('shell'), sbBtn = $('sb-collapse-btn');
   if (shell && sbBtn) {
     shell.classList.toggle('sb-collapsed', localStorage.getItem('tt_sb_collapsed') === 'true');
@@ -115,8 +142,7 @@ function init() {
   }
 
   $('sb-theme-btn')?.addEventListener('click', () => {
-    const theme = State.get('ui.theme') === 'dark' ? 'light' : 'dark';
-    State.setTheme(theme); UI.applyTheme(theme);
+    // This button now toggles between dark/light, but the full theme selection is in settings
   });
 
   let resizeTimer;

@@ -91,7 +91,7 @@
 #upl-info     { padding: var(--s3) 0 var(--s1); text-align: center; }
 
 #upl-title {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-primary);
   font-size: 24px;
   font-weight: 800;
   color: oklch(1 0 0);

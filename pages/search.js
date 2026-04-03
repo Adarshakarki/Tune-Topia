@@ -123,8 +123,13 @@ function _renderResults() {
     _renderVideos(results, listEl)
   } else if (tab === 'playlists') {
     _renderPlaylists(results, listEl)
-} else {
-    UI.renderTracks(results, listEl, null)
+  } else {
+    // Prioritize Tidal tracks over YouTube tracks in the search list
+    const sorted = [...results].sort((a, b) => {
+      const aIsYt = a.source === 'youtube', bIsYt = b.source === 'youtube';
+      return aIsYt === bIsYt ? 0 : aIsYt ? 1 : -1;
+    });
+    UI.renderTracks(sorted, listEl, null)
     _attachSearchTrackEvents(listEl)
   }
 }

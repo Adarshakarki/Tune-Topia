@@ -26,7 +26,7 @@ export function initEvents(showFn) {
   $('profile-popup-overlay')?.addEventListener('click', _close);
   
   // Popup actions
-  const routes = { 'popup-goto-profile': 'account', 'popup-goto-settings': 'settings', 'About': 'about' };
+  const routes = { 'popup-goto-profile': 'account', 'popup-goto-settings': 'settings', 'popup-goto-about': 'about' };
   Object.entries(routes).forEach(([id, pg]) => $(id)?.addEventListener('click', () => { _close(); _showPage(pg); }));
 
   $('popup-signin')?.addEventListener('click', () => { _close(); UI.toast('Sign in coming soon'); });

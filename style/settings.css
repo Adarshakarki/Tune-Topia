@@ -47,7 +47,7 @@
 .settings-input {
   width: 100%;
   background: var(--surface-2);
-  border: 0.5px solid var(--border-mid);
+  border: 0.5px solid var(--border);
   border-radius: var(--r-sm);
   padding: 9px var(--s3);
   font-size: 14px;
@@ -57,6 +57,38 @@
 }
 .settings-input:focus { border-color: var(--accent); }
 .settings-input::placeholder { color: var(--text-3); }
+
+.settings-select {
+  width: 100%;
+  max-width: 200px;
+  background: var(--surface-2);
+  border: 0.5px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 8px 32px 8px var(--s3);
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23888888' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--s3) center;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+
+.settings-select:hover {
+  background-color: var(--surface-3);
+}
+
+.settings-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-dim);
+}
+
+.settings-select option {
+  background-color: var(--surface);
+  color: var(--text);
+}
 
 .settings-save-btn {
   align-self: flex-start;

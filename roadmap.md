@@ -46,7 +46,6 @@
 
 #### Phase 2: Player Core
 
-- [ ] **13.** Crossfade implementation
 - [ x ] **14.** Global keyboard shortcuts
 - [ ] **15.** Audio Equalizer
 

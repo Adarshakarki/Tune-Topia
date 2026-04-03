@@ -50,7 +50,7 @@
 .vp-back-btn .bi { font-size: 20px; }
 
 .vp-header-info { text-align: center; min-width: 0; padding: 0 4px; }
-.vp-title  { font-family: 'Playfair Display', serif; font-size: 14px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vp-title  { font-family: var(--font-primary); font-size: 14px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .vp-artist { font-size: 11px; color: rgba(255,255,255,0.55); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .vp-source-badge { display: none; }
 

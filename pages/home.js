@@ -41,7 +41,6 @@ export async function load() {
 
     // Hide sections only if they end up empty to prevent layout shifts
     if (!h.length && $('home-recent-section')) $('home-recent-section').style.display = 'none';
-    if (recTs.length < 6 && $('home-foryou-section')) $('home-foryou-section').style.display = 'none';
 
     _loadForYou(recTs);
     _loadArtists(recTs);
@@ -69,11 +68,21 @@ async function _fetchRecs() {
 }
 
 async function _loadForYou(recTracks) {
-  const s = $('home-foryou-section'), r = $('home-foryou-row'); if (!s || !r) return;
-  const fy = recTracks.slice(6, 20);
-  if (!fy.length) {
-    try { const rs = await Promise.allSettled(['indie hits', 'viral songs'].map(q => searchTracks(q).catch(() => []))); const ts = rs.flatMap(x => x.status === 'fulfilled' ? x.value : []); if (ts.length) { s.style.display = ''; UI.renderHorizCards(ts, r); attachHorizEvents(r); } } catch {}
-  } else { s.style.display = ''; UI.renderHorizCards(fy, r); attachHorizEvents(r); }
+  const s = $('home-foryou-section'), r = $('home-foryou-row');
+  if (!s || !r) return;
+
+  s.style.display = ''; // Ensure the section is visible
+
+  let tracksToRender = recTracks.slice(6, 20);
+  if (!tracksToRender.length) {
+    try {
+      const rs = await Promise.allSettled(['indie hits', 'viral songs'].map(q => searchTracks(q).catch(() => [])));
+      tracksToRender = rs.flatMap(x => x.status === 'fulfilled' ? x.value : []);
+    } catch (e) { /* console.error("Failed to load fallback 'for you' tracks:", e); */ }
+  }
+
+  if (tracksToRender.length) { UI.renderHorizCards(tracksToRender, r); attachHorizEvents(r); }
+  else { r.innerHTML = UI.emptyState('bi-music-note-beamed', 'No recommendations for you right now'); }
 }
 
 async function _loadArtists(recTracks) {
@@ -90,7 +99,11 @@ async function _loadArtists(recTracks) {
     }
     if (arts.length >= 10) break;
   }
-  if (!arts.length) return;
+  if (!arts.length) {
+    s.style.display = ''; // Ensure the section is visible even if empty
+    r.innerHTML = UI.emptyState('bi-person-fill', 'No artists found');
+    return;
+  }
 
   // Fetch actual artist profile data to get real profile images instead of song covers
   const artistProfiles = await Promise.all(arts.map(async (name) => {
@@ -98,7 +111,7 @@ async function _loadArtists(recTracks) {
       const results = await searchArtists(name);
       return results.find(a => a.name.toLowerCase() === name.toLowerCase()) || results[0] || { name, cover: '' };
     } catch { return { name, cover: '' }; }
-  }));
+  })).then(profiles => profiles.filter(Boolean)); // Filter out any null/undefined profiles from failed searches
 
   s.style.display = '';
   r.innerHTML = artistProfiles.filter(Boolean).map((a, i) => `

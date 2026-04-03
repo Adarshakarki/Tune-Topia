@@ -12,7 +12,7 @@
 
 .profile-hero-info { flex: 1; min-width: 0; }
 .profile-hero-name {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-primary);
   font-size: 22px;
   font-weight: 700;
   color: var(--text);

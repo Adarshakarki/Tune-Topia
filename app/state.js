@@ -14,14 +14,15 @@ const State = (() => {
     queue: { tracks: [], played: [], upcoming: [] },
     search: { query: '', activeTab: 'music', isLoading: false, topResult: null, results: [], mood: null },
     library: { likedSongs: [], savedAlbums: [], followedArtists: [], playlists: [], likedVideos: [] },
-    ui: { theme: localStorage.getItem('tt_theme') || 'light', activePage: 'home', npOpen: false, queuePanelOpen: false, lyricsPanelOpen: false }
+    ui: { theme: 'none', themeMode: 'light', fontPrimaryLink: '', fontSecondaryLink: '', activePage: 'home', npOpen: false, queuePanelOpen: false, lyricsPanelOpen: false }
   }, _subs = {};
 
   const get = p => p.split('.').reduce((o, k) => o?.[k], _state);
   const _ls = {
     'library.likedSongs': 'tt_liked', 'library.savedAlbums': 'tt_albums',
     'library.followedArtists': 'tt_artists', 'library.playlists': 'tt_playlists',
-    'library.likedVideos': 'tt_liked_videos', 'queue.tracks': 'tt_queue'
+    'library.likedVideos': 'tt_liked_videos', 'queue.tracks': 'tt_queue',
+    'ui.theme': 'tt_theme', 'ui.themeMode': 'tt_theme_mode'
   };
 
   const _notify = k => (_subs[k] || []).forEach(cb => cb(get(k)));
@@ -46,15 +47,20 @@ const State = (() => {
       if (pfp !== undefined) { set('user.pfp', pfp); localStorage.setItem('tt_pfp', pfp); }
     },
     setTheme: theme => {
-      set('ui.theme', theme); localStorage.setItem('tt_theme', theme);
-      document.documentElement.setAttribute('data-theme', theme);
+      set('ui.theme', theme);
     },
     init: () => {
-      document.documentElement.setAttribute('data-theme', _state.ui.theme);
       const h = new Date().getHours();
       set('user.greeting', h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening');
       Object.entries(_ls).forEach(([p, k]) => {
-        try { const v = JSON.parse(localStorage.getItem(k)); if (v) set(p, v); } catch {}
+        const raw = localStorage.getItem(k);
+        if (!raw) return;
+        try {
+          const v = JSON.parse(raw);
+          if (v !== null) set(p, v);
+        } catch {
+          set(p, raw); // Fallback for raw strings not stored as JSON
+        }
       });
     }
   };

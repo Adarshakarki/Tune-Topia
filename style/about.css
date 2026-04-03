@@ -1,96 +1,164 @@
-#page-about {
-    background-color: var(--surface-1);
-    color: var(--text-1);
+.about-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: var(--s6) var(--s5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s8);
 }
 
-.about-hero {
-    text-align: center;
-    padding: var(--s8) var(--s5) var(--s6);
-    background: linear-gradient(to bottom, var(--surface-2), transparent);
+.about-header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s3);
 }
 
-.about-logo {
-    font-size: 48px;
-    color: var(--accent);
-    margin-bottom: var(--s3);
+.about-app-logo {
+  width: 100px;
+  height: 100px;
+  border-radius: var(--r-full);
+  box-shadow: var(--shadow-lg);
+  margin-bottom: var(--s2);
 }
 
-.about-hero h1 {
-    font-family: 'Playfair Display', serif;
-    font-size: 32px;
-    margin-bottom: var(--s1);
+.about-app-title {
+  font-family: var(--font-primary);
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--text);
 }
 
-.about-tagline {
-    color: var(--text-3);
-    font-size: 16px;
+.about-app-desc {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-2);
+  max-width: 400px;
 }
 
-.about-section {
-    padding: var(--s5);
-    max-width: 800px;
-    margin: 0 auto;
+.about-features-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  background: var(--surface-2);
+  padding: var(--s5);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--border);
 }
 
-.about-section h2 {
-    font-size: 20px;
-    margin-bottom: var(--s3);
-    color: var(--accent);
+.about-feature {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
 }
 
-.about-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: var(--s4);
-    padding: var(--s5);
-    max-width: 1000px;
-    margin: 0 auto;
+.about-feature i {
+  color: var(--accent);
+  font-size: 18px;
 }
 
-.about-card {
-    background: var(--surface-2);
-    padding: var(--s5);
-    border-radius: var(--r-lg);
-    border: 1px solid var(--border);
-    transition: transform 0.2s;
+.developer-card {
+  margin-top: var(--s4);
 }
 
-.about-card i {
-    font-size: 24px;
-    color: var(--accent);
-    display: block;
-    margin-bottom: var(--s3);
+.dev-card-front {
+  background: var(--surface);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--r-xl);
+  padding: var(--s5);
+  display: flex;
+  align-items: center;
+  gap: var(--s5);
+  box-shadow: var(--shadow-md);
+  position: relative;
+  overflow: hidden;
 }
 
-.about-card h3 {
-    font-size: 16px;
-    margin-bottom: var(--s2);
+.dev-card-front::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100px;
+  height: 100px;
+  background: var(--accent-soft);
+  border-radius: 0 0 0 100%;
+  z-index: 0;
 }
 
-.about-card p {
-    font-size: 13px;
-    color: var(--text-2);
-    line-height: 1.5;
+.dev-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--r-full);
+  object-fit: cover;
+  border: 2px solid var(--accent);
+  position: relative;
+  z-index: 1;
 }
 
-.about-footer {
-    text-align: center;
-    padding: var(--s8) var(--s5);
-    color: var(--text-3);
-    font-size: 13px;
+.dev-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  position: relative;
+  z-index: 1;
 }
 
-.about-links {
-    margin-top: var(--s4);
-    display: flex;
-    justify-content: center;
-    gap: var(--s5);
+.dev-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  margin-bottom: 2px;
 }
 
-.about-links a {
-    color: var(--text-1);
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: var(--s1);
+.dev-name {
+  font-family: var(--font-primary);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.dev-role {
+  font-size: 13px;
+  color: var(--text-2);
+  font-weight: 500;
+}
+
+.dev-email {
+  font-size: 12px;
+  color: var(--text-3);
+  margin-top: 4px;
+}
+
+.about-social {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--s2);
+}
+
+.github-link-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: var(--s3) var(--s6);
+  background: var(--text);
+  color: var(--bg);
+  border-radius: var(--r-full);
+  font-size: 14px;
+  font-weight: 600;
+  transition: transform 0.2s var(--spring), opacity 0.15s;
+}
+
+.github-link-btn:active {
+  transform: scale(0.95);
+  opacity: 0.9;
+}
+
+.github-link-btn i {
+  font-size: 18px;
 }

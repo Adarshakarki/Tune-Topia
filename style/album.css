@@ -95,7 +95,7 @@
 
 /* info */
 #album-info { padding: var(--s3) var(--s5) var(--s1); text-align: center; }
-#album-hero-title  { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 800; color: oklch(1 0 0); line-height: 1.2; margin-bottom: 4px; }
+#album-hero-title  { font-family: var(--font-primary); font-size: 24px; font-weight: 800; color: oklch(1 0 0); line-height: 1.2; margin-bottom: 4px; }
 #album-hero-artist { font-size: 15px; font-weight: 600; color: oklch(1 0 0 / 0.72); margin-bottom: 4px; cursor: pointer; }
 #album-hero-meta   { font-size: 12px; font-weight: 500; color: oklch(1 0 0 / 0.5); }
 

@@ -6,6 +6,7 @@ import { exportBackup, importBackup } from '../modules/backup.js'
 import { escHtml } from '../api/utils.js'
 import * as Cache from '../modules/cache.js'
 import { getIcon } from '../app/icons.js'
+import * as Theme from '../modules/theme.js'
 
 const $ = (id) => document.getElementById(id)
 let _stopStatus = null
@@ -15,7 +16,7 @@ function _renderCacheSize() {
   if (el) el.textContent = n > 0 ? `${n} item${n !== 1 ? 's' : ''} cached` : 'Cache is empty';
 }
 
-// ── Update ────────────────────────────────────────────────────────────────────
+// Update
 let _waitingWorker = null
 
 function _hookSW() {
@@ -104,17 +105,23 @@ function _injectSpinStyle() {
   s.textContent = '@keyframes tt-spin { to { transform: rotate(360deg); } }'
   document.head.appendChild(s)
 }
-// ─────────────────────────────────────────────────────────────────────────────
 
 export function render() {
-  const theme = State.get('ui.theme') || 'light';
-  $('theme-toggle-btn')?.setAttribute('aria-checked', theme === 'dark' ? 'true' : 'false');
+  const cached = Cache.get('status_check');
+  if (cached) _onStatusUpdate(cached);
+
   if (_stopStatus) { _stopStatus(); _stopStatus = null; }
-  _stopStatus = startLiveCheck(_onStatusUpdate, 30000);
+  _stopStatus = startLiveCheck(groups => {
+    Cache.set('status_check', groups); // Defaults to 5m TTL in cache.js
+    _onStatusUpdate(groups);
+  }, 300000); // 5 minutes
 
   renderQuality()
   renderSpeed()
   renderGapless()
+  renderThemes()
+  Theme.loadFonts();
+  renderFonts();
   _renderCacheSize()
   _initEQ()
   _injectSpinStyle()
@@ -155,13 +162,59 @@ export function renderGapless() {
   $('gapless-toggle')?.setAttribute('aria-checked', String(on))
 }
 
+export async function renderThemes() { // Made async to await fetchThemes
+  await Theme.fetchThemes();
+  const currentSkin = State.get('ui.theme') || 'dark'; // Default to 'dark' (Standard)
+  const mode = State.get('ui.themeMode') || 'dark';
+  
+  $('appearance-toggle')?.setAttribute('aria-checked', mode === 'dark' ? 'true' : 'false');
+
+  const select = $('theme-select');
+  if (select) {
+    select.innerHTML = '<option value="none">Default</option>' +
+      Theme.THEMES.map(t => `<option value="${t.id}" ${t.id === currentSkin ? 'selected' : ''}>${t.name}</option>`).join('');
+  }
+}
+
+export function renderFonts() {
+  if ($('primary-font-input')) $('primary-font-input').value = State.get('ui.fontPrimaryLink') || '';
+  if ($('secondary-font-input')) $('secondary-font-input').value = State.get('ui.fontSecondaryLink') || '';
+}
+
 export function initEvents() {
   $('quality-options')?.addEventListener('click', e => { const btn = e.target.closest('.quality-btn'); if (!btn) return; localStorage.setItem('tt_quality', btn.dataset.quality); renderQuality(); });
   $('speed-options')?.addEventListener('click', e => { const btn = e.target.closest('.speed-btn'); if (!btn) return; const speed = parseFloat(btn.dataset.speed); localStorage.setItem('tt_speed', speed); renderSpeed(); UI.toast(`Playback speed: ${speed}×`); });
 
   Player.on('trackChanged', () => { const speed = parseFloat(localStorage.getItem('tt_speed') || '1'); if (speed !== 1) setTimeout(() => document.querySelectorAll('audio,video').forEach(el => el.playbackRate = speed), 300); });
   $('gapless-toggle')?.addEventListener('click', function () { const on = this.getAttribute('aria-checked') === 'true'; localStorage.setItem('tt_gapless', String(!on)); renderGapless(); UI.toast(on ? 'Gapless playback off' : 'Gapless playback on'); });
-  $('theme-toggle-btn')?.addEventListener('click', function () { const isDark = this.getAttribute('aria-checked') === 'true'; const next = isDark ? 'light' : 'dark'; this.setAttribute('aria-checked', String(!isDark)); State.setTheme(next); UI.applyTheme(next); });
+
+
+  $('appearance-toggle')?.addEventListener('click', function() {
+    const isDark = this.getAttribute('aria-checked') === 'true';
+    Theme.applyAppearance(isDark ? 'light' : 'dark');
+    this.setAttribute('aria-checked', String(!isDark));
+  });
+
+  $('theme-select')?.addEventListener('change', (e) => {
+    Theme.applyTheme(e.target.value);
+  });
+
+  $('fonts-save-btn')?.addEventListener('click', () => {
+    const p = $('primary-font-input').value.trim();
+    const s = $('secondary-font-input').value.trim();
+    Theme.applyFonts(p, s);
+    UI.toast('Typography links applied');
+  });
+
+  $('fonts-clear-btn')?.addEventListener('click', () => {
+    if (confirm('Reset typography to system defaults?')) {
+      Theme.applyFonts('', '');
+      if ($('primary-font-input')) $('primary-font-input').value = '';
+      if ($('secondary-font-input')) $('secondary-font-input').value = '';
+      UI.toast('Typography reset to default');
+    }
+  });
+
   $('clear-cache-btn')?.addEventListener('click', () => { Cache.clear(); _renderCacheSize(); UI.toast('Cache cleared'); });
 
   $('backup-export-btn')?.addEventListener('click', () => exportBackup(State));
