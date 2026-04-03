@@ -35,6 +35,11 @@ app.get('/proxy', async (req, res) => {
   try {
     const parsedUrl = new URL(targetUrl);
     
+    // SSRF Fix: Strictly validate the protocol to prevent non-web schemes
+    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+      return res.status(403).send("Forbidden protocol. Only HTTP and HTTPS are allowed.");
+    }
+
     // Validate domain against whitelist (includes subdomains)
     const isWhitelisted = ALLOWED_DOMAINS.some(domain => 
       parsedUrl.hostname === domain || parsedUrl.hostname.endsWith('.' + domain)
@@ -44,8 +49,8 @@ app.get('/proxy', async (req, res) => {
       return res.status(403).send(`Access denied for: ${parsedUrl.hostname}`);
     }
 
-    // Fetch target resource as binary data
-    const response = await axios.get(targetUrl, { 
+    // SSRF Fix: Use the validated and re-serialized URL instead of raw input
+    const response = await axios.get(parsedUrl.href, { 
       responseType: 'arraybuffer',
       timeout: 8000 // Increased slightly for high-res audio streams
     });

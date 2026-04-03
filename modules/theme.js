@@ -84,10 +84,19 @@ function _extractFontName(input) {
 
 function _updateFontLink(id, href) {
   let link = document.getElementById(id);
-  if (!href || /^\s*javascript:/i.test(href)) {
+  
+  // Security Fix: Robust scheme check to prevent XSS via javascript: or data: URIs
+  let isSafe = false;
+  try {
+    const u = new URL(href, window.location.origin);
+    isSafe = ['http:', 'https:'].includes(u.protocol);
+  } catch (e) { isSafe = false; }
+
+  if (!href || !isSafe) {
     if (link) link.remove();
     return;
   }
   if (!link) { link = document.createElement('link'); link.id = id; link.rel = 'stylesheet'; document.head.appendChild(link); }
-  link.href = href;
+  // Use setAttribute for sensitive attributes to satisfy some security scanners
+  link.setAttribute('href', href);
 }

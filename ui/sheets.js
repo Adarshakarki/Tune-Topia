@@ -23,10 +23,13 @@ export function openTrackSheet(t, opts = {}) {
     const img = document.createElement('img');
     img.src = t.coverSmall || t.cover || '';
     img.onerror = () => { img.src = ''; };
+    
     const info = document.createElement('div');
-    info.innerHTML = `<div class="bs-title"></div><div class="bs-artist"></div>`;
-    info.querySelector('.bs-title').textContent = t.title;
-    info.querySelector('.bs-artist').textContent = t.artist || '';
+    const title = document.createElement('div');
+    title.className = 'bs-title'; title.textContent = t.title;
+    const artist = document.createElement('div');
+    artist.className = 'bs-artist'; artist.textContent = t.artist || '';
+    info.append(title, artist);
     p.append(img, info);
   }
 
@@ -167,10 +170,13 @@ export function initEvents() {
       const img = document.createElement('img');
       img.src = t.coverSmall || t.cover || '';
       img.onerror = () => { img.src = ''; };
+      
       const info = document.createElement('div');
-      info.innerHTML = '<div class="bs-title"></div><div class="bs-artist"></div>';
-      info.querySelector('.bs-title').textContent = t.title;
-      info.querySelector('.bs-artist').textContent = t.artist || '';
+      const title = document.createElement('div');
+      title.className = 'bs-title'; title.textContent = t.title;
+      const artist = document.createElement('div');
+      artist.className = 'bs-artist'; artist.textContent = t.artist || '';
+      info.append(title, artist);
       p.append(img, info);
     }
     const pos = State.get('player.queuePosition') || 0, act = idx === pos;
