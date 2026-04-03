@@ -1,3 +1,5 @@
+// Lyrics fetching and parsing (LRCLIB Integration)
+
 import { fetchJSON } from '../api/utils.js';
 
 const LRCLIB_BASE = 'https://lrclib.net/api';

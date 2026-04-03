@@ -1,3 +1,4 @@
+// Secure Proxy Server for CORS bypass
 const express = require('express')
 const axios = require('axios')
 const dns = require('dns').promises
@@ -5,7 +6,7 @@ const net = require('net')
 
 const app = express()
 
-// Strict service → domain mapping (no user-controlled hostnames)
+// --- Domain Whitelist ---
 const SERVICES = {
   spotify: 'i.scdn.co',
   tidal: 'api.tidal.com',

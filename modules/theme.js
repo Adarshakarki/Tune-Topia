@@ -1,8 +1,7 @@
-/* modules/theme.js */
-
+// Theme and Typography Management
 import State from '../app/state.js'
 
-export let THEMES = [{ id: 'monochrome', name: 'Monochrome' }];
+export let THEMES = [{ id: 'default', name: 'Default' }];
 
 /**
  * Fetch theme manifest and update global list
@@ -15,7 +14,7 @@ export async function fetchThemes() {
     return THEMES;
   } catch (err) {
     console.warn('[Theme] manifest not found, using fallbacks.');
-    THEMES = [{ id: 'monochrome', name: 'Monochrome' }];
+    THEMES = [{ id: 'default', name: 'Default' }];
     return THEMES;
   }
 }
@@ -32,7 +31,7 @@ export function applyAppearance(mode) {
  * Apply a specific skin/theme by ID
  */
 export function applyTheme(id) {
-  const theme = THEMES.find(t => t.id === id) || (id === 'none' ? { id: 'none' } : (THEMES[0] || { id: 'monochrome' }));
+  const theme = THEMES.find(t => t.id === id) || (id === 'default' ? { id: 'default' } : (THEMES[0] || { id: 'default' }));
   document.documentElement.setAttribute('data-skin', theme.id);
   State.set('ui.theme', theme.id);
 
@@ -46,7 +45,7 @@ export function applyTheme(id) {
   }
   
   // Note: Local paths are inherently safe from SSRF/XSS as they are hardcoded
-  if (theme.id === 'none') {
+  if (theme.id === 'default') {
     link.href = '';
   } else {
     link.href = `./theme/${theme.id}.css`;
@@ -88,8 +87,7 @@ export function applyFonts(primaryLink, secondaryLink) {
 }
 
 /**
- * INTERNAL: Securely updates <link> tags in the document head.
- * Satisfies CodeQL Rule js/xss-through-dom
+ * Securely updates font <link> tags in the head
  */
 function _updateFontLink(id, href) {
   let link = document.getElementById(id);
@@ -99,9 +97,7 @@ function _updateFontLink(id, href) {
     return;
   }
 
-  // 1. URL Validation & Re-serialization (The "Sanitizer Pattern")
-  // By passing the user-provided string through the URL constructor and only using
-  // the resulting .href property, we ensure the string is a valid, well-formed URL.
+  // Validation & Re-serialization to prevent XSS
   let validatedHref = '';
   try {
     const url = new URL(href);
@@ -120,7 +116,7 @@ function _updateFontLink(id, href) {
     return;
   }
 
-  // 2. Safe DOM Injection
+  // Safe Injection
   if (!link) {
     link = document.createElement('link');
     link.id = id;
@@ -128,13 +124,11 @@ function _updateFontLink(id, href) {
     document.head.appendChild(link);
   }
   
-  // Use the re-serialized 'validatedHref' to prevent XSS
   link.setAttribute('href', validatedHref);
 }
 
 /**
- * INTERNAL: Extracts the font-family name from a Google Fonts URL or raw string.
- * Strips special characters to prevent CSS injection.
+ * Extracts and sanitizes font names for CSS variables
  */
 function _extractFontName(input) {
   if (!input) return '';
@@ -150,7 +144,7 @@ function _extractFontName(input) {
     name = input;
   }
 
-  // 3. CSS Injection Guard: Strip anything that isn't alphanumeric, space, or hyphen
+  // Strip anything that isn't alphanumeric, space, or hyphen
   const sanitized = name.replace(/[^a-zA-Z0-9\s-]/g, '').trim();
   
   if (!sanitized) return '';

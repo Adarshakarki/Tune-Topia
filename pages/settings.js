@@ -171,7 +171,7 @@ export async function renderThemes() { // Made async to await fetchThemes
 
   const select = $('theme-select');
   if (select) {
-    select.innerHTML = '<option value="none">Default</option>' +
+    select.innerHTML = '<option value="default">Default</option>' +
       Theme.THEMES.map(t => `<option value="${t.id}" ${t.id === currentSkin ? 'selected' : ''}>${t.name}</option>`).join('');
   }
 }

@@ -1,4 +1,4 @@
-// Instance monitoring
+// Instance monitoring and health checks
 import { CORS_PROXY } from './utils.js';
 
 const INSTANCES = {
@@ -12,7 +12,7 @@ const INSTANCES = {
   },
 }
 
-// Ping instance
+// --- Core Functions ---
 export async function pingInstance(url) {
   const ctrl = new AbortController(), tid = setTimeout(() => ctrl.abort(), 6000);
   try {
@@ -30,7 +30,7 @@ export async function checkAll() {
   return { api, streaming };
 }
 
-// Status loop
+// --- Lifecycle ---
 export function startLiveCheck(cb, ms = 30000) {
   let active = true;
   const run = async () => { if (active) { cb(await checkAll()); setTimeout(run, ms); } };

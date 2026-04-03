@@ -1,4 +1,4 @@
-const CACHE = 'tunetopia-v2'
+const CACHE = 'tunetopia-v2.1'
 
 // Core assets for offline shell
 const PRECACHE = [

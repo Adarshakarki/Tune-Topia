@@ -1,4 +1,4 @@
-//modules/player.js
+// Gapless Hybrid Audio Player
 import State from '../app/state.js'
 import Queue from './queue.js'
 import History from './history.js'
@@ -8,7 +8,7 @@ import {
 } from '../api/index.js'
 import { getAudioStream as ytStream, searchVideos } from '../api/index.js'
 
-//audio-elements
+// --- Audio Elements ---
 const audioA = document.getElementById('audio')
 const audioB = new Audio()
 audioB.preload = 'auto'
@@ -27,7 +27,7 @@ let _preloaded = null
 let _preloading = false
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
 
-//events
+// --- Events ---
 export function on(event, cb) {
   if (!_listeners[event]) _listeners[event] = []
   _listeners[event].push(cb)
@@ -39,7 +39,7 @@ function _emit(event, data) {
   ;(_listeners[event] || []).forEach((cb) => cb(data))
 }
 
-//mediasession-metadata
+// --- MediaSession Integration ---
 function _updateMediaSession(track) {
   if (!('mediaSession' in navigator)) return
   
@@ -84,13 +84,11 @@ function _updateMediaSession(track) {
   if (_active.readyState >= 1) _setPosition()
 }
 
-//mediasession-state
 function _syncMediaSessionState(isPlaying) {
   if (!('mediaSession' in navigator)) return
   navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused'
 }
 
-//mediasession-handlers
 function _ensureMediaSessionHandlers() {
   if (!('mediaSession' in navigator) || _handlersRegistered) return
   _handlersRegistered = true
@@ -114,7 +112,6 @@ function _ensureMediaSessionHandlers() {
   })
 }
 
-//mediasession-position
 function _updatePositionState() {
   if (!('mediaSession' in navigator)) return
   if (!_active?.duration || !isFinite(_active.duration)) return
@@ -122,7 +119,6 @@ function _updatePositionState() {
 }
 
 
-//audio-binding
 function _bindAudio(el) {
   el.addEventListener('play', () => {
     if (el !== _active) return
@@ -159,7 +155,7 @@ function _bindAudio(el) {
 _bindAudio(audioA)
 _bindAudio(audioB)
 
-//queue-ended
+// --- Queue Management ---
 function _onEnded() {
   if (_sleepAfterTrack) {
     _sleepAfterTrack = false; _emit('playStateChanged', false); _emit('sleepTimerFired', null); return;
@@ -181,7 +177,7 @@ function _onEnded() {
   })
 }
 
-//preload
+// --- Preloading ---
 async function _preloadNext() {
   const nextTrack = Queue.getUpcoming()[0]
   if (!nextTrack) return
@@ -198,7 +194,7 @@ async function _preloadNext() {
   _preloading = false
 }
 
-//gapless-swap
+// --- Gapless Logic ---
 function _swapToPreloaded() {
   if (_swapping) return
   _swapping = true;
@@ -219,7 +215,7 @@ function _swapToPreloaded() {
   _preloadNext();
 }
 
-//dash-support
+// --- DASH Support ---
 async function _loadDashJs() {
   return new Promise((res, rej) => {
     if (window.dashjs) {
@@ -242,7 +238,7 @@ async function _playDash(manifestXml) {
   _dash.updateSettings({ streaming: { abr: { autoSwitchBitrate: { audio: false } } } });
 }
 
-//stream-resolver
+// --- Stream Resolver ---
 async function _getStream(track) {
   if (track.source === 'youtube') return ytStream(track.id)
   try {
@@ -253,7 +249,7 @@ async function _getStream(track) {
   throw new Error('Stream unavailable')
 }
 
-//public-play
+// --- Public Controls ---
 export async function play(track, tracks, startIndex = 0) {
   if (tracks) Queue.load(tracks, startIndex);
 
@@ -284,7 +280,6 @@ export async function play(track, tracks, startIndex = 0) {
   }
 }
 
-//public-controls
 export async function toggle() {
   if (!_active.src && !_dash) return
   State.get('player.isPlaying') ? _active.pause() : await _active.play()
@@ -365,7 +360,7 @@ export function setSleepAfterTrack(val) {
   _sleepAfterTrack = val
 }
 
-//video-pause
+// --- Video Management ---
 function _pauseVideo() {
   const vp = document.getElementById('vp-video')
   if (vp && !vp.paused) vp.pause()

@@ -1,4 +1,4 @@
-// ui/sheets.js — bottom sheets and popup event wiring
+// Bottom sheets and popup event management
 
 import * as UI from '../app/ui.js'
 import * as Player from '../modules/player.js'
@@ -14,7 +14,7 @@ import { downloadTrack } from '../modules/downloader.js'
 const $ = id => document.getElementById(id);
 let _timer = null, _qIdx = -1, _tsTrack = null, _tsOpts = {};
 
-// Track Options
+// --- Track Options ---
 export function openTrackSheet(t, opts = {}) {
   _tsTrack = t; _tsOpts = opts;
   const p = $('track-sheet-preview');

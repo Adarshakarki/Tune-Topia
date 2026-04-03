@@ -1,3 +1,5 @@
+// Tidal Service Provider
+
 import {
   get,
   getAlbum,
@@ -19,7 +21,7 @@ const Q_MAP = {
   low: 'LOW'
 }
 
-// SEARCH
+// --- Search ---
 export async function searchTracks(query) {
   const key = `search:tracks:${query}`
   const cached = cacheGet(key)
@@ -91,7 +93,7 @@ export async function searchPlaylists(query, limit = 6) {
   return []
 }
 
-// ALBUM / ARTIST
+// --- Album / Artist ---
 export async function getAlbumTracks(albumId) {
   const key = `album:tracks:${albumId}`
   const cached = cacheGet(key)
@@ -139,7 +141,7 @@ export const getArtistAlbums = async (id) => {
     }))
 }
 
-// PLAYLIST
+// --- Playlist ---
 export async function getPlaylist(id) {
   const key = `playlist:${id}`
   const cached = cacheGet(key)
@@ -201,7 +203,7 @@ export async function getTrackRecommendations(id) {
   }
 }
 
-// STREAM (AUDIO)
+// --- Stream (Audio) ---
 export async function getStream(trackId) {
   const pref = localStorage.getItem('tt_quality') || 'lossless'
   const quality = Q_MAP[pref] || Q_MAP.lossless
@@ -222,7 +224,7 @@ export async function getStream(trackId) {
   throw new Error('Stream unavailable')
 }
 
-// VIDEO
+// --- Video ---
 export const searchTidalVideos = async (query) => {
   try {
     const { data } = await get(
@@ -265,7 +267,7 @@ export const getTidalVideoStream = async (id) => {
   throw new Error('Video stream unavailable')
 }
 
-// HELPERS
+// --- Helpers ---
 const _normVid = v => {
   const img = v.imageId || v.cover || v.album?.cover || ''
   return {

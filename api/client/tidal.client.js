@@ -1,3 +1,5 @@
+// Low-level Tidal API Client
+
 import { fetchJSON, tryBases } from '../utils.js'
 
 const HARDCODED_BASES = [
@@ -23,7 +25,6 @@ const UPTIMES = ['https://tidal-uptime.jiffy-puffs-1j.workers.dev/', 'https://ti
 const BLOCKED = [];
 let _resolved = null;
 
-// Safety check for bases
 const _isSafe = u => {
   try {
     const { protocol, hostname } = new URL(u);
@@ -31,7 +32,7 @@ const _isSafe = u => {
   } catch { return false; }
 };
 
-// Resolve live API instances
+// --- Instance Management ---
 export async function getBases() {
   if (_resolved) return _resolved;
   const urls = UPTIMES.sort(() => Math.random() - 0.5);
@@ -45,7 +46,7 @@ export async function getBases() {
   return HARDCODED_BASES;
 }
 
-// Generic fetcher
+// --- Generic fetcher ---
 export async function get(path, bases, opts = {}) {
   let all = [...(bases || await getBases()), ...HARDCODED_BASES];
   all = [...new Set(all)];

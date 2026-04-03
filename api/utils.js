@@ -1,3 +1,5 @@
+// Core API Utilities and Resource Helpers
+
 const BASE_TIMEOUT = 12000, RETRY_DELAY = 500;
 export const CORS_PROXY = 'https://tune-topia.onrender.com/proxy?url=';
 
@@ -33,7 +35,7 @@ export async function tryBases(bases, path, retries = 2) {
   throw new Error(`All providers failed:\n${errs.join('\n')}`);
 }
 
-// Resource Helpers
+// --- Resource Helpers ---
 export const tidalCover = (id, s = 320) => 
   id ? `https://resources.tidal.com/images/${id.replace(/-/g, '/')}/${s}x${s}.jpg` : '';
 
@@ -67,7 +69,7 @@ export const qualityBadge = t => {
   return t.quality === 'YT' ? { label: 'YT', cls: 'yt' } : null;
 };
 
-// Formatting Utilities
+// --- Formatting Utilities ---
 const _pad = n => String(Math.floor(n)).padStart(2, '0');
 export const fmtDur = s => (!s || isNaN(s) || !isFinite(s)) ? '' : `${Math.floor(s / 60)}:${_pad(s % 60)}`;
 export const fmtTime = s => (!s || isNaN(s) || !isFinite(s)) ? '0:00' : `${Math.floor(s / 60)}:${_pad(s % 60)}`;

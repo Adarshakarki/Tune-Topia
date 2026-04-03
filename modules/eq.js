@@ -1,4 +1,4 @@
-// EQ Band Definitions
+// Equalizer definitions and signal processing
 const BANDS = [
   { freq: 32, type: 'lowshelf', label: '32' },
   { freq: 64, type: 'peaking', label: '64' },
@@ -29,7 +29,7 @@ export const PRESETS = {
 
 let _gains = BANDS.map(() => 0), _enabled = false;
 
-// Persistence
+// --- Persistence ---
 function _save() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(_gains));
   localStorage.setItem(ENABLED_KEY, String(_enabled));
@@ -41,7 +41,7 @@ function _load() {
   _enabled = localStorage.getItem(ENABLED_KEY) === 'true';
 }
 
-// Logic
+// --- Logic ---
 export function setGain(bandIndex, db) {
   _gains[bandIndex] = Math.max(MIN_DB, Math.min(MAX_DB, db));
   _save();
@@ -69,7 +69,7 @@ export function reset() { _gains = BANDS.map(() => 0); _save(); _renderUI(); }
 
 export function init() { _load(); _renderUI(); }
 
-// UI Rendering
+// --- UI Rendering ---
 function _renderUI() {
   const container = document.getElementById('eq-container');
   if (!container) return;
@@ -101,7 +101,7 @@ function _renderUI() {
     </div>
     <button class="eq-reset-btn" id="eq-reset-btn">Reset</button>`;
 
-  // Events
+  // --- Events ---
   document.getElementById('eq-toggle-btn')?.addEventListener('click', () => { setEnabled(!_enabled); _renderUI(); });
 
   BANDS.forEach((_, i) => {

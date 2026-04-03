@@ -1,4 +1,4 @@
-// Global state management
+// Global reactive state management
 const State = (() => {
   const _state = {
     user: {
