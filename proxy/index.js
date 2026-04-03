@@ -2,20 +2,21 @@ const express = require('express');
 const axios = require('axios');
 const dns = require('dns').promises;
 const net = require('net');
-const { URL } = require('url');
 
 const app = express();
 
-const ALLOWED_DOMAINS = [
-  'i.scdn.co', 'api.tidal.com', 'resources.tidal.com',
-  'monochrome.tf', 'samidy.com', 'squid.wtf',
-  'qqdl.site', 'kinoplus.online', 'p1nkhamster.xyz',
-  'lossless.wtf', 'binimum.org',
-  'pipedapi.kavin.rocks', 'piped-api.garudalinux.org',
-  'api-piped.mha.fi', 'piped-api.lunar.icu',
-  'yt.artemislena.eu', 'pipedapi.at.as641.net',
-  'i.ytimg.com', 'nhac.com.vn'
-];
+// Strict service → domain mapping (no user-controlled hostnames)
+const SERVICES = {
+  spotify: 'i.scdn.co',
+  tidal: 'api.tidal.com',
+  tidal_res: 'resources.tidal.com',
+  piped1: 'pipedapi.kavin.rocks',
+  piped2: 'piped-api.garudalinux.org',
+  piped3: 'api-piped.mha.fi',
+  piped4: 'piped-api.lunar.icu',
+  ytimg: 'i.ytimg.com',
+  nhac: 'nhac.com.vn'
+};
 
 function isPrivateIP(ip) {
   if (!net.isIP(ip)) return true;
@@ -47,40 +48,31 @@ async function isSafeHost(hostname) {
 }
 
 app.get('/proxy', async (req, res) => {
-  const { url: targetUrl } = req.query;
-  if (!targetUrl) return res.status(400).send("Missing url.");
+  const { service, path = '/', query = '' } = req.query;
+
+  const hostname = SERVICES[service];
+  if (!hostname) {
+    return res.status(403).send("Invalid service.");
+  }
+
+  if (path.includes('..')) {
+    return res.status(403).send("Invalid path.");
+  }
+
+  const safe = await isSafeHost(hostname);
+  if (!safe) {
+    return res.status(403).send("Blocked internal IP.");
+  }
 
   try {
-    const parsedUrl = new URL(targetUrl);
-    const hostname = parsedUrl.hostname.toLowerCase();
+    const safeUrl = new URL(`https://${hostname}${path}${query ? '?' + query : ''}`);
 
-    if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
-      return res.status(403).send("Invalid protocol.");
-    }
-
-    if (parsedUrl.port && !['80', '443', ''].includes(parsedUrl.port)) {
-      return res.status(403).send("Invalid port.");
-    }
-
-    const isWhitelisted = ALLOWED_DOMAINS.some(domain =>
-      hostname === domain || hostname.endsWith('.' + domain)
-    );
-
-    if (!isWhitelisted) {
-      return res.status(403).send(`Forbidden host: ${hostname}`);
-    }
-
-    const safe = await isSafeHost(hostname);
-    if (!safe) {
-      return res.status(403).send("Blocked internal IP.");
-    }
-
-    const response = await axios.get(parsedUrl.href, {
+    const response = await axios.get(safeUrl.toString(), {
       responseType: 'arraybuffer',
       timeout: 8000,
       maxRedirects: 0,
       maxContentLength: 5 * 1024 * 1024,
-      validateStatus: (status) => status >= 200 && status < 300,
+      validateStatus: (s) => s >= 200 && s < 300,
       headers: {
         'User-Agent': 'SecureProxy/1.0'
       }
