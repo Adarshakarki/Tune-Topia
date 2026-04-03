@@ -116,7 +116,12 @@ function _renderUI() {
 
   document.getElementById('eq-presets')?.addEventListener('click', e => {
     const btn = e.target.closest('.eq-preset-btn');
-    if (btn) { applyPreset(btn.dataset.preset); _syncSliders(); _highlightPreset(btn.dataset.preset); }
+    if (btn && btn.dataset.preset) { 
+      const presetName = btn.dataset.preset;
+      applyPreset(presetName); 
+      _syncSliders(); 
+      _highlightPreset(presetName); 
+    }
   });
 
   document.getElementById('eq-reset-btn')?.addEventListener('click', () => { reset(); _syncSliders(); _highlightPreset('flat'); });

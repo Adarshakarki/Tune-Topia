@@ -18,7 +18,17 @@ let _timer = null, _qIdx = -1, _tsTrack = null, _tsOpts = {};
 export function openTrackSheet(t, opts = {}) {
   _tsTrack = t; _tsOpts = opts;
   const p = $('track-sheet-preview');
-  if (p) p.innerHTML = `<img src="${escHtml(t.coverSmall || t.cover || '')}" onerror="this.src=''" alt=""/><div><div class="bs-title">${escHtml(t.title)}</div><div class="bs-artist">${escHtml(t.artist || '')}</div></div>`;
+  if (p) {
+    p.innerHTML = ''; // Clear existing
+    const img = document.createElement('img');
+    img.src = t.coverSmall || t.cover || '';
+    img.onerror = () => { img.src = ''; };
+    const info = document.createElement('div');
+    info.innerHTML = `<div class="bs-title"></div><div class="bs-artist"></div>`;
+    info.querySelector('.bs-title').textContent = t.title;
+    info.querySelector('.bs-artist').textContent = t.artist || '';
+    p.append(img, info);
+  }
 
   const l = isLiked(t.id), btn = $('tsheet-like'), lbl = $('tsheet-like-label'), ico = btn?.querySelector('i');
   if (btn) btn.classList.toggle('liked', l);

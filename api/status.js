@@ -1,4 +1,6 @@
 // Instance monitoring
+import { CORS_PROXY } from './utils.js';
+
 const INSTANCES = {
   api: {
     label: 'API Instances',
@@ -14,7 +16,8 @@ const INSTANCES = {
 export async function pingInstance(url) {
   const ctrl = new AbortController(), tid = setTimeout(() => ctrl.abort(), 6000);
   try {
-    const res = await fetch(url, { signal: ctrl.signal, cache: 'no-store' });
+    const finalUrl = `${CORS_PROXY}${encodeURIComponent(url)}`;
+    const res = await fetch(finalUrl, { signal: ctrl.signal, cache: 'no-store' });
     return { url, online: res.ok };
   } catch { return { url, online: false }; }
   finally { clearTimeout(tid); }

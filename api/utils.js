@@ -1,14 +1,18 @@
-// API utilities
-const BASE_TIMEOUT = 9000;
-const CORS_PROXY = 'https://corsproxy.io/?'; // Use a public proxy to bypass CORS blocks
+const BASE_TIMEOUT = 12000, RETRY_DELAY = 500;
+export const CORS_PROXY = 'https://tune-topia.onrender.com/proxy?url=';
 
 export async function fetchJSON(url, timeout = BASE_TIMEOUT) {
-  const ctrl = new AbortController(), tid = setTimeout(() => ctrl.abort(), timeout);
+  const ctrl = new AbortController();
+  const tid = setTimeout(() => ctrl.abort(), timeout);
+
   try {
-    // If the URL is known to have CORS issues (like spotisaver or binimum), prefix it
-    const finalUrl = (url.includes('spotisaver.net') || url.includes('binimum.org')) 
-      ? `${CORS_PROXY}${encodeURIComponent(url)}` 
-      : url;
+    let finalUrl = url;
+    try {
+      const { hostname: host } = new URL(url);
+      if (host.endsWith('spotisaver.net') || host.endsWith('binimum.org')) {
+        finalUrl = `${CORS_PROXY}${encodeURIComponent(url)}`;
+      }
+    } catch (e) { /* Fallback to raw URL */ }
 
     const r = await fetch(finalUrl, { signal: ctrl.signal });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -16,33 +20,39 @@ export async function fetchJSON(url, timeout = BASE_TIMEOUT) {
   } finally { clearTimeout(tid); }
 }
 
-export async function tryBases(bases, path) {
+export async function tryBases(bases, path, retries = 2) {
   const errs = [];
-  for (const b of bases) {
-    try {
-      return { data: await fetchJSON(`${b}${path}`), base: b };
-    } catch (e) { errs.push(`${b}: ${e.message}`); }
-  }
+  for (let i = 0; i <= retries; i++) {
+    for (const b of bases) {
+      try { return { data: await fetchJSON(`${b}${path}`), base: b }; }
+      catch (e) { errs.push(`${b}: ${e.message}`); }
+    }
+    if (i < retries) await new Promise(r => setTimeout(r, RETRY_DELAY * (i + 1)));
+  } 
   throw new Error(`All providers failed:\n${errs.join('\n')}`);
 }
 
-export const tidalCover = (id, s = 320) => id ? `https://resources.tidal.com/images/${id.replace(/-/g, '/')}/${s}x${s}.jpg` : '';
+// Resource Helpers
+export const tidalCover = (id, s = 320) => 
+  id ? `https://resources.tidal.com/images/${id.replace(/-/g, '/')}/${s}x${s}.jpg` : '';
 
 export function decodeManifest(p) {
   const raw = atob(p.manifest), mime = p.manifestMimeType || '';
   if (mime === 'application/vnd.tidal.bts') {
     const m = JSON.parse(raw);
-    return { type: 'direct', url: m.urls[0], mimeType: m.mimeType || 'audio/flac', codecs: m.codecs || 'flac', quality: p.audioQuality, bitDepth: p.bitDepth, sampleRate: p.sampleRate };
+    return { type: 'direct', url: m.urls[0], mimeType: m.mimeType || 'audio/flac', codecs: m.codecs || 'flac', ...p };
   }
-  if (mime === 'application/dash+xml') return { type: 'dash', manifest: raw, quality: p.audioQuality, bitDepth: p.bitDepth, sampleRate: p.sampleRate };
+  if (mime === 'application/dash+xml') return { type: 'dash', manifest: raw, ...p };
   throw new Error(`Unknown manifest: ${mime}`);
 }
 
 export function normalizeTrack(t, source = 'tidal') {
   const arts = (t.artists || [t.artist]).filter(Boolean);
   return {
-    id: String(t.id), title: t.title || 'Unknown', artist: arts.map(a => a.name).join(', '),
-    artistId: String(arts[0]?.id || ''), album: t.album?.title || '', albumId: String(t.album?.id || ''),
+    id: String(t.id), title: t.title || 'Unknown', 
+    artist: arts.map(a => a.name).join(', '),
+    artistId: String(arts[0]?.id || ''),
+    album: t.album?.title || '', albumId: String(t.album?.id || ''),
     cover: tidalCover(t.album?.cover, 640), coverSmall: tidalCover(t.album?.cover, 160),
     duration: t.duration || 0, dur: fmtDur(t.duration), quality: t.audioQuality || '',
     tags: t.mediaMetadata?.tags || [], explicit: !!t.explicit, source
@@ -56,7 +66,8 @@ export const qualityBadge = t => {
   return t.quality === 'YT' ? { label: 'YT', cls: 'yt' } : null;
 };
 
+// Formatting Utilities
 const _pad = n => String(Math.floor(n)).padStart(2, '0');
 export const fmtDur = s => (!s || isNaN(s) || !isFinite(s)) ? '' : `${Math.floor(s / 60)}:${_pad(s % 60)}`;
 export const fmtTime = s => (!s || isNaN(s) || !isFinite(s)) ? '0:00' : `${Math.floor(s / 60)}:${_pad(s % 60)}`;
-export const escHtml = s => s ? s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') : '';
+export const escHtml = s => s ? s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])) : '';
