@@ -162,7 +162,17 @@ export function initEvents() {
     const item = e.target.closest('.npq-item'); if (!item) return;
     const idx = parseInt(item.dataset.index), ts = State.get('queue.tracks') || [], t = ts[idx]; if (!t) return;
     _qIdx = idx; const p = $('np-queue-item-preview');
-    if (p) p.innerHTML = `<img src="${escHtml(t.coverSmall || t.cover || '')}" onerror="this.src=''" alt=""/><div><div class="bs-title">${escHtml(t.title)}</div><div class="bs-artist">${escHtml(t.artist || '')}</div></div>`;
+    if (p) {
+      p.innerHTML = '';
+      const img = document.createElement('img');
+      img.src = t.coverSmall || t.cover || '';
+      img.onerror = () => { img.src = ''; };
+      const info = document.createElement('div');
+      info.innerHTML = '<div class="bs-title"></div><div class="bs-artist"></div>';
+      info.querySelector('.bs-title').textContent = t.title;
+      info.querySelector('.bs-artist').textContent = t.artist || '';
+      p.append(img, info);
+    }
     const pos = State.get('player.queuePosition') || 0, act = idx === pos;
     $('qsheet-move-up').style.display = idx <= pos + 1 ? 'none' : '';
     $('qsheet-move-down').style.display = idx >= ts.length - 1 ? 'none' : '';

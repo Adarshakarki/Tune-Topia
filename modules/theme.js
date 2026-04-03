@@ -84,7 +84,7 @@ function _extractFontName(input) {
 
 function _updateFontLink(id, href) {
   let link = document.getElementById(id);
-  if (!href || href.trim().toLowerCase().startsWith('javascript:')) {
+  if (!href || /^\s*javascript:/i.test(href)) {
     if (link) link.remove();
     return;
   }

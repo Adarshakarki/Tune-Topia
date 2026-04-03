@@ -9,7 +9,8 @@ export async function fetchJSON(url, timeout = BASE_TIMEOUT) {
     let finalUrl = url;
     try {
       const { hostname: host } = new URL(url);
-      if (host.endsWith('spotisaver.net') || host.endsWith('binimum.org')) {
+      const isProxyDomain = d => host === d || host.endsWith('.' + d);
+      if (isProxyDomain('spotisaver.net') || isProxyDomain('binimum.org')) {
         finalUrl = `${CORS_PROXY}${encodeURIComponent(url)}`;
       }
     } catch (e) { /* Fallback to raw URL */ }
