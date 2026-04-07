@@ -1,4 +1,4 @@
-const CACHE = 'tunetopia-v2.1'
+const CACHE = 'tunetopia-v2.1.1'
 
 // Core assets for offline shell
 const PRECACHE = [
@@ -96,6 +96,8 @@ self.addEventListener('fetch', e => {
     url.pathname.startsWith('/api/') ||
     url.pathname.endsWith('.m3u8') ||
     url.pathname.endsWith('.ts') ||
+    url.pathname.includes('ffmpeg') ||
+    url.pathname.endsWith('.wasm') ||
     request.destination === 'audio' ||
     request.destination === 'video' ||
     request.headers.get('range')
@@ -111,7 +113,7 @@ self.addEventListener('fetch', e => {
           }
           return res
         })
-        .catch(() => caches.match(request).then(c => c || caches.match('/index.html')))
+        .catch(() => caches.match(request).then(c => c || caches.match('./index.html') || new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } })))
     )
     return
   }
@@ -124,7 +126,7 @@ self.addEventListener('fetch', e => {
         const clone = res.clone()
         caches.open(CACHE).then(c => c.put(request, clone))
         return res
-      }).catch(() => caches.match('/index.html'))
+      }).catch(() => caches.match('./index.html') || new Response('Offline', { status: 503 }))
     })
   )
 })
