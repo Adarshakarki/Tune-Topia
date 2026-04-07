@@ -12,7 +12,8 @@ const allowedOrigins = [
     'http://127.0.0.1:3000', 
     'http://localhost:3000',
     'http://127.0.0.1:5173',
-    'http://localhost:5173'
+    'http://localhost:5173',
+    'https://adarshakarki.github.io/Tune-Topia/'
 ];
 
 app.use(cors({
@@ -72,6 +73,7 @@ app.get('/proxy', async (req, res) => {
         const response = await axios.get(targetUrl, {
             responseType: 'arraybuffer',
             timeout: 10000,
+            validateStatus: () => true, // Don't throw on 4xx/5xx
             headers: { 
                 'User-Agent': 'TuneTopiaProxy/1.0',
                 'Accept': '*/*'
