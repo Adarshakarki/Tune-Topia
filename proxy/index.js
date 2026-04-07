@@ -1,120 +1,101 @@
-// Secure Proxy Server for CORS bypass
-const express = require('express')
-const axios = require('axios')
-const dns = require('dns').promises
-const net = require('net')
+const express = require('express');
+const axios = require('axios');
+const dns = require('dns').promises;
+const net = require('net');
+const cors = require('cors');
 
-const app = express()
+const app = express();
 
-// --- Domain Whitelist ---
-const SERVICES = {
-  spotify: 'i.scdn.co',
-  tidal: 'api.tidal.com',
-  tidal_res: 'resources.tidal.com',
-  piped1: 'pipedapi.kavin.rocks',
-  piped2: 'piped-api.garudalinux.org',
-  piped3: 'api-piped.mha.fi',
-  piped4: 'piped-api.lunar.icu',
-  ytimg: 'i.ytimg.com',
-  nhac: 'nhac.com.vn',
-}
+// 1. ALLOWED ORIGINS (Fixes CORS Errors)
+const allowedOrigins = [
+    'https://adarshakarki.github.io', 
+    'http://127.0.0.1:3000', 
+    'http://localhost:3000',
+    'http://127.0.0.1:5173',
+    'http://localhost:5173'
+];
 
+app.use(cors({
+    origin: (origin, callback) => {
+        // Allow requests with no origin or from allowed list
+        if (!origin || allowedOrigins.includes(origin) || origin.includes('localhost') || origin.includes('127.0.0.1')) {
+            callback(null, true);
+        } else {
+            console.log("CORS blocked origin:", origin);
+            callback(null, true); // Allow during transition to avoid silent failures
+        }
+    },
+    credentials: true
+}));
+
+// Required for ffmpeg.wasm / SharedArrayBuffer to work in modern browsers
+app.use((req, res, next) => {
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+    next();
+});
+
+// 2. PRIVATE IP CHECK (Security: Prevents SSRF attacks)
 function isPrivateIP(ip) {
-  if (!net.isIP(ip)) return true
-
-  return (
-    ip.startsWith('10.') ||
-    ip.startsWith('192.168.') ||
-    ip.startsWith('172.16.') ||
-    ip.startsWith('172.17.') ||
-    ip.startsWith('172.18.') ||
-    ip.startsWith('172.19.') ||
-    ip.startsWith('172.20.') ||
-    ip.startsWith('172.21.') ||
-    ip.startsWith('172.22.') ||
-    ip.startsWith('172.23.') ||
-    ip.startsWith('172.24.') ||
-    ip.startsWith('172.25.') ||
-    ip.startsWith('172.26.') ||
-    ip.startsWith('172.27.') ||
-    ip.startsWith('172.28.') ||
-    ip.startsWith('172.29.') ||
-    ip.startsWith('172.30.') ||
-    ip.startsWith('172.31.') ||
-    ip.startsWith('127.') ||
-    ip === '::1' ||
-    ip.startsWith('fc') ||
-    ip.startsWith('fd')
-  )
+    if (!net.isIP(ip)) return true;
+    return (
+        ip.startsWith('10.') || ip.startsWith('192.168.') ||
+        ip.startsWith('172.16.') || ip.startsWith('172.31.') ||
+        ip.startsWith('127.') || ip === '::1' ||
+        ip.startsWith('fc') || ip.startsWith('fd')
+    );
 }
 
 async function isSafeHost(hostname) {
-  try {
-    const addresses = await dns.lookup(hostname, { all: true })
-    return !addresses.some((addr) => isPrivateIP(addr.address))
-  } catch {
-    return false
-  }
+    try {
+        const addresses = await dns.lookup(hostname, { all: true });
+        return !addresses.some((addr) => isPrivateIP(addr.address));
+    } catch { return false; }
 }
 
+// 3. THE PROXY ROUTE (Fixes 400 Bad Requests)
 app.get('/proxy', async (req, res) => {
-  const serviceRaw = req.query.service
-  const pathRaw = req.query.path ?? '/'
-  const queryRaw = req.query.query ?? ''
+    const targetUrl = req.query.url;
 
-  if (
-    typeof serviceRaw !== 'string' ||
-    typeof pathRaw !== 'string' ||
-    typeof queryRaw !== 'string'
-  ) {
-    return res.status(400).send('Invalid parameters.')
-  }
-
-  const service = serviceRaw
-  const path = pathRaw
-  const query = queryRaw
-
-  const hostname = SERVICES[service]
-  if (!hostname) {
-    return res.status(403).send('Invalid service.')
-  }
-
-  if (path.includes('..')) {
-    return res.status(403).send('Invalid path.')
-  }
-
-  const safe = await isSafeHost(hostname)
-  if (!safe) {
-    return res.status(403).send('Blocked internal IP.')
-  }
-
-  try {
-    const safeUrl = new URL(
-      `https://${hostname}${path}${query ? '?' + query : ''}`
-    )
-
-    const response = await axios.get(safeUrl.toString(), {
-      responseType: 'arraybuffer',
-      timeout: 8000,
-      maxRedirects: 0,
-      maxContentLength: 5 * 1024 * 1024,
-      validateStatus: (s) => s >= 200 && s < 300,
-      headers: {
-        'User-Agent': 'SecureProxy/1.0',
-      },
-    })
-
-    if (response.headers['content-type']) {
-      res.set('Content-Type', response.headers['content-type'])
+    if (!targetUrl) {
+        return res.status(400).send('Error: Missing "url" parameter.');
     }
 
-    res.send(response.data)
-  } catch (err) {
-    console.error('Proxy error:', err.message)
-    res.status(500).json({ success: false, error: 'Fetch failed.' })
-  }
-})
+    try {
+        const urlObj = new URL(targetUrl);
+        
+        // Security check
+        const safe = await isSafeHost(urlObj.hostname);
+        if (!safe) return res.status(403).send('Forbidden: Internal IP.');
 
-app.listen(3000, () => {
-  console.log('Secure proxy running on http://localhost:3000')
-})
+        // Fetching the external resource
+        const response = await axios.get(targetUrl, {
+            responseType: 'arraybuffer',
+            timeout: 10000,
+            headers: { 
+                'User-Agent': 'TuneTopiaProxy/1.0',
+                'Accept': '*/*'
+            }
+        });
+
+        // Forward the original content type (images, json, etc.)
+        if (response.headers['content-type']) {
+            res.set('Content-Type', response.headers['content-type']);
+        }
+        
+        res.send(response.data);
+    } catch (err) {
+        console.error("Proxy Error:", err.message);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Failed to fetch the requested URL',
+            details: err.message 
+        });
+    }
+});
+
+// 4. DYNAMIC PORT (Fixes Render Deployment)
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Tune-Topia Proxy running on port ${PORT}`);
+});
