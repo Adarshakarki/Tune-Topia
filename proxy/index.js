@@ -9,7 +9,7 @@ const https = require('https')
 
 const app = express()
 
-// -------------------- CORS --------------------
+// CORS
 app.use(cors())
 
 app.use((req, res, next) => {
@@ -20,7 +20,7 @@ app.use((req, res, next) => {
 
 app.use(express.static(path.join(__dirname, '../')))
 
-// -------------------- SSRF PROTECTION --------------------
+// SSRF
 function isPrivateIP(ip) {
   const version = net.isIP(ip)
   if (!version) return true
@@ -62,7 +62,7 @@ const safeLookup = (hostname, options, cb) => {
 const httpAgent = new http.Agent({ lookup: safeLookup })
 const httpsAgent = new https.Agent({ lookup: safeLookup })
 
-// -------------------- MODE 1: STRICT MEDIA --------------------
+// Media
 const mediaHosts = [
   'tidal.com',
   'resources.tidal.com',
@@ -74,10 +74,18 @@ const mediaHosts = [
   'wsrv.nl',
 ]
 
-// -------------------- MODE 2: API PROXY --------------------
-const apiHosts = ['spotisaver.net']
+// API
+const apiHosts = [
+  'spotisaver.net',
+  'monochrome.tf',
+  'p1nkhamster.xyz',
+  'qqdl.site',
+  'samidy.com',
+  'squid.wtf',
+  'kinoplus.online',
+]
 
-// -------------------- HOST CHECK --------------------
+// Check
 function getProxyMode(hostname) {
   if (mediaHosts.some((h) => hostname === h || hostname.endsWith('.' + h))) {
     return 'media'
@@ -90,7 +98,7 @@ function getProxyMode(hostname) {
   return null
 }
 
-// -------------------- ROUTE --------------------
+// Route
 app.get('/proxy', async (req, res) => {
   const targetUrl = req.query.url
   if (!targetUrl) {
@@ -101,7 +109,7 @@ app.get('/proxy', async (req, res) => {
     const urlObj = new URL(targetUrl)
     const hostname = urlObj.hostname.toLowerCase()
 
-    // protocol check
+    // Protocol
     if (!['http:', 'https:'].includes(urlObj.protocol)) {
       return res.status(400).send('Invalid protocol')
     }
@@ -114,14 +122,14 @@ app.get('/proxy', async (req, res) => {
       return res.status(400).send('Invalid path')
     }
 
-    // -------------------- MODE DETECTION --------------------
+    // Mode
     const mode = getProxyMode(hostname)
 
     if (!mode) {
       return res.status(403).send('Host not allowed (no mode match)')
     }
 
-    // -------------------- MEDIA MODE (STRICT) --------------------
+    // Media
     if (mode === 'media') {
       const safe = await dns.promises.lookup(hostname, { all: true })
       if (safe.some((a) => isPrivateIP(a.address))) {
@@ -129,28 +137,21 @@ app.get('/proxy', async (req, res) => {
       }
     }
 
-    // -------------------- API MODE (LESS STRICT BUT STILL SAFE) --------------------
+    // API
     if (mode === 'api') {
-      // still prevent private IP SSRF
       const safe = await dns.promises.lookup(hostname, { all: true })
       if (safe.some((a) => isPrivateIP(a.address))) {
         return res.status(403).send('Blocked unsafe API host')
       }
     }
 
-    // -------------------- SAFE URL BUILD --------------------
-    const finalUrl = new URL(urlObj.origin)
-    finalUrl.pathname = urlObj.pathname
-    finalUrl.search = urlObj.search
+    // Request (Safe URL)
+    const validatedBaseURL = (urlObj.protocol === 'https:' ? 'https://' : 'http://') + hostname;
 
-    // -------------------- REQUEST --------------------
     const response = await axios.request({
       method: 'GET',
-
-      // 🔥 CodeQL-safe split (IMPORTANT)
-      baseURL: `${finalUrl.protocol}//${finalUrl.hostname}`,
-      url: finalUrl.pathname + finalUrl.search,
-
+      baseURL: validatedBaseURL,
+      url: urlObj.pathname + urlObj.search,
       responseType: 'arraybuffer',
       timeout: 15000,
       maxContentLength: 50 * 1024 * 1024,
@@ -179,7 +180,7 @@ app.get('/proxy', async (req, res) => {
   }
 })
 
-// -------------------- START --------------------
+// Start
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {
   console.log(`Proxy running on port ${PORT}`)

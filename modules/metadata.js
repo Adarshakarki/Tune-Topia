@@ -1,4 +1,4 @@
-// Metadata
+// Meta
 export const enc = s => new TextEncoder().encode(s);
 
 export function concat(...arrs) {
@@ -14,7 +14,7 @@ const syncsafe4 = n => new Uint8Array([(n>>>21)&0x7f, (n>>>14)&0x7f, (n>>>7)&0x7
 export const u32BE = n => new Uint8Array([(n>>>24)&0xff, (n>>>16)&0xff, (n>>>8)&0xff, n&0xff]);
 const readU32 = (b, o) => ((b[o]<<24)|(b[o+1]<<16)|(b[o+2]<<8)|b[o+3]) >>> 0;
 
-// ID3 (MP3)
+// MP3
 function id3Frame(id, data) {
   return concat(enc(id), syncsafe4(data.length), new Uint8Array(2), data);
 }
@@ -30,11 +30,10 @@ export function buildID3(t, img, mime = 'image/jpeg') {
   return concat(enc('ID3'), new Uint8Array([4,0,0]), syncsafe4(pay.length), pay);
 }
 
-// MP4/iTunes (M4A)
+// M4A
 const atom = (t, b) => {
   let type;
   if (typeof t === 'string' && t.startsWith('\u00a9')) {
-    // iTunes atoms like ©nam need the single byte 0xA9, not the 2-byte UTF8 copyright symbol
     type = new Uint8Array([0xa9, ...enc(t.slice(1)).slice(0, 3)]);
   } else {
     type = typeof t === 'string' ? enc(t).slice(0, 4) : t;
@@ -79,7 +78,6 @@ export function injectM4aMeta(bin, t, img) {
   const moovPayload = stripAtom(bin.slice(mOff + 8, mOff + mSize), 'udta');
   const newMoov = atom('moov', concat(moovPayload, udta));
   
-  // Replace original moov with a 'free' atom of the same size to keep offsets valid, then append new moov
   const free = concat(u32BE(mSize), enc('free'), new Uint8Array(mSize - 8));
   return concat(bin.slice(0, mOff), free, bin.slice(mOff + mSize), newMoov);
 }
@@ -95,7 +93,7 @@ export async function fetchCover(url) {
   } return null;
 }
 
-// Vorbis Comments (Used by OGG and FLAC)
+// OGG/FLAC
 export function buildVorbisComment(t, img) {
   const tags = [];
   if (t.title) tags.push(`TITLE=${t.title}`);
@@ -106,8 +104,6 @@ export function buildVorbisComment(t, img) {
     const mime = enc('image/jpeg');
     const desc = enc('Front Cover');
     const pic = concat(u32BE(3), u32BE(mime.length), mime, u32BE(desc.length), desc, u32BE(0), u32BE(0), u32BE(0), u32BE(0), u32BE(img.length), img);
-    // OGG/Vorbis stores the picture block as a Base64 string
-    // Use a loop to avoid stack overflow on btoa(String.fromCharCode(...pic))
     let binary = '';
     for (let i = 0; i < pic.length; i++) binary += String.fromCharCode(pic[i]);
     tags.push(`METADATA_BLOCK_PICTURE=${btoa(binary)}`);

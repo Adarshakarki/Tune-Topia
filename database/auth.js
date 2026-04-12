@@ -13,14 +13,7 @@ function verifyPassword(password, combined) {
   return hash === originalHash;
 }
 
-// First time setup — single user app
-/**
- * Registers the primary user for the application.
- * @param {string} username 
- * @param {string} email 
- * @param {string} password 
- * @returns {Omit<Object, 'passwordHash'>} The user object without the hash.
- */
+// Register
 export function register(username, email, password) {
   const db = readDB();
   if (db.user) throw new Error("User already exists.");
@@ -67,7 +60,7 @@ export function logout() {
   setSession(null);
 }
 
-// Get profile
+// Profile
 export function getProfile() {
   const db = readDB();
   const currentSessionId = getSession();
@@ -78,7 +71,7 @@ export function getProfile() {
   return safeUser;
 }
 
-// Update profile fields (name, imageUrl, backgroundImageUrl, description)
+// Update
 export function updateProfile(updates) {
   const db = readDB();
   if (!db.user) throw new Error("No user found.");

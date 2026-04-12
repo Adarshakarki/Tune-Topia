@@ -1,4 +1,4 @@
-// Downloader
+// Download
 import { buildID3, injectM4aMeta, injectOggMeta, fetchCover, concat } from './metadata.js'
 import { injectFlacMeta } from './metadata-flac.js'
 import * as UI from '../app/ui.js'
@@ -61,10 +61,9 @@ const _trigger = (blobUrl, filename) => {
 }
 
 export async function downloadTrack(track, stream) {
-  // Determine source extension more accurately
+  // Detect ext
   let originalExt = 'flac'
   if (stream.type === 'dash' || track.source === 'youtube') {
-    // Detect codec from manifest to provide correct extension to FFmpeg
     const manifest = stream.manifest || ''
     if (
       manifest.includes('codecs="opus"') ||
@@ -106,7 +105,7 @@ export async function downloadTrack(track, stream) {
   const target = QUALITY_MAP[targetKey] || QUALITY_MAP.mp3_320
   const safeBaseName = _safeName(track)
 
-  // 1. Fetch Assets
+  // 1. Fetch
   const coverBytes = await fetchCover(track.coverSmall || track.cover)
   let audioBytes
 
@@ -118,8 +117,7 @@ export async function downloadTrack(track, stream) {
     audioBytes = new Uint8Array(await res.arrayBuffer())
   }
 
-  // 2. The Smart Switch Logic
-  // Bypass FFmpeg if we aren't changing format (Fast Path)
+  // 2. Logic
   const needsTranscode = originalExt !== target.ext || stream.type === 'dash'
   let processedBlob
 
@@ -141,7 +139,7 @@ export async function downloadTrack(track, stream) {
           '-c:a', 'libvorbis',
           '-b:a', target.bitrate || '128k',
           '-vbr', 'on',
-          '-compression_level', '3' // Level 3 is safer for RAM than level 10
+          '-compression_level', '3'
         );
       } else {
         args.push('-c:a', target.codec || 'copy');
@@ -167,7 +165,7 @@ export async function downloadTrack(track, stream) {
     processedBlob = new Blob([audioBytes], { type: MIME[originalExt] })
   }
 
-  // 3. Metadata Injection (Using lightweight JS)
+  // 3. Meta
   const finalExt = target.ext
   let finalBytes = new Uint8Array(await (processedBlob instanceof Blob ? processedBlob.arrayBuffer() : processedBlob.buffer))
 

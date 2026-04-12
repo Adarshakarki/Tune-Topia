@@ -1,8 +1,8 @@
-// Service Worker
+// SW
 const CACHE = 'tunetopia-v2.2'
 const VERSION = CACHE.split('-v')[1] || '1.0.0'
 
-// Assets to cache
+// Cache
 const PRECACHE = [
   './',
   'index.html',
@@ -40,7 +40,7 @@ const PRECACHE = [
   'assets/logo.JPEG',
 ]
 
-// Install handler
+// Install
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE).then(async (cache) => {
@@ -62,7 +62,7 @@ self.addEventListener('install', (e) => {
   );
 });
 
-// Activate handler
+// Activate
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
@@ -76,7 +76,7 @@ self.addEventListener('activate', e => {
   )
 })
 
-// IPC handler
+// IPC
 self.addEventListener('message', (e) => {
   if (e.data?.type === 'SKIP_WAITING') {
     console.log('[SW] SKIP_WAITING received — activating now');
@@ -87,7 +87,7 @@ self.addEventListener('message', (e) => {
   }
 });
 
-// Fetch handler
+// Fetch
 self.addEventListener('fetch', (e) => {
   const { request } = e;
   if (request.method !== 'GET') return;
@@ -95,7 +95,7 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(request.url);
   if (!url.protocol.startsWith('http')) return;
 
-  // Network-only rules (API, streaming, WASM/FFmpeg)
+  // Network-only
   if (
     url.origin !== self.location.origin ||
     url.pathname.startsWith('/api/') ||
@@ -110,7 +110,7 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // HTML / Navigation: Network first, then Cache fallback
+  // HTML
   if (request.mode === 'navigate' || request.destination === 'document' || url.pathname.endsWith('.html') || url.pathname === '/') {
     e.respondWith(
       fetch(request)
@@ -127,7 +127,7 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // Assets (JS, CSS, Images): Cache first, then Network fallback
+  // Assets
   e.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;

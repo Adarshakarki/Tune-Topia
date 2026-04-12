@@ -45,7 +45,7 @@ function _emit(event, data) {
   ;(_listeners[event] || []).forEach((cb) => cb(data))
 }
 
-// MediaSession
+// Media
 function _updateMediaSession(track) {
   if (!('mediaSession' in navigator)) return
   
@@ -161,7 +161,7 @@ function _bindAudio(el) {
 _bindAudio(audioA)
 _bindAudio(audioB)
 
-// Management
+// Logic
 function _onEnded() {
   if (_sleepAfterTrack) {
     _sleepAfterTrack = false; _emit('playStateChanged', false); _emit('sleepTimerFired', null); return;
@@ -172,7 +172,6 @@ function _onEnded() {
   const hasNext = Queue.getNext();
   if (hasNext) { next(); return; }
 
-  // If we reached the end and Radio is on, fetch next batch and play
   if (_radioMode) {
     _fillRadioQueue().then(() => {
       if (Queue.getNext()) next();
