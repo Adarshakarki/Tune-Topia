@@ -83,7 +83,6 @@ export async function open(playlist) {
   _setHeader(_collection)
   $('pl-tracklist').innerHTML = _skeleton()
   page.classList.add('open')
-  document.body.style.overflow = 'hidden'
 
   if (playlist.cover)
     extractColor(playlist.cover, (r, g, b) => _applyColor(r, g, b))
@@ -108,7 +107,6 @@ export async function open(playlist) {
 
 export function close() {
   $('page-playlist')?.classList.remove('open')
-  document.body.style.overflow = ''
 }
 
 function _applyColor(r, g, b) {

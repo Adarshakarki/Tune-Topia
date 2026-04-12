@@ -40,7 +40,6 @@ export async function open(input) {
   $('artist-discography').innerHTML = _skelAbs();
   $('artist-wiki-section').style.display = 'none';
   page.classList.add('open');
-  document.body.style.overflow = 'hidden';
 
   const Router = await import('../app/router.js');
   const slug = (input.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '_');
@@ -66,7 +65,6 @@ export async function open(input) {
 
 export function close() {
   $('page-artist')?.classList.remove('open', 'stacked');
-  document.body.style.overflow = '';
   UI.revertThemeColor();
   UI.updatePlayerPosition();
 }

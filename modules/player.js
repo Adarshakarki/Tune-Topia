@@ -3,6 +3,7 @@ import State from '../app/state.js'
 import Queue from './queue.js'
 import History from './history.js'
 import * as Recommendations from './recommendations.js'
+import * as processor from './processor.js'
 import {
   getStream as tidalStream,
   getTrackRecommendations,
@@ -11,10 +12,12 @@ import {
 import { getAudioStream as ytStream, searchVideos } from '../api/index.js'
 
 // Audio
-const audioA = document.getElementById('audio')
-const audioB = new Audio()
+export const audioA = document.getElementById('audio')
+export const audioB = new Audio()
 audioB.crossOrigin = 'anonymous'
 audioB.preload = 'auto'
+audioB.style.display = 'none'
+document.body.appendChild(audioB)
 
 let _active = audioA
 let _inactive = audioB
@@ -121,7 +124,11 @@ function _ensureMediaSessionHandlers() {
 function _updatePositionState() {
   if (!('mediaSession' in navigator)) return
   if (!_active?.duration || !isFinite(_active.duration)) return
-  try { navigator.mediaSession.setPositionState(isIOS ? { playbackRate: _active.playbackRate || 1, position: _active.currentTime } : { duration: _active.duration, playbackRate: _active.playbackRate || 1, position: Math.min(_active.currentTime, _active.duration) }); } catch {}
+  // Set rate to 0 if paused to stop the system seek bar from advancing
+  const rate = (_active.paused || _active.ended) ? 0 : (_active.playbackRate || 1);
+  try { 
+    navigator.mediaSession.setPositionState(isIOS ? { playbackRate: rate, position: _active.currentTime } : { duration: _active.duration, playbackRate: rate, position: Math.min(_active.currentTime, _active.duration) }); 
+  } catch {}
 }
 
 
@@ -303,6 +310,7 @@ async function _getStream(track) {
 // Playback
 export async function play(track, tracks, startIndex = 0) {
   if (tracks) Queue.load(tracks, startIndex);
+  await processor.resume();
 
   _radioHistory.add(track.id);
   _switching = true; _pauseVideo(); _preloaded = null; _preloading = false; _swapping = false;
@@ -350,6 +358,7 @@ export async function startRadio(track = null) {
 
 export async function toggle() {
   if (!_active.src && !_dash) return
+  await processor.resume();
   State.get('player.isPlaying') ? _active.pause() : await _active.play()
 }
 

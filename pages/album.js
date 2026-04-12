@@ -56,7 +56,6 @@ export async function open(album) {
   _syncLike();
   $('album-tracklist').innerHTML = _skeleton();
   page.classList.add('open');
-  document.body.style.overflow = 'hidden';
 
   const Router = await import('../app/router.js');
   const slug = (album.title || '').toLowerCase().replace(/[^a-z0-9]+/g, '_');
@@ -84,7 +83,6 @@ export async function open(album) {
 
 export function close() {
   $('page-album')?.classList.remove('open', 'stacked');
-  document.body.style.overflow = '';
   UI.revertThemeColor();
   UI.updatePlayerPosition();
 }

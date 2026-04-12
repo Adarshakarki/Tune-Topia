@@ -38,21 +38,24 @@ export const PRESETS = {
 /**
  * Initializes the audio graph.
  * Should be called once the <audio> element is available in the DOM.
- * @param {HTMLAudioElement} audioElement 
+ * @param {HTMLAudioElement|HTMLAudioElement[]} audioElement 
  */
-export function init(audioElement) {
+export function init(elements) {
   if (audioCtx) return;
+  const els = Array.isArray(elements) ? elements : [elements];
 
   // Initialize Context
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   
-  // Create source from the HTML5 Audio element
-  // Note: Ensure the audio element has crossOrigin="anonymous" if loading from external URLs
-  sourceNode = audioCtx.createMediaElementSource(audioElement);
+  // Entry point for all audio sources
+  const inputNode = audioCtx.createGain();
+  els.forEach(el => {
+    audioCtx.createMediaElementSource(el).connect(inputNode);
+  });
 
   // 1. Build Equalizer Graph
   // We chain multiple peaking filters together.
-  let lastNode = sourceNode;
+  let lastNode = inputNode;
 
   eqFilters = EQ_BANDS.map(freq => {
     const filter = audioCtx.createBiquadFilter();

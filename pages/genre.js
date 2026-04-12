@@ -18,14 +18,13 @@ export async function open(id, label) {
   if ($('genre-topbar-title')) $('genre-topbar-title').textContent = label;
   if ($('genre-scroll')) $('genre-scroll').scrollTop = 0;
   page.classList.add('open');
-  document.body.style.overflow = 'hidden';
   UI.updatePlayerPosition();
   _skels();
   try { _render(await _fetch(id)); }
   catch { $('genre-playlists-grid').innerHTML = '<div class="genre-empty">Failed to load</div>'; }
 }
 
-export function close() { $('page-genre')?.classList.remove('open'); document.body.style.overflow = ''; UI.updatePlayerPosition(); }
+export function close() { $('page-genre')?.classList.remove('open'); UI.updatePlayerPosition(); }
 
 // Fetch
 async function _fetch(id) {

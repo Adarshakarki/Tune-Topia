@@ -702,7 +702,6 @@ export function closeAllOverlays() {
   document.querySelectorAll('.bottom-sheet, .bottom-sheet-global, #track-options-sheet, #playlist-picker-sheet, #np-more-sheet, #profile-popup-sheet, #sleep-timer-popup, #np-queue-item-sheet')
     .forEach(el => el.classList.remove('open'));
   if ($('playlist-modal-overlay')) $('playlist-modal-overlay').style.display = 'none';
-  document.body.style.overflow = '';
   revertThemeColor();
   updatePlayerPosition();
 }

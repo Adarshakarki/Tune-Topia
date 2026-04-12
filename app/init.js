@@ -54,9 +54,8 @@ async function init() {
   State.init();
   _fixViewportHeight();
 
-  const audioEl = $('audio');
-  if (audioEl) {
-    processor.init(audioEl);
+  if (Player.audioA && Player.audioB) {
+    processor.init([Player.audioA, Player.audioB]);
     EQ.init();
   }
 
