@@ -125,6 +125,16 @@ app.get('/proxy', async (req, res) => {
     if (!urlObj.hostname) {
       return res.status(400).send('Error: Missing hostname.')
     }
+    
+    // Restrict outbound targets to known-safe hosts only
+    const allowedProxyHosts = new Set([
+      'example.com',
+      'api.example.com',
+    ])
+    const normalizedHost = urlObj.hostname.toLowerCase()
+    if (!allowedProxyHosts.has(normalizedHost)) {
+      return res.status(403).send('Forbidden: Host is not allowlisted.')
+    }
 
     // Safety check
     const safe = await isSafeHost(urlObj.hostname)
