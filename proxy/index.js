@@ -1,4 +1,4 @@
-// Proxy Server
+// proxy/index.js
 const express = require('express')
 const axios = require('axios')
 const dns = require('dns')
@@ -10,20 +10,18 @@ const https = require('https')
 
 const app = express()
 
-// CORS configuration
+// -------------------- CORS --------------------
 const allowedOrigins = [
   'https://adarshakarki.github.io',
   'http://127.0.0.1:3000',
   'http://localhost:3000',
   'http://127.0.0.1:5173',
   'http://localhost:5173',
-  'https://adarshakarki.github.io/Tune-Topia/',
 ]
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin or from allowed list
       if (
         !origin ||
         allowedOrigins.includes(origin) ||
@@ -32,166 +30,169 @@ app.use(
       ) {
         callback(null, true)
       } else {
-        console.log('CORS blocked origin:', origin)
-        callback(null, true) // Allow during transition to avoid silent failures
+        console.log('CORS blocked:', origin)
+        callback(null, false)
       }
     },
     credentials: true,
   })
 )
 
-// COOP/COEP headers for ffmpeg.wasm
+// -------------------- COOP/COEP --------------------
 app.use((req, res, next) => {
   res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
   res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp')
   next()
 })
 
-// Serve static assets
+// -------------------- STATIC --------------------
 app.use(express.static(path.join(__dirname, '../')))
 
-// Block private IPs (SSRF protection)
+// -------------------- SSRF HELPERS --------------------
 function isPrivateIP(ip) {
   const version = net.isIP(ip)
   if (!version) return true
+
   if (version === 4) {
-    const parts = ip.split('.').map(Number)
-    if (
-      parts.length !== 4 ||
-      parts.some((p) => Number.isNaN(p) || p < 0 || p > 255)
-    ) {
-      return true
-    }
-    const [a, b] = parts
-    // 10.0.0.0/8
-    if (a === 10) return true
-    // 172.16.0.0/12 (172.16.0.0 – 172.31.255.255)
-    if (a === 172 && b >= 16 && b <= 31) return true
-    // 192.168.0.0/16
-    if (a === 192 && b === 168) return true
-    // 127.0.0.0/8 (loopback)
-    if (a === 127) return true
-    // 169.254.0.0/16 (link-local)
-    if (a === 169 && b === 254) return true
-    return false
+    const [a, b] = ip.split('.').map(Number)
+
+    return (
+      a === 10 ||
+      (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168) ||
+      a === 127 ||
+      (a === 169 && b === 254)
+    )
   }
 
-  // IPv6: block loopback, link-local and unique-local
   const normalized = ip.toLowerCase()
-  if (normalized === '::1') return true // loopback
-  if (normalized.startsWith('fe80:')) return true // link-local
-  if (normalized.startsWith('fc') || normalized.startsWith('fd')) return true // unique-local
-  return false
+  return (
+    normalized === '::1' ||
+    normalized.startsWith('fe80:') ||
+    normalized.startsWith('fc') ||
+    normalized.startsWith('fd')
+  )
 }
 
 async function isSafeHost(hostname) {
-    try {
-        const addresses = await dns.promises.lookup(hostname, { all: true });
-        return !addresses.some((addr) => isPrivateIP(addr.address));
-    } catch { return false; }
+  try {
+    const addresses = await dns.promises.lookup(hostname, { all: true })
+    return !addresses.some((a) => isPrivateIP(a.address))
+  } catch {
+    return false
+  }
 }
 
-// Custom lookup for SSRF protection to prevent TOCTOU race conditions.
-// This validates the IP address at the moment of connection.
-const ssrSafeLookup = (hostname, options, callback) => {
+// Prevent DNS rebinding (TOCTOU safe)
+const safeLookup = (hostname, options, cb) => {
   dns.lookup(hostname, options, (err, address, family) => {
-    if (err) return callback(err);
-    
-    const addresses = Array.isArray(address) ? address : [{ address }];
-    if (addresses.some(addr => isPrivateIP(addr.address))) {
-      return callback(new Error('SSRF Detected: Access to private IP addresses is prohibited'));
+    if (err) return cb(err)
+
+    const list = Array.isArray(address) ? address : [{ address }]
+    if (list.some((a) => isPrivateIP(a.address))) {
+      return cb(new Error('Blocked private IP'))
     }
-    callback(null, address, family);
-  });
-};
 
-const httpAgent = new http.Agent({ lookup: ssrSafeLookup });
-const httpsAgent = new https.Agent({ lookup: ssrSafeLookup });
+    cb(null, address, family)
+  })
+}
 
-// Proxy route
+const httpAgent = new http.Agent({ lookup: safeLookup })
+const httpsAgent = new https.Agent({ lookup: safeLookup })
+
+// -------------------- ALLOWLIST --------------------
+const allowedHosts = [
+  'tidal.com',
+  'resources.tidal.com',
+  'api.tidal.com',
+  'youtube.com',
+  'ytimg.com',
+  'i.ytimg.com',
+  'googlevideo.com',
+  'wsrv.nl',
+]
+
+// -------------------- PROXY ROUTE --------------------
 app.get('/proxy', async (req, res) => {
   const targetUrl = req.query.url
   if (!targetUrl) {
-    return res.status(400).send('Error: Missing "url" parameter.')
+    return res.status(400).send('Missing url param')
   }
 
   try {
     const urlObj = new URL(targetUrl)
 
-    // Validate protocol and host
-    if (urlObj.protocol !== 'http:' && urlObj.protocol !== 'https:') {
-      return res.status(400).send('Error: Only http/https allowed.')
+    // ---- BASIC VALIDATION ----
+    if (!['http:', 'https:'].includes(urlObj.protocol)) {
+      return res.status(400).send('Invalid protocol')
     }
+
     if (!urlObj.hostname) {
-      return res.status(400).send('Error: Missing hostname.')
+      return res.status(400).send('Missing hostname')
     }
 
-    // Restrict outbound targets to known-safe hosts only
-    const allowedProxyHosts = [
-      'tidal.com',
-      'resources.tidal.com',
-      'api.tidal.com',
-      'youtube.com',
-      'ytimg.com',
-      'i.ytimg.com',
-      'googlevideo.com',
-      'wsrv.nl',
-    ]
-    const normalizedHost = urlObj.hostname.toLowerCase()
-    const isWhitelisted = allowedProxyHosts.some(allowed => 
-      normalizedHost === allowed || normalizedHost.endsWith('.' + allowed)
-    );
-
-    if (!isWhitelisted) {
-      return res.status(403).send('Forbidden: Host is not allowlisted.')
-    }
-
-    // Safety check
-    const safe = await isSafeHost(urlObj.hostname)
-    if (!safe) {
-      return res.status(403).send('Forbidden: Internal or unsafe host.')
+    if (urlObj.username || urlObj.password) {
+      return res.status(400).send('Auth in URL not allowed')
     }
 
     if (urlObj.pathname.includes('..')) {
-      return res.status(400).send('Error: Invalid path.')
+      return res.status(400).send('Invalid path')
     }
 
-    // Construct outbound URL using only validated components to break the taint chain
-    const outboundUrl = new URL(urlObj.protocol + '//' + urlObj.host + urlObj.pathname + urlObj.search);
+    // ---- HOST ALLOWLIST ----
+    const hostname = urlObj.hostname.toLowerCase()
+    const allowed = allowedHosts.some(
+      (h) => hostname === h || hostname.endsWith('.' + h)
+    )
 
-    // Fetch target
+    if (!allowed) {
+      return res.status(403).send('Host not allowed')
+    }
+
+    // ---- DNS SAFETY ----
+    const safe = await isSafeHost(hostname)
+    if (!safe) {
+      return res.status(403).send('Unsafe host')
+    }
+
+    // ---- BUILD SAFE URL (CodeQL-safe) ----
+    const outboundUrl = new URL(urlObj.origin)
+    outboundUrl.pathname = urlObj.pathname
+    outboundUrl.search = urlObj.search
+
+    // ---- REQUEST ----
     const response = await axios.get(outboundUrl.href, {
       responseType: 'arraybuffer',
       timeout: 15000,
-      maxContentLength: 50 * 1024 * 1024, // 50MB limit to prevent DoS via large files
-      maxRedirects: 5, // Limit redirects to prevent SSRF bypass via redirect chains
+      maxContentLength: 50 * 1024 * 1024,
+      maxRedirects: 3,
       httpAgent,
       httpsAgent,
-      validateStatus: () => true, // Don't throw on 4xx/5xx
+      validateStatus: () => true,
       headers: {
         'User-Agent': 'TuneTopiaProxy/1.0',
         Accept: '*/*',
       },
     })
 
-    // Pass headers
+    // ---- RESPONSE ----
     if (response.headers['content-type']) {
       res.set('Content-Type', response.headers['content-type'])
     }
 
     res.send(response.data)
   } catch (err) {
-    console.error('Proxy Error:', err.message)
+    console.error('Proxy error:', err.message)
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch the requested URL',
+      error: 'Proxy failed',
       details: err.message,
     })
   }
 })
 
-// Start server
+// -------------------- START --------------------
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {
-  console.log(`Tune-Topia Proxy running on port ${PORT}`)
+  console.log(`Proxy running on http://localhost:${PORT}`)
 })
