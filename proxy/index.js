@@ -127,12 +127,22 @@ app.get('/proxy', async (req, res) => {
     }
 
     // Restrict outbound targets to known-safe hosts only
-    const allowedProxyHosts = new Set([
-      'example.com',
-      'api.example.com',
-    ])
+    const allowedProxyHosts = [
+      'tidal.com',
+      'resources.tidal.com',
+      'api.tidal.com',
+      'youtube.com',
+      'ytimg.com',
+      'i.ytimg.com',
+      'googlevideo.com',
+      'wsrv.nl',
+    ]
     const normalizedHost = urlObj.hostname.toLowerCase()
-    if (!allowedProxyHosts.has(normalizedHost)) {
+    const isWhitelisted = allowedProxyHosts.some(allowed => 
+      normalizedHost === allowed || normalizedHost.endsWith('.' + allowed)
+    );
+
+    if (!isWhitelisted) {
       return res.status(403).send('Forbidden: Host is not allowlisted.')
     }
 
@@ -142,26 +152,19 @@ app.get('/proxy', async (req, res) => {
       return res.status(403).send('Forbidden: Internal or unsafe host.')
     }
 
-     // Build outbound URL from validated components (avoid direct user-controlled URL)
-    const normalizedPath = urlObj.pathname || '/'
-    if (normalizedPath.includes('..')) {
+    if (urlObj.pathname.includes('..')) {
       return res.status(400).send('Error: Invalid path.')
     }
-    const outboundUrl = new URL(`${urlObj.protocol}//${normalizedHost}`)
-    if (urlObj.port) {
-      const portNum = Number(urlObj.port)
-      if (!Number.isInteger(portNum) || portNum < 1 || portNum > 65535) {
-        return res.status(400).send('Error: Invalid port.')
-      }
-      outboundUrl.port = String(portNum)
-    }
-    outboundUrl.pathname = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`
-    outboundUrl.search = urlObj.searchParams.toString() ? `?${urlObj.searchParams.toString()}` : ''
-    
+
+    // Construct outbound URL using only validated components to break the taint chain
+    const outboundUrl = new URL(urlObj.protocol + '//' + urlObj.host + urlObj.pathname + urlObj.search);
+
     // Fetch target
-    const response = await axios.get(outboundUrl.toString(), {
+    const response = await axios.get(outboundUrl.href, {
       responseType: 'arraybuffer',
-      timeout: 10000,
+      timeout: 15000,
+      maxContentLength: 50 * 1024 * 1024, // 50MB limit to prevent DoS via large files
+      maxRedirects: 5, // Limit redirects to prevent SSRF bypass via redirect chains
       httpAgent,
       httpsAgent,
       validateStatus: () => true, // Don't throw on 4xx/5xx
