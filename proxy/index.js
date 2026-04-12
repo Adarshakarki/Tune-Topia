@@ -161,7 +161,9 @@ app.get('/proxy', async (req, res) => {
     outboundUrl.search = urlObj.search
 
     // ---- REQUEST ----
-    const response = await axios.get(outboundUrl.href, {
+    const response = await axios.request({
+      method: 'GET',
+      url: finalUrl.toString(),
       responseType: 'arraybuffer',
       timeout: 15000,
       maxContentLength: 50 * 1024 * 1024,
