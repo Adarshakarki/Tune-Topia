@@ -2,7 +2,15 @@ import crypto from "crypto";
 import { readDB, writeDB, setSession, getSession } from "./database.js";
 
 function hashPassword(password) {
-  return crypto.createHash("sha256").update(password).digest("hex");
+  const salt = crypto.randomBytes(16).toString("hex");
+  const hash = crypto.scryptSync(password, salt, 64, { N: 16384 }).toString("hex");
+  return `${salt}:${hash}`;
+}
+
+function verifyPassword(password, combined) {
+  const [salt, originalHash] = combined.split(":");
+  const hash = crypto.scryptSync(password, salt, 64, { N: 16384 }).toString("hex");
+  return hash === originalHash;
 }
 
 // First time setup — single user app
@@ -45,7 +53,7 @@ export function login(email, password) {
   const db = readDB();
   if (!db.user) throw new Error("No user found. Please register first.");
   if (db.user.email !== email) throw new Error("Email not found.");
-  if (db.user.passwordHash !== hashPassword(password)) throw new Error("Wrong password.");
+  if (!verifyPassword(password, db.user.passwordHash)) throw new Error("Wrong password.");
 
   // Persist the login state
   setSession(db.user.id);

@@ -90,15 +90,16 @@ function _syncEl(imgId, wrapId, url) {
 function _getSocialInfo(url) {
   try {
     const domain = new URL(url).hostname.toLowerCase();
-    if (domain.includes('pinterest')) return { icon: 'pinterest', name: 'Pinterest' };
-    if (domain.includes('instagram')) return { icon: 'instagram', name: 'Instagram' };
-    if (domain.includes('github')) return { icon: 'github', name: 'GitHub' };
-    if (domain.includes('twitter') || domain.includes('x.com')) return { icon: 'twitter-x', name: 'Twitter' };
-    if (domain.includes('youtube')) return { icon: 'youtube', name: 'YouTube' };
-    if (domain.includes('linkedin')) return { icon: 'linkedin', name: 'LinkedIn' };
-    if (domain.includes('facebook')) return { icon: 'facebook', name: 'Facebook' };
-    if (domain.includes('discord')) return { icon: 'discord', name: 'Discord' };
-    if (domain.includes('spotify')) return { icon: 'spotify', name: 'Spotify' };
+    const is = (d) => domain === d || domain.endsWith('.' + d);
+    if (is('pinterest.com')) return { icon: 'pinterest', name: 'Pinterest' };
+    if (is('instagram.com')) return { icon: 'instagram', name: 'Instagram' };
+    if (is('github.com')) return { icon: 'github', name: 'GitHub' };
+    if (is('twitter.com') || is('x.com')) return { icon: 'twitter-x', name: 'Twitter' };
+    if (is('youtube.com') || is('youtu.be')) return { icon: 'youtube', name: 'YouTube' };
+    if (is('linkedin.com')) return { icon: 'linkedin', name: 'LinkedIn' };
+    if (is('facebook.com')) return { icon: 'facebook', name: 'Facebook' };
+    if (is('discord.com') || is('discord.gg')) return { icon: 'discord', name: 'Discord' };
+    if (is('spotify.com')) return { icon: 'spotify', name: 'Spotify' };
     return { icon: 'link-45deg', name: 'Link' };
   } catch {
     return { icon: 'link-45deg', name: 'Link' };

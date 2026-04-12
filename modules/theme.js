@@ -101,8 +101,8 @@ function _updateFontLink(id, href) {
   let validatedHref = '';
   try {
     const url = new URL(href);
-    // Strict protocol check: Only allow web schemes to prevent javascript: or data: URIs
-    if (['http:', 'https:'].includes(url.protocol)) {
+    // Strict protocol check: Only allow https to prevent Mixed Content errors
+    if (url.protocol === 'https:') {
       validatedHref = url.href; 
     }
   } catch (e) {

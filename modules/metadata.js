@@ -88,7 +88,10 @@ export async function fetchCover(url) {
   if (!url) return null;
   const p = `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=400&h=400&fit=cover&output=jpg&q=90`;
   for (const u of [p, url]) {
-    try { const r = await fetch(u); if (r.ok) return new Uint8Array(await r.arrayBuffer()); } catch {}
+    try { 
+      if (!u.startsWith('https://')) continue;
+      const r = await fetch(u); if (r.ok) return new Uint8Array(await r.arrayBuffer()); 
+    } catch {}
   } return null;
 }
 
