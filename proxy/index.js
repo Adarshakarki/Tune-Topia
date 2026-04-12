@@ -83,12 +83,10 @@ function isPrivateIP(ip) {
 }
 
 async function isSafeHost(hostname) {
-  try {
-    const addresses = await dns.lookup(hostname, { all: true })
-    return !addresses.some((addr) => isPrivateIP(addr.address))
-  } catch {
-    return false
-  }
+    try {
+        const addresses = await dns.lookup(hostname, { all: true });
+        return !addresses.some((addr) => isPrivateIP(addr.address));
+    } catch { return false; }
 }
 
 // Proxy route
