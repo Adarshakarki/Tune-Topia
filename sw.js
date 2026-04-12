@@ -1,5 +1,5 @@
 // Service Worker
-const CACHE = 'tunetopia-v2.1.3'
+const CACHE = 'tunetopia-v2.2'
 const VERSION = CACHE.split('-v')[1] || '1.0.0'
 
 // Assets to cache
@@ -77,22 +77,25 @@ self.addEventListener('activate', e => {
 })
 
 // IPC handler
-self.addEventListener('message', e => {
+self.addEventListener('message', (e) => {
   if (e.data?.type === 'SKIP_WAITING') {
-    console.log('[SW] SKIP_WAITING received — activating now')
-    self.skipWaiting()
+    console.log('[SW] SKIP_WAITING received — activating now');
+    self.skipWaiting();
   }
-})
+  if (e.data?.type === 'GET_VERSION') {
+    e.ports[0]?.postMessage({ version: CACHE });
+  }
+});
 
 // Fetch handler
-self.addEventListener('fetch', e => {
-  const { request } = e
-  if (request.method !== 'GET') return
+self.addEventListener('fetch', (e) => {
+  const { request } = e;
+  if (request.method !== 'GET') return;
 
-  const url = new URL(request.url)
-  if (!url.protocol.startsWith('http')) return
+  const url = new URL(request.url);
+  if (!url.protocol.startsWith('http')) return;
 
-  // Network-only rules
+  // Network-only rules (API, streaming, WASM/FFmpeg)
   if (
     url.origin !== self.location.origin ||
     url.pathname.startsWith('/api/') ||
@@ -100,47 +103,41 @@ self.addEventListener('fetch', e => {
     url.pathname.endsWith('.ts') ||
     url.pathname.includes('ffmpeg') ||
     url.pathname.endsWith('.wasm') ||
-    url.pathname.includes('ffmpeg') ||
-    url.pathname.endsWith('.wasm') ||
     request.destination === 'audio' ||
     request.destination === 'video' ||
     request.headers.get('range')
-  ) return
+  ) {
+    return;
+  }
 
-  if (request.destination === 'document' || url.pathname === '/' || url.pathname.endsWith('.html')) {
+  // HTML / Navigation: Network first, then Cache fallback
+  if (request.mode === 'navigate' || request.destination === 'document' || url.pathname.endsWith('.html') || url.pathname === '/') {
     e.respondWith(
       fetch(request)
-        .then(res => {
+        .then((res) => {
           if (res && res.status === 200) {
-            const clone = res.clone()
-            caches.open(CACHE).then(c => c.put(request, clone))
+            const clone = res.clone();
+            caches.open(CACHE).then((c) => c.put(request, clone));
           }
-          return res
+          return res;
         })
-        .catch(() => caches.match(request).then(c => c || caches.match('./index.html') || new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } })))
-        .catch(() => caches.match(request).then(c => c || caches.match('./index.html') || new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } })))
-    )
-    return
+        .catch(() => caches.match(request).then((c) => c || caches.match('./index.html')))
+        .then((res) => res || new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } }))
+    );
+    return;
   }
 
+  // Assets (JS, CSS, Images): Cache first, then Network fallback
   e.respondWith(
-    caches.match(request).then(cached => {
-      if (cached) return cached
-      return fetch(request).then(res => {
-        if (!res || res.status !== 200 || res.type !== 'basic') return res
-        const clone = res.clone()
-        caches.open(CACHE).then(c => c.put(request, clone))
-        return res
-      }).catch(() => caches.match('./index.html') || new Response('Offline', { status: 503 }))
-      }).catch(() => caches.match('./index.html') || new Response('Offline', { status: 503 }))
+    caches.match(request).then((cached) => {
+      if (cached) return cached;
+      return fetch(request).then((res) => {
+        if (res && res.status === 200 && res.type === 'basic') {
+          const clone = res.clone();
+          caches.open(CACHE).then((c) => c.put(request, clone));
+        }
+        return res;
+      }).catch(() => caches.match('./index.html'));
     })
-  )
-})
-
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'GET_VERSION') {
-    event.ports[0].postMessage({
-      version: CACHE
-    })
-  }
-})
+  );
+});

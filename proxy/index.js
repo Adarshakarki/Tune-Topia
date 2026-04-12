@@ -125,7 +125,7 @@ app.get('/proxy', async (req, res) => {
     if (!urlObj.hostname) {
       return res.status(400).send('Error: Missing hostname.')
     }
-    
+
     // Restrict outbound targets to known-safe hosts only
     const allowedProxyHosts = new Set([
       'example.com',
@@ -142,8 +142,24 @@ app.get('/proxy', async (req, res) => {
       return res.status(403).send('Forbidden: Internal or unsafe host.')
     }
 
+     // Build outbound URL from validated components (avoid direct user-controlled URL)
+    const normalizedPath = urlObj.pathname || '/'
+    if (normalizedPath.includes('..')) {
+      return res.status(400).send('Error: Invalid path.')
+    }
+    const outboundUrl = new URL(`${urlObj.protocol}//${normalizedHost}`)
+    if (urlObj.port) {
+      const portNum = Number(urlObj.port)
+      if (!Number.isInteger(portNum) || portNum < 1 || portNum > 65535) {
+        return res.status(400).send('Error: Invalid port.')
+      }
+      outboundUrl.port = String(portNum)
+    }
+    outboundUrl.pathname = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`
+    outboundUrl.search = urlObj.searchParams.toString() ? `?${urlObj.searchParams.toString()}` : ''
+    
     // Fetch target
-    const response = await axios.get(urlObj.toString(), {
+    const response = await axios.get(outboundUrl.toString(), {
       responseType: 'arraybuffer',
       timeout: 10000,
       httpAgent,
