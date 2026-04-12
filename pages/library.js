@@ -1,3 +1,4 @@
+// Library
 import * as UI from '../app/ui.js'
 import State from '../app/state.js'
 import History from '../modules/history.js'
@@ -13,7 +14,6 @@ import {
   attachHorizEvents,
 } from './home.js'
 import * as AlbumPage from './album.js'
-import { getIcon } from '../app/icons.js'
 
 const $ = (id) => document.getElementById(id)
 const NEW_RELEASES_PLAYLIST_ID = '1b418bb8-90a7-4f87-901d-707993838346'
@@ -112,7 +112,7 @@ export function loadAlbums() {
     albums.sort((a, b) => (a.title || '').localeCompare(b.title || ''))
   else if (_albumSort === 'artist')
     albums.sort((a, b) => (a.artist || '').localeCompare(b.artist || ''))
-  // 'recent' = saved order (reversed, newest first)
+  // Order by saved
   else albums.reverse()
 
   _updateSortChips('albums-sort-chips', _albumSort)
@@ -177,7 +177,7 @@ export async function loadSongs() {
     if (!tracks.length)
       tracks = await searchVideos('popular songs').catch(() => [])
     if (!tracks.length) throw new Error('No results')
-    UI.renderTracks(tracks, el, null)
+    UI.renderTrackList(tracks, el, null)
     attachTrackEvents(el)
   } catch {
     el.innerHTML = UI.errorState('Could not load songs', loadSongs)
@@ -189,14 +189,13 @@ export function loadHistory() {
   if (!el) return
   const hist = History.getAll()
   if (!hist.length) {
-    el.innerHTML = UI.emptyState(getIcon('history'),
-      'bi-clock-history',
+    el.innerHTML = UI.emptyState('history',
       'No history yet',
       'Play some music to see it here'
     )
     return
   }
-  UI.renderTracks(hist, el, null)
+  UI.renderTrackList(hist, el, null)
   attachTrackEvents(el)
 }
 
@@ -205,7 +204,7 @@ export function loadRecent() {
   if (!el) return
   const hist = History.getAll()
   if (!hist.length) {
-    el.innerHTML = UI.emptyState('bi-clock-history', 'Nothing played yet')
+    el.innerHTML = UI.emptyState('history', 'Nothing played yet')
     return
   }
   UI.renderAlbums(

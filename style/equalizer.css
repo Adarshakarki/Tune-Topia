@@ -1,133 +1,326 @@
-/* eq card */
+/* ─── EQ Card Shell ──────────────────────────────────────────────────────────── */
 .eq-card {
+  padding: 0 !important;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--surface-1);
+}
+
+/* ─── EQ Mode Switcher ───────────────────────────────────────────────────────── */
+.eq-type-switcher {
+  display: flex;
+  background: var(--surface-2);
+  padding: 4px;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.eq-type-btn {
+  flex: 1;
+  padding: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: calc(var(--r-sm) - 2px);
+  color: var(--text-3);
+  transition: all 0.2s var(--ease);
+  text-align: center;
+}
+
+.eq-type-btn.active {
+  background: var(--surface);
+  color: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ─── Panel Visibility ───────────────────────────────────────────────────────── */
+.eq-panel  { display: none; }
+.eq-panel.active { display: block; }
+
+.eq-loading {
+  padding: 40px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-3);
+}
+
+/* ─── Shared EQ Root Layout ──────────────────────────────────────────────────── */
+.eq-root {
+  display: flex;
+  flex-direction: column;
+}
+
+.eq-top-bar {
   padding: var(--s3) var(--s4);
   display: flex;
   flex-direction: column;
-  gap: var(--s3);
-  overflow: hidden;
+  gap: var(--s4);
 }
 
-/* presets */
-.eq-presets { display: flex; flex-wrap: wrap; gap: var(--s2); }
-.eq-preset-btn {
-  padding: 4px var(--s3);
-  border-radius: var(--r-full);
-  font-size: 12px;
-  font-weight: 600;
-  background: var(--surface-2);
-  color: var(--text-2);
-  border: 0.5px solid var(--border);
-  cursor: pointer;
-  transition: background 0.14s, color 0.14s;
-  white-space: nowrap;
-}
-.eq-preset-btn:hover  { background: var(--surface-3); color: var(--text); }
-.eq-preset-btn:active { opacity: 0.7; }
-.eq-preset-btn.active { background: var(--accent-dim); color: var(--accent); border-color: transparent; }
-
-/* sliders */
-.eq-sliders {
+.eq-header-actions {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--s1);
-  height: 180px;
-}
-.eq-band {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  height: 100%;
-}
-.eq-db-label {
-  font-size: 9px;
-  font-weight: 700;
-  color: var(--accent);
-  min-height: 12px;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-.eq-slider-wrap {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   width: 100%;
-  overflow: hidden;
 }
-.eq-slider {
-  appearance: auto;
-  writing-mode: vertical-lr;
-  direction: rtl;
-  width: 20px;
-  height: 140px;
-  cursor: pointer;
-  accent-color: var(--accent);
-  background: transparent;
-}
-.eq-freq-label { font-size: 9px; color: var(--text-3); font-weight: 500; white-space: nowrap; }
 
-/* reset */
-.eq-reset-btn {
-  align-self: center;
-  padding: 5px var(--s4);
+/* ─── Power Toggle ───────────────────────────────────────────────────────────── */
+.eq-power-toggle {
+  width: 50px;
+  height: 26px;
+  padding: 0;
+  border-radius: var(--r-full);
+  background-color: var(--surface-3);
+  position: relative;
+  transition: background-color 0.2s;
+  cursor: pointer;
+  border: none;
+}
+
+.eq-power-toggle[aria-checked="true"] {
+  background-color: var(--accent);
+}
+
+.eq-power-toggle .toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.eq-power-toggle[aria-checked="true"] .toggle-thumb {
+  transform: translateX(24px);
+}
+
+/* ─── Presets Scroll ─────────────────────────────────────────────────────────── */
+.eq-presets-scroll {
+  overflow-x: auto;
+  margin: 0 calc(-1 * var(--s5));
+  padding: 0 var(--s5);
+  -webkit-overflow-scrolling: touch;
+}
+.eq-presets-scroll::-webkit-scrollbar { display: none; }
+
+.eq-presets-list {
+  display: flex;
+  gap: 8px;
+  padding-bottom: 4px;
+}
+
+.eq-preset-btn {
+  padding: 6px 14px;
   border-radius: var(--r-full);
   font-size: 12px;
   font-weight: 600;
-  background: var(--surface-2);
+  background: var(--surface-3);
   color: var(--text-2);
-  border: 0.5px solid var(--border);
+  border: 1px solid var(--border-mid);
+  white-space: nowrap;
   cursor: pointer;
-  transition: background 0.14s, color 0.14s;
+  transition: all 0.15s;
 }
-.eq-reset-btn:hover  { background: var(--surface-3); color: var(--text); }
-.eq-reset-btn:active { opacity: 0.7; }
 
-.eq-loading { font-size: 13px; color: var(--text-3); text-align: center; padding: var(--s3) 0; }
-
-/* quality selector */
-.quality-options {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--s2);
-  padding: var(--s2) var(--s4) var(--s3);
+.eq-preset-btn.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
 }
-.quality-btn,
-.theme-btn,
-.header-font-btn,
-.body-font-btn {
+
+/* ─── Shared EQ Body (Legacy / Graphic) ──────────────────────────────────────── */
+.eq-body {
+  padding: var(--s3) var(--s2);
+  background: var(--surface-2);
+  border-top: 1px solid var(--border);
+  transition: opacity 0.3s;
+}
+
+.eq-body.is-disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.eq-sliders {
+  display: flex;
+  justify-content: center;
+  height: 130px;
+  gap: 0;
+}
+
+.eq-band {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 3px;
-  padding: var(--s2) var(--s3);
-  border-radius: var(--r-sm);
-  background: var(--surface-2);
-  border: 1.5px solid transparent;
-  cursor: pointer;
-  transition: background 0.14s, border-color 0.14s;
-  text-align: left;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
 }
-.quality-btn:hover,
-.theme-btn:hover,
-.header-font-btn:hover,
-.body-font-btn:hover { background: var(--surface-3); }
-.quality-btn:active,
-.theme-btn:active,
-.header-font-btn:active,
-.body-font-btn:active { opacity: 0.7; }
-.quality-btn.active,
-.theme-btn.active,
-.header-font-btn.active,
-.body-font-btn.active { background: var(--accent-dim); border-color: var(--accent); }
 
-.quality-label { font-size: 13px; font-weight: 700; color: var(--text); }
-.quality-btn.active .quality-label, .theme-btn.active .quality-label, .header-font-btn.active .quality-label, .body-font-btn.active .quality-label { color: var(--accent); }
-.quality-desc  { font-size: 11px; color: var(--text-3); line-height: 1.3; }
+.eq-slider-outer {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
+.eq-slider-outer::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 20%;
+  right: 20%;
+  height: 1px;
+  background: var(--border-mid);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.eq-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 80px;
+  height: 32px;
+  background: transparent;
+  transform: rotate(-90deg);
+  cursor: ns-resize;
+  z-index: 1;
+  margin: 0;
+}
+
+.eq-slider::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 4px;
+  background: var(--surface-3);
+  border-radius: var(--r-full);
+}
+
+.eq-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--accent);
+  border: 3px solid var(--surface-2);
+  border-radius: 50%;
+  margin-top: -7px;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+}
+
+.eq-freq-label,
+.eq-db-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-3);
+  text-align: center;
+}
+
+.eq-db-label {
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  min-height: 14px;
+}
+
+/* ─── Parametric EQ: Canvas Visualiser ───────────────────────────────────────── */
+.para-eq-viz {
+  position: relative;
+  width: 100%;
+  height: 220px;           /* increase if you want a taller plot */
+  background: #0d0d14;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  cursor: crosshair;
+  transition: opacity 0.3s;
+}
+
+.para-eq-viz--disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+#para-eq-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ─── Parametric EQ: Preamp Row ──────────────────────────────────────────────── */
+.para-preamp-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px var(--s4);
+  background: var(--surface-2);
+  border-top: 1px solid var(--border);
+}
+
+.para-preamp-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-3);
+  white-space: nowrap;
+  min-width: 52px;
+}
+
+.para-preamp-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: var(--surface-3);
+  border-radius: var(--r-full);
+  outline: none;
+  cursor: pointer;
+}
+
+.para-preamp-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--accent);
+  border: 2.5px solid var(--surface-2);
+  border-radius: 50%;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+}
+
+.para-preamp-slider:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.para-preamp-val {
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+  min-width: 56px;
+  text-align: right;
+}
+
+/* ─── Parametric EQ: Title ───────────────────────────────────────────────────── */
+.para-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ─── Responsive ─────────────────────────────────────────────────────────────── */
 @media (min-width: 900px) {
-  .eq-sliders { height: 200px; }
-  .eq-slider  { height: 160px; }
+  .eq-body          { padding: var(--s5); }
+  .eq-sliders       { height: 180px; }
+  .eq-slider        { width: 130px; height: 44px; }
+  .eq-slider::-webkit-slider-thumb {
+    width: 22px;
+    height: 22px;
+    margin-top: -9px;
+  }
+  .para-eq-viz      { height: 260px; }
 }

@@ -1,3 +1,4 @@
+// Followed Artists
 const KEY = 'followedArtists';
 
 // Persistent storage helpers

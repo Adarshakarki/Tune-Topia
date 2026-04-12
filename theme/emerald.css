@@ -11,7 +11,7 @@
   --text-3: #065f46;
   --border: rgba(110, 231, 183, 0.08);
   --sidebar-bg: #020504;
-  --player-bg: rgba(10, 20, 16, 0.95);
+  --player-bg: rgba(26, 46, 37, 0.95);
   --r-lg: 12px;
 }
 
@@ -27,4 +27,6 @@
   --text-2: #059669;
   --text-3: #34d399;
   --sidebar-bg: #f9fefb;
+  --player-bg: #ffffff;
+  --glass: #ffffff;
 }

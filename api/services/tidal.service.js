@@ -1,5 +1,4 @@
-// Tidal Service Provider
-
+// Tidal
 import {
   get,
   getAlbum,
@@ -14,11 +13,12 @@ const TTL_SEARCH = 300000
 const TTL_ALBUM = 900000
 const TTL_RECS = 600000
 
-const Q_MAP = {
+const Q_MAP = { // Quality mapping
+  atmos: 'DOLBY_ATMOS',
   hires: 'HI_RES_LOSSLESS',
   lossless: 'LOSSLESS',
   high: 'HIGH',
-  low: 'LOW'
+  low: 'LOW',
 }
 
 // --- Search ---
@@ -28,8 +28,9 @@ export async function searchTracks(query) {
   if (cached) return cached
 
   const { data } = await get(`/search?s=${encodeURIComponent(query)}`)
-  const tracks = (data?.data?.items || data?.items || [])
-    .map(t => normalizeTrack(t, 'tidal'))
+  const tracks = (data?.data?.items || data?.items || []).map((t) =>
+    normalizeTrack(t, 'tidal')
+  )
 
   cacheSet(key, tracks, TTL_SEARCH)
   return tracks
@@ -43,9 +44,10 @@ export async function searchAlbums(query) {
   const { data } = await get(`/search?s=${encodeURIComponent(query)}`)
   const items = data?.data?.items || data?.items || []
 
-  const albums = items.length && items[0]?.cover && !items[0]?.album
-    ? items.map(_albObj)
-    : items.filter(t => t.album?.cover).map(_albTrk)
+  const albums =
+    items.length && items[0]?.cover && !items[0]?.album
+      ? items.map(_albObj)
+      : items.filter((t) => t.album?.cover).map(_albTrk)
 
   const res = _dedupe(albums)
 
@@ -55,13 +57,15 @@ export async function searchAlbums(query) {
 
 export const searchArtists = async (query) => {
   const { data } = await get(`/search?a=${encodeURIComponent(query)}`)
-  const items = data?.data?.artists?.items || data?.artists?.items || data?.artists || []
-  return items.filter(a => a.id)
-    .map(a => ({
+  const items =
+    data?.data?.artists?.items || data?.artists?.items || data?.artists || []
+  return items
+    .filter((a) => a.id)
+    .map((a) => ({
       id: String(a.id),
       name: a.name,
       cover: tidalCover(a.picture, 320),
-      type: 'artist'
+      type: 'artist',
     }))
 }
 
@@ -70,7 +74,7 @@ export async function searchPlaylists(query, limit = 6) {
 
   const paths = [
     `/search?p=${encodeURIComponent(query)}&limit=${limit}`,
-    `/search?s=${encodeURIComponent(query)}&limit=${limit}`
+    `/search?s=${encodeURIComponent(query)}&limit=${limit}`,
   ]
 
   for (const path of paths) {
@@ -84,7 +88,7 @@ export async function searchPlaylists(query, limit = 6) {
         data?.data?.playlists?.items ||
         []
 
-      const playlists = items.filter(p => p.uuid || p.numberOfTracks != null)
+      const playlists = items.filter((p) => p.uuid || p.numberOfTracks != null)
 
       if (playlists.length) return playlists.map(_normPl)
     } catch {}
@@ -103,8 +107,8 @@ export async function getAlbumTracks(albumId) {
   const album = data?.data || data || {}
 
   const tracks = (album.items || [])
-    .filter(r => r.type === 'track' || r.item)
-    .map(r => {
+    .filter((r) => r.type === 'track' || r.item)
+    .map((r) => {
       const t = r.item || r
       if (!t.album?.cover && album.cover) {
         t.album = { ...t.album, cover: album.cover, title: album.title }
@@ -120,7 +124,7 @@ export const getArtistTopTracks = async (id) => {
   const { data } = await get(`/artist/?id=${id}&limit=5`)
   return (data?.data?.topTracks?.items || data?.topTracks?.items || [])
     .slice(0, 5)
-    .map(t => normalizeTrack(t, 'tidal'))
+    .map((t) => normalizeTrack(t, 'tidal'))
 }
 
 export const getArtistAlbums = async (id) => {
@@ -129,15 +133,15 @@ export const getArtistAlbums = async (id) => {
 
   const seen = new Set()
   return items
-    .filter(a => a.cover && !seen.has(a.id) && seen.add(a.id))
-    .map(a => ({
+    .filter((a) => a.cover && !seen.has(a.id) && seen.add(a.id))
+    .map((a) => ({
       id: String(a.id),
       title: a.title,
-      artist: a.artists?.map(x => x.name).join(', ') || '',
+      artist: a.artists?.map((x) => x.name).join(', ') || '',
       cover: tidalCover(a.cover, 640),
       coverSmall: tidalCover(a.cover, 320),
       year: a.releaseDate ? new Date(a.releaseDate).getFullYear() : null,
-      type: a.type === 'SINGLE' ? 'single' : 'album'
+      type: a.type === 'SINGLE' ? 'single' : 'album',
     }))
 }
 
@@ -149,17 +153,17 @@ export async function getPlaylist(id) {
 
   let data
   try {
-    ({ data } = await getPlaylistRaw(`/playlist?id=${id}`))
+    ;({ data } = await getPlaylistRaw(`/playlist?id=${id}`))
   } catch (err) {
-    console.error(`Failed to fetch playlist ${id}:`, err);
-    return { id, title: 'Playlist', tracks: [], type: 'playlist' };
+    console.error(`Failed to fetch playlist ${id}:`, err)
+    return { id, title: 'Playlist', tracks: [], type: 'playlist' }
   }
 
   const pl = data?.playlist || data?.data || data || {}
   const items = data?.items || pl.items || []
 
   const tracks = items
-    .map(r => {
+    .map((r) => {
       const t = r.item || (r.id ? r : null)
       return t ? normalizeTrack(t, 'tidal') : null
     })
@@ -173,20 +177,96 @@ export async function getPlaylist(id) {
     coverSmall: tidalCover(pl.squareImage || pl.image || pl.cover, 320),
     trackCount: pl.numberOfTracks || tracks.length,
     tracks,
-    type: 'playlist'
+    type: 'playlist',
   }
 
   cacheSet(key, res, TTL_ALBUM)
   return res
 }
 
+// --- Mix ---
+export async function getMix(mixId) {
+  const key = `mix:${mixId}`
+  const cached = cacheGet(key)
+  if (cached) return cached
+
+  try {
+    const { data } = await get(`/mix/?id=${encodeURIComponent(mixId)}`)
+    const payload = data?.mix ? data : (data?.data ?? data ?? {})
+    const mixMeta = payload?.mix ?? {}
+    const rawItems = payload?.items ?? []
+
+    const tracks = rawItems
+      .map((r) => {
+        const t = r.item || (r.id ? r : null)
+        return t ? normalizeTrack(t, 'tidal') : null
+      })
+      .filter(Boolean)
+
+    const cover =
+      mixMeta.images?.LARGE?.url ||
+      mixMeta.images?.MEDIUM?.url ||
+      tidalCover(mixMeta.image || mixMeta.cover, 640)
+    const coverSmall =
+      mixMeta.images?.SMALL?.url ||
+      tidalCover(mixMeta.image || mixMeta.cover, 320)
+
+    const res = {
+      mix: {
+        id: String(mixMeta.id || mixId),
+        title: mixMeta.title || 'Mix',
+        description: mixMeta.subTitle || '',
+        cover,
+        coverSmall,
+        trackCount: tracks.length,
+        type: 'mix',
+      },
+      tracks,
+    }
+
+    if (tracks.length > 0) cacheSet(key, res, TTL_RECS)
+    return res
+
+  } catch (err) {
+    return {
+      mix: { id: mixId, title: 'Mix', description: '', cover: null, coverSmall: null, type: 'mix' },
+      tracks: [],
+    }
+  }
+}
+
+export async function getTrackById(trackId) {
+  try {
+    const { data } = await get(`/tracks/${trackId}`)
+    if (!data) throw new Error('Track not found')
+
+    const t = data.track || data
+    return normalizeTrack(t, 'tidal')
+  } catch (err) {
+    return {
+      id: trackId,
+      title: 'Unknown Track',
+      artist: 'Unknown Artist',
+      cover: null,
+      album: null,
+      mixes: null,
+      type: 'track',
+    }
+  }
+}
+
 export async function getHomeTrending() {
   const qs = ['top hits 2025', 'new releases 2025', 'trending now']
   const rs = await Promise.allSettled(qs.map(searchTracks))
-  const s = new Set(), res = []
+  const s = new Set(),
+    res = []
   for (const r of rs) {
     if (r.status === 'fulfilled') {
-      for (const t of r.value) if (!s.has(t.id)) { s.add(t.id); res.push(t) }
+      for (const t of r.value)
+        if (!s.has(t.id)) {
+          s.add(t.id)
+          res.push(t)
+        }
     }
   }
   return res
@@ -196,46 +276,49 @@ export async function getTrackRecommendations(id) {
   try {
     const { data } = await get(`/recommendations/?id=${id}`)
     return (data?.items || data?.data?.items || [])
-      .map(i => normalizeTrack(i.track || i))
-      .filter(t => t.id)
+      .map((i) => normalizeTrack(i.track || i))
+      .filter((t) => t.id)
   } catch {
     return []
   }
 }
 
-// --- Stream (Audio) ---
-export async function getStream(trackId) {
-  const pref = localStorage.getItem('tt_quality') || 'lossless'
+// --- Streaming ---
+export async function getStream(trackId, requestedQuality) {
+  const pref =
+    requestedQuality || localStorage.getItem('tt_quality') || 'lossless'
   const quality = Q_MAP[pref] || Q_MAP.lossless
-
-  for (const q of [quality, Q_MAP.high, Q_MAP.lossless]) {
+  const fallbacks = [quality]
+  if (pref === 'atmos') {
+    fallbacks.push(Q_MAP.hires, Q_MAP.lossless, Q_MAP.high)
+  } else {
+    fallbacks.push(Q_MAP.high, Q_MAP.lossless)
+  }
+  for (const q of fallbacks) {
     try {
       const { data } = await get(`/track/?id=${trackId}&quality=${q}`)
       const payload = data?.data || data
-
       if (payload?.manifest) {
         const decoded = decodeManifest(payload)
         if (decoded.quality === 'LOW' && q !== Q_MAP.low) continue
+        if (q === Q_MAP.atmos) decoded.isAtmos = true
         return decoded
       }
-    } catch {}
+    } catch { }
   }
-
   throw new Error('Stream unavailable')
 }
 
 // --- Video ---
 export const searchTidalVideos = async (query) => {
   try {
-    const { data } = await get(
-      `/search?v=${encodeURIComponent(query)}`,
-      null,
-      { allowedDomains: ['hifi-one.spotisaver.net'] }
-    )
+    const { data } = await get(`/search?v=${encodeURIComponent(query)}`, null, {
+      allowedDomains: ['hifi-one.spotisaver.net'],
+    })
 
     return (data?.videos?.items || data?.data?.videos?.items || [])
       .map(_normVid)
-      .filter(v => v.id)
+      .filter((v) => v.id)
   } catch {
     return []
   }
@@ -244,10 +327,9 @@ export const searchTidalVideos = async (query) => {
 export const getTidalVideoStream = async (id) => {
   for (const q of ['HIGH', 'LOW']) {
     try {
-      const { data } = await get(
-        `/video?id=${id}&quality=${q}`,
-        ['https://hifi-one.spotisaver.net']  
-      )
+      const { data } = await get(`/video?id=${id}&quality=${q}`, [
+        'https://hifi-one.spotisaver.net',
+      ])
 
       const p = data?.video || data?.data || data
       if (!p?.manifest) continue
@@ -259,7 +341,7 @@ export const getTidalVideoStream = async (id) => {
       return {
         type: m?.mimeType?.includes('mpegurl') ? 'hls' : 'mp4',
         url: urls[urls.length - 1],
-        duration: p.duration || m?.duration || 0
+        duration: p.duration || m?.duration || 0,
       }
     } catch {}
   }
@@ -268,49 +350,51 @@ export const getTidalVideoStream = async (id) => {
 }
 
 // --- Helpers ---
-const _normVid = v => {
+const _normVid = (v) => {
   const img = v.imageId || v.cover || v.album?.cover || ''
   return {
     id: String(v.id || ''),
     title: v.title || 'Unknown',
     artist: (v.artists || [v.artist])
       .filter(Boolean)
-      .map(a => a?.name || a)
+      .map((a) => a?.name || a)
       .join(', '),
     cover: tidalCover(img, 640),
     coverSmall: tidalCover(img, 320),
     duration: v.duration || 0,
     source: 'tidal-video',
-    type: 'video'
+    type: 'video',
   }
 }
 
-const _albObj = a => ({
+const _albObj = (a) => ({
   id: String(a.id),
   title: a.title,
-  artist: (a.artists || [a.artist]).map(x => x?.name).join(', '),
+  artist: (a.artists || [a.artist]).map((x) => x?.name).join(', '),
   cover: tidalCover(a.cover, 640),
   coverSmall: tidalCover(a.cover, 320),
   year: a.releaseDate ? new Date(a.releaseDate).getFullYear() : null,
-  type: 'album'
+  type: 'album',
 })
 
-const _albTrk = t => ({
+const _albTrk = (t) => ({
   id: String(t.album.id),
   title: t.album.title,
-  artist: (t.artists || [t.artist]).map(a => a?.name).join(', '),
+  artist: (t.artists || [t.artist]).map((a) => a?.name).join(', '),
   cover: tidalCover(t.album.cover, 640),
   coverSmall: tidalCover(t.album.cover, 320),
-  year: t.album.releaseDate ? new Date(t.album.releaseDate).getFullYear() : null,
-  type: 'album'
+  year: t.album.releaseDate
+    ? new Date(t.album.releaseDate).getFullYear()
+    : null,
+  type: 'album',
 })
 
-const _dedupe = arr => {
+const _dedupe = (arr) => {
   const seen = new Set()
-  return arr.filter(a => !seen.has(a.id) && seen.add(a.id)).slice(0, 20)
+  return arr.filter((a) => !seen.has(a.id) && seen.add(a.id)).slice(0, 20)
 }
 
-const _normPl = p => {
+const _normPl = (p) => {
   const img = p.squareImage || p.image || p.cover || ''
   return {
     id: String(p.uuid || p.id || ''),
@@ -320,6 +404,6 @@ const _normPl = p => {
     coverSmall: tidalCover(img, 320),
     trackCount: p.numberOfTracks || 0,
     tracks: [],
-    type: 'playlist'
+    type: 'playlist',
   }
 }

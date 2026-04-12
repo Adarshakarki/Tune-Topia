@@ -1,4 +1,5 @@
-const enc = s => new TextEncoder().encode(s);
+// Metadata
+export const enc = s => new TextEncoder().encode(s);
 
 export function concat(...arrs) {
   const out = new Uint8Array(arrs.reduce((s, a) => s + a.length, 0));
@@ -7,9 +8,11 @@ export function concat(...arrs) {
   return out;
 }
 
+export const u32LE = n => new Uint8Array([n & 0xff, (n >>> 8) & 0xff, (n >>> 16) & 0xff, (n >>> 24) & 0xff]);
+export const u24BE = n => new Uint8Array([(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff]);
 const syncsafe4 = n => new Uint8Array([(n>>>21)&0x7f, (n>>>14)&0x7f, (n>>>7)&0x7f, n&0x7f]);
-const u32BE = n => new Uint8Array([(n>>>24)&0xff, (n>>>16)&0xff, (n>>>8)&0xff, n&0xff]);
-const readU32 = (b, o) => ((b[off]<<24)|(b[off+1]<<16)|(b[off+2]<<8)|b[off+3]) >>> 0;
+export const u32BE = n => new Uint8Array([(n>>>24)&0xff, (n>>>16)&0xff, (n>>>8)&0xff, n&0xff]);
+const readU32 = (b, o) => ((b[o]<<24)|(b[o+1]<<16)|(b[o+2]<<8)|b[o+3]) >>> 0;
 
 // ID3 (MP3)
 function id3Frame(id, data) {
@@ -28,7 +31,16 @@ export function buildID3(t, img, mime = 'image/jpeg') {
 }
 
 // MP4/iTunes (M4A)
-const atom = (t, b) => concat(u32BE(b.length + 8), enc(t).slice(0, 4), b);
+const atom = (t, b) => {
+  let type;
+  if (typeof t === 'string' && t.startsWith('\u00a9')) {
+    // iTunes atoms like ©nam need the single byte 0xA9, not the 2-byte UTF8 copyright symbol
+    type = new Uint8Array([0xa9, ...enc(t.slice(1)).slice(0, 3)]);
+  } else {
+    type = typeof t === 'string' ? enc(t).slice(0, 4) : t;
+  }
+  return concat(u32BE(b.length + 8), type, b);
+};
 const itData = (f, b) => atom('data', concat(new Uint8Array([0,0,0,f,0,0,0,0]), b));
 
 function buildIlst(t, img) {
@@ -64,8 +76,12 @@ export function injectM4aMeta(bin, t, img) {
   if (!ilst) return bin;
   const hdlr = atom('hdlr', concat(new Uint8Array(8), enc('mdirappl'), new Uint8Array(9)));
   const udta = atom('udta', atom('meta', concat(new Uint8Array(4), hdlr, ilst)));
-  const newMoov = atom('moov', concat(stripAtom(bin.slice(mOff + 8, mOff + mSize), 'udta'), udta));
-  return concat(bin.slice(0, mOff), newMoov, bin.slice(mOff + mSize));
+  const moovPayload = stripAtom(bin.slice(mOff + 8, mOff + mSize), 'udta');
+  const newMoov = atom('moov', concat(moovPayload, udta));
+  
+  // Replace original moov with a 'free' atom of the same size to keep offsets valid, then append new moov
+  const free = concat(u32BE(mSize), enc('free'), new Uint8Array(mSize - 8));
+  return concat(bin.slice(0, mOff), free, bin.slice(mOff + mSize), newMoov);
 }
 
 export async function fetchCover(url) {
@@ -74,4 +90,79 @@ export async function fetchCover(url) {
   for (const u of [p, url]) {
     try { const r = await fetch(u); if (r.ok) return new Uint8Array(await r.arrayBuffer()); } catch {}
   } return null;
+}
+
+// Vorbis Comments (Used by OGG and FLAC)
+export function buildVorbisComment(t, img) {
+  const tags = [];
+  if (t.title) tags.push(`TITLE=${t.title}`);
+  if (t.artist) tags.push(`ARTIST=${t.artist}`);
+  if (t.album) tags.push(`ALBUM=${t.album}`);
+  
+  if (img) {
+    const mime = enc('image/jpeg');
+    const desc = enc('Front Cover');
+    const pic = concat(u32BE(3), u32BE(mime.length), mime, u32BE(desc.length), desc, u32BE(0), u32BE(0), u32BE(0), u32BE(0), u32BE(img.length), img);
+    // OGG/Vorbis stores the picture block as a Base64 string
+    // Use a loop to avoid stack overflow on btoa(String.fromCharCode(...pic))
+    let binary = '';
+    for (let i = 0; i < pic.length; i++) binary += String.fromCharCode(pic[i]);
+    tags.push(`METADATA_BLOCK_PICTURE=${btoa(binary)}`);
+  }
+
+  const vendor = enc('TuneTopia');
+  return concat(u32LE(vendor.length), vendor, u32LE(tags.length), ...tags.map(tag => {
+    const b = enc(tag);
+    return concat(u32LE(b.length), b);
+  }));
+}
+
+const OGG_CRC_TABLE = new Uint32Array(256);
+for (let i = 0; i < 256; i++) {
+  let r = i << 24;
+  for (let j = 0; j < 8; j++) r = (r << 1) ^ (r & 0x80000000 ? 0x04c11db7 : 0);
+  OGG_CRC_TABLE[i] = r;
+}
+
+export function injectOggMeta(bin, t, img) {
+  // Find the second Ogg page (usually the Comment/Tags page)
+  let o = 0, pages = [];
+  while (o < bin.length && pages.length < 2) {
+    if (bin[o] !== 0x4f || bin[o+1] !== 0x67 || bin[o+2] !== 0x67 || bin[o+3] !== 0x53) break;
+    const segs = bin[o+26];
+    let len = 27 + segs;
+    for (let i = 0; i < segs; i++) len += bin[o + 27 + i];
+    pages.push({ start: o, len });
+    o += len;
+  }
+  if (pages.length < 2) return bin;
+
+  const p2 = bin.slice(pages[1].start, pages[1].start + pages[1].len);
+  const segs2 = p2[26];
+  const packetStart = 27 + segs2;
+
+  const isOpus = String.fromCharCode(...p2.slice(packetStart, packetStart + 8)) === 'OpusTags';
+  const isVorbis = p2[packetStart] === 0x03 && String.fromCharCode(...p2.slice(packetStart + 1, packetStart + 7)) === 'vorbis';
+  if (!isOpus && !isVorbis) return bin;
+
+  const commentBlock = buildVorbisComment(t, img);
+  const payload = isOpus 
+    ? concat(enc('OpusTags'), commentBlock)
+    : concat(new Uint8Array([0x03]), enc('vorbis'), commentBlock, new Uint8Array([1]));
+
+  const newSegmentTable = [];
+  let rem = payload.length;
+  while (rem >= 255) { newSegmentTable.push(255); rem -= 255; }
+  newSegmentTable.push(rem);
+
+  if (newSegmentTable.length > 255) return bin; // Simplified injector: limited to 255 segments (~64KB)
+
+  const newPage = new Uint8Array(27 + newSegmentTable.length + payload.length);
+  newPage.set(p2.slice(0, 22));
+  newPage[26] = newSegmentTable.length;
+  newPage.set(new Uint8Array(newSegmentTable), 27);
+  newPage.set(payload, 27 + newSegmentTable.length);
+  const crc = (buf) => { let c = 0; for (let i = 0; i < buf.length; i++) c = (c << 8) ^ OGG_CRC_TABLE[((c >>> 24) ^ buf[i]) & 0xff]; return c >>> 0; };
+  newPage.set(u32LE(crc(newPage)), 22);
+  return concat(bin.slice(0, pages[1].start), newPage, bin.slice(pages[1].start + pages[1].len));
 }

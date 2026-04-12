@@ -1,4 +1,6 @@
+// Liked Videos
 import * as LikedVideos from '../modules/likedVideos.js'
+import * as UI from '../app/ui.js'
 import { escHtml } from '../api/utils.js'
 
 const $ = (id) => document.getElementById(id)
@@ -7,7 +9,7 @@ let _playVideo = null
 let _query = ''
 let _sortMode = 'recent' // 'recent' | 'az'
 
-// Re-exports used by search.js
+// For search.js
 export const toggle = (video) => {
   const result = LikedVideos.toggle(video)
   _updateGlobalCount()
@@ -62,7 +64,7 @@ function _getFilteredVideos() {
   if (_sortMode === 'az') {
     items.sort((a, b) => (a.title || '').localeCompare(b.title || ''))
   } else {
-    items.reverse() // Default: newest first
+    items.reverse() // Newest first
   }
 
   return items
@@ -82,11 +84,7 @@ function _render() {
 
   if (!all.length) {
     list.innerHTML = `
-      <div class="empty">
-        <i class="bi bi-camera-video"></i>
-        <p>No liked videos yet</p>
-        <small>Like videos from search to save them here</small>
-      </div>`
+      ${UI.emptyState('camera', 'No liked videos yet', 'Like videos from search to save them here')}`
     return
   }
 
@@ -105,7 +103,7 @@ function _render() {
     <div class="vc-row lv-row" data-id="${escHtml(v.id)}">
       <div class="vc-thumb-wrap">
         <img class="vc-thumb" src="${escHtml(v.cover || v.coverSmall || '')}" alt="" onerror="this.src=''"/>
-        <div class="vc-overlay"><i class="bi bi-play-fill" style="color:#fff;font-size:22px"></i></div>
+        <div class="vc-overlay" style="color:#fff;font-size:22px">${UI.getIcon('play')}</div>
         <span class="vc-source-badge ${v.source === 'youtube' ? 'vc-badge-yt' : 'vc-badge-tidal'}">
           ${v.source === 'youtube' ? 'YT' : 'Tidal'}
         </span>
@@ -116,7 +114,7 @@ function _render() {
         <div class="vc-artist">${escHtml(v.artist || '')}</div>
       </div>
       <button class="vc-like-btn lv-unlike-btn" data-id="${escHtml(v.id)}" title="Unlike">
-        <i class="bi bi-heart-fill vc-like-icon liked"></i>
+        <span class="vc-like-icon liked">${UI.getIcon('heartFill')}</span>
       </button>
     </div>`
     )

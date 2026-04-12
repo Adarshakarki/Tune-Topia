@@ -1,6 +1,8 @@
-const CACHE = 'tunetopia-v2.1'
+// Service Worker
+const CACHE = 'tunetopia-v2.1.3'
+const VERSION = CACHE.split('-v')[1] || '1.0.0'
 
-// Core assets for offline shell
+// Assets to cache
 const PRECACHE = [
   './',
   'index.html',
@@ -38,16 +40,16 @@ const PRECACHE = [
   'assets/logo.JPEG',
 ]
 
-// Cache assets on install
+// Install handler
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE).then(async (cache) => {
-      // 1. Cache static core assets
+      // Cache static list
       await Promise.all(
         PRECACHE.map((url) => cache.add(url).catch((err) => console.warn('[SW] precache miss:', url, err)))
       );
 
-      // 2. Dynamically discover and cache all themes from the manifest
+      // Cache dynamic themes
       try {
         const res = await fetch('theme/themes.json');
         const data = await res.json();
@@ -60,7 +62,7 @@ self.addEventListener('install', (e) => {
   );
 });
 
-// Cleanup old caches
+// Activate handler
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
@@ -74,7 +76,7 @@ self.addEventListener('activate', e => {
   )
 })
 
-// Handle update trigger
+// IPC handler
 self.addEventListener('message', e => {
   if (e.data?.type === 'SKIP_WAITING') {
     console.log('[SW] SKIP_WAITING received — activating now')
@@ -82,7 +84,7 @@ self.addEventListener('message', e => {
   }
 })
 
-// Fetch strategy: Network-first for HTML, Cache-first for assets
+// Fetch handler
 self.addEventListener('fetch', e => {
   const { request } = e
   if (request.method !== 'GET') return
@@ -90,12 +92,14 @@ self.addEventListener('fetch', e => {
   const url = new URL(request.url)
   if (!url.protocol.startsWith('http')) return
 
-  // Bypass streaming, API, and range requests
+  // Network-only rules
   if (
     url.origin !== self.location.origin ||
     url.pathname.startsWith('/api/') ||
     url.pathname.endsWith('.m3u8') ||
     url.pathname.endsWith('.ts') ||
+    url.pathname.includes('ffmpeg') ||
+    url.pathname.endsWith('.wasm') ||
     request.destination === 'audio' ||
     request.destination === 'video' ||
     request.headers.get('range')
@@ -111,7 +115,7 @@ self.addEventListener('fetch', e => {
           }
           return res
         })
-        .catch(() => caches.match(request).then(c => c || caches.match('/index.html')))
+        .catch(() => caches.match(request).then(c => c || caches.match('./index.html') || new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } })))
     )
     return
   }
@@ -124,7 +128,15 @@ self.addEventListener('fetch', e => {
         const clone = res.clone()
         caches.open(CACHE).then(c => c.put(request, clone))
         return res
-      }).catch(() => caches.match('/index.html'))
+      }).catch(() => caches.match('./index.html') || new Response('Offline', { status: 503 }))
     })
   )
+})
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'GET_VERSION') {
+    event.ports[0].postMessage({
+      version: CACHE
+    })
+  }
 })

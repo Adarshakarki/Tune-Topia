@@ -1,13 +1,21 @@
-.about-container {
+#page-about.active {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+#page-about .about-container {
   max-width: 600px;
+  width: 100%;
   margin: 0 auto;
   padding: var(--s6) var(--s5);
+
   display: flex;
   flex-direction: column;
   gap: var(--s8);
 }
 
-.about-header {
+#page-about .about-header {
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -15,39 +23,39 @@
   gap: var(--s3);
 }
 
-.about-app-logo {
+#page-about .about-app-logo {
   width: 100px;
   height: 100px;
   border-radius: var(--r-full);
   box-shadow: var(--shadow-lg);
-  margin-bottom: var(--s2);
 }
 
-.about-app-title {
+#page-about .about-app-title {
   font-family: var(--font-primary);
   font-size: 32px;
   font-weight: 800;
   color: var(--text);
 }
 
-.about-app-desc {
+#page-about .about-app-desc {
   font-size: 15px;
   line-height: 1.6;
   color: var(--text-2);
   max-width: 400px;
 }
 
-.about-features-list {
+#page-about .about-features-list {
   display: flex;
   flex-direction: column;
   gap: var(--s3);
+
   background: var(--surface-2);
   padding: var(--s5);
   border-radius: var(--r-lg);
   border: 1px solid var(--border);
 }
 
-.about-feature {
+#page-about .about-feature {
   display: flex;
   align-items: center;
   gap: var(--s3);
@@ -56,29 +64,31 @@
   color: var(--text);
 }
 
-.about-feature i {
+#page-about .about-feature i {
   color: var(--accent);
   font-size: 18px;
 }
 
-.developer-card {
+#page-about .developer-card {
   margin-top: var(--s4);
 }
 
-.dev-card-front {
+#page-about .dev-card-front {
   background: var(--surface);
   border: 1px solid var(--border-mid);
   border-radius: var(--r-xl);
   padding: var(--s5);
+
   display: flex;
   align-items: center;
   gap: var(--s5);
+
   box-shadow: var(--shadow-md);
   position: relative;
   overflow: hidden;
 }
 
-.dev-card-front::before {
+#page-about .dev-card-front::before {
   content: '';
   position: absolute;
   top: 0;
@@ -90,75 +100,88 @@
   z-index: 0;
 }
 
-.dev-avatar {
+#page-about .dev-avatar {
   width: 80px;
   height: 80px;
   border-radius: var(--r-full);
   object-fit: cover;
   border: 2px solid var(--accent);
-  position: relative;
   z-index: 1;
 }
 
-.dev-info {
+#page-about .dev-info {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  position: relative;
   z-index: 1;
 }
 
-.dev-label {
+#page-about .dev-label {
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.1em;
   color: var(--accent);
-  margin-bottom: 2px;
 }
 
-.dev-name {
+#page-about .dev-name {
   font-family: var(--font-primary);
   font-size: 20px;
   font-weight: 700;
   color: var(--text);
 }
 
-.dev-role {
+#page-about .dev-role {
   font-size: 13px;
   color: var(--text-2);
-  font-weight: 500;
 }
 
-.dev-email {
+#page-about .dev-email {
   font-size: 12px;
   color: var(--text-3);
   margin-top: 4px;
 }
 
-.about-social {
+#page-about .about-social {
   display: flex;
   justify-content: center;
-  margin-top: var(--s2);
 }
 
-.github-link-btn {
+#page-about .github-link-btn {
   display: flex;
   align-items: center;
   gap: var(--s2);
+
   padding: var(--s3) var(--s6);
   background: var(--text);
   color: var(--bg);
+
   border-radius: var(--r-full);
   font-size: 14px;
   font-weight: 600;
+
   transition: transform 0.2s var(--spring), opacity 0.15s;
 }
 
-.github-link-btn:active {
+#page-about .github-link-btn:active {
   transform: scale(0.95);
   opacity: 0.9;
 }
 
-.github-link-btn i {
+#page-about .github-link-btn i {
   font-size: 18px;
+}
+
+#page-about .about-footer-minimal {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-3);
+  opacity: 0.7;
+}
+#page-about #app-version {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+#page-about #app-version.loaded {
+  opacity: 1;
 }

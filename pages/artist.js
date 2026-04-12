@@ -1,3 +1,4 @@
+// Artist
 import { searchArtists, searchTracks, searchAlbums, getArtistTopTracks, getArtistAlbums } from '../api/index.js'
 import { escHtml } from '../api/utils.js'
 import * as UI from '../app/ui.js'
@@ -10,7 +11,6 @@ const $ = (id) => document.getElementById(id)
 
 let _artist = null, _tracks = [], _albums = [], _playFn = null, _openAlbum = null, _sheetTrack = null;
 
-// Lifecycle
 export function init(playFn, openAlb) {
   _playFn = playFn; _openAlbum = openAlb;
   $('artist-back-btn')?.addEventListener('click', close);
@@ -41,6 +41,11 @@ export async function open(input) {
   $('artist-wiki-section').style.display = 'none';
   page.classList.add('open');
   document.body.style.overflow = 'hidden';
+
+  const Router = await import('../app/router.js');
+  const slug = (input.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '_');
+  Router.updateURL('artist', { ...input, artist: slug });
+
   UI.updatePlayerPosition();
 
   if (!input.id || String(input.id) === 'undefined') {
@@ -66,9 +71,9 @@ export function close() {
   UI.updatePlayerPosition();
 }
 
-// UI Helpers
+// Theme
 function _applyColor(r, g, b) {
-  const dr = Math.round(r * 0.52), dg = Math.round(g * 0.52), db = Math.round(b * 0.52);
+  const dr = Math.round(r * 0.85), dg = Math.round(g * 0.85), db = Math.round(b * 0.85);
   const page = $('page-artist'); if (!page) return;
   const dark = `rgb(${dr},${dg},${db})`;
   page.style.setProperty('--art-dark', dark);
@@ -129,7 +134,7 @@ async function _loadWiki(n) {
 
 function _renderTs(ts) {
   const el = $('artist-tracklist'); if (!el) return;
-  if (!ts.length) return el.innerHTML = '<div class="empty"><i class="bi bi-music-note-beamed"></i><p>No tracks found</p></div>';
+  if (!ts.length) return el.innerHTML = UI.emptyState('music', 'No tracks found');
   el.innerHTML = ts.map((t, i) => `
     <div class="alb-track" data-index="${i}" data-tid="${escHtml(t.id)}">
       <span class="alb-track-num">${i + 1}</span>
@@ -139,7 +144,7 @@ function _renderTs(ts) {
         <div class="alb-track-artist">${escHtml(t.album || '')}</div>
       </div>
       <span class="alb-track-dur">${t.dur || ''}</span>
-      <button class="alb-track-more" data-index="${i}"><i class="bi bi-three-dots"></i></button>
+      <button class="alb-track-more" data-index="${i}">${UI.getIcon('more')}</button>
     </div>`).join('');
 
   el.querySelectorAll('.alb-track').forEach(row => {

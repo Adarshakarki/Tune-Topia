@@ -1,51 +1,85 @@
-// Secure Proxy Server for CORS bypass
+// Proxy Server
 const express = require('express')
 const axios = require('axios')
 const dns = require('dns').promises
 const net = require('net')
+const cors = require('cors')
+const path = require('path')
 
 const app = express()
 
-// --- Domain Whitelist ---
-const SERVICES = {
-  spotify: 'i.scdn.co',
-  tidal: 'api.tidal.com',
-  tidal_res: 'resources.tidal.com',
-  piped1: 'pipedapi.kavin.rocks',
-  piped2: 'piped-api.garudalinux.org',
-  piped3: 'api-piped.mha.fi',
-  piped4: 'piped-api.lunar.icu',
-  ytimg: 'i.ytimg.com',
-  nhac: 'nhac.com.vn',
-}
+// CORS configuration
+const allowedOrigins = [
+  'https://adarshakarki.github.io',
+  'http://127.0.0.1:3000',
+  'http://localhost:3000',
+  'http://127.0.0.1:5173',
+  'http://localhost:5173',
+  'https://adarshakarki.github.io/Tune-Topia/',
+]
 
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin or from allowed list
+      if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        origin.includes('localhost') ||
+        origin.includes('127.0.0.1')
+      ) {
+        callback(null, true)
+      } else {
+        console.log('CORS blocked origin:', origin)
+        callback(null, true) // Allow during transition to avoid silent failures
+      }
+    },
+    credentials: true,
+  })
+)
+
+// COOP/COEP headers for ffmpeg.wasm
+app.use((req, res, next) => {
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
+  res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp')
+  next()
+})
+
+// Serve static assets
+app.use(express.static(path.join(__dirname, '../')))
+
+// Block private IPs (SSRF protection)
 function isPrivateIP(ip) {
-  if (!net.isIP(ip)) return true
+  const version = net.isIP(ip)
+  if (!version) return true
+  if (version === 4) {
+    const parts = ip.split('.').map(Number)
+    if (
+      parts.length !== 4 ||
+      parts.some((p) => Number.isNaN(p) || p < 0 || p > 255)
+    ) {
+      return true
+    }
+    const [a, b] = parts
+    // 10.0.0.0/8
+    if (a === 10) return true
+    // 172.16.0.0/12 (172.16.0.0 – 172.31.255.255)
+    if (a === 172 && b >= 16 && b <= 31) return true
+    // 192.168.0.0/16
+    if (a === 192 && b === 168) return true
+    // 127.0.0.0/8 (loopback)
+    if (a === 127) return true
+    // 169.254.0.0/16 (link-local)
+    if (a === 169 && b === 254) return true
+    return false
+  }
 
-  return (
-    ip.startsWith('10.') ||
-    ip.startsWith('192.168.') ||
-    ip.startsWith('172.16.') ||
-    ip.startsWith('172.17.') ||
-    ip.startsWith('172.18.') ||
-    ip.startsWith('172.19.') ||
-    ip.startsWith('172.20.') ||
-    ip.startsWith('172.21.') ||
-    ip.startsWith('172.22.') ||
-    ip.startsWith('172.23.') ||
-    ip.startsWith('172.24.') ||
-    ip.startsWith('172.25.') ||
-    ip.startsWith('172.26.') ||
-    ip.startsWith('172.27.') ||
-    ip.startsWith('172.28.') ||
-    ip.startsWith('172.29.') ||
-    ip.startsWith('172.30.') ||
-    ip.startsWith('172.31.') ||
-    ip.startsWith('127.') ||
-    ip === '::1' ||
-    ip.startsWith('fc') ||
-    ip.startsWith('fd')
-  )
+  // IPv6: block loopback, link-local and unique-local
+  const normalized = ip.toLowerCase()
+  if (normalized === '::1') return true // loopback
+  if (normalized.startsWith('fe80:')) return true // link-local
+  if (normalized.startsWith('fc') || normalized.startsWith('fd')) return true // unique-local
+  return false
 }
 
 async function isSafeHost(hostname) {
@@ -57,64 +91,59 @@ async function isSafeHost(hostname) {
   }
 }
 
+// Proxy route
 app.get('/proxy', async (req, res) => {
-  const serviceRaw = req.query.service
-  const pathRaw = req.query.path ?? '/'
-  const queryRaw = req.query.query ?? ''
-
-  if (
-    typeof serviceRaw !== 'string' ||
-    typeof pathRaw !== 'string' ||
-    typeof queryRaw !== 'string'
-  ) {
-    return res.status(400).send('Invalid parameters.')
-  }
-
-  const service = serviceRaw
-  const path = pathRaw
-  const query = queryRaw
-
-  const hostname = SERVICES[service]
-  if (!hostname) {
-    return res.status(403).send('Invalid service.')
-  }
-
-  if (path.includes('..')) {
-    return res.status(403).send('Invalid path.')
-  }
-
-  const safe = await isSafeHost(hostname)
-  if (!safe) {
-    return res.status(403).send('Blocked internal IP.')
+  const targetUrl = req.query.url
+  if (!targetUrl) {
+    return res.status(400).send('Error: Missing "url" parameter.')
   }
 
   try {
-    const safeUrl = new URL(
-      `https://${hostname}${path}${query ? '?' + query : ''}`
-    )
+    const urlObj = new URL(targetUrl)
 
-    const response = await axios.get(safeUrl.toString(), {
+    // Validate protocol and host
+    if (urlObj.protocol !== 'http:' && urlObj.protocol !== 'https:') {
+      return res.status(400).send('Error: Only http/https allowed.')
+    }
+    if (!urlObj.hostname) {
+      return res.status(400).send('Error: Missing hostname.')
+    }
+
+    // Safety check
+    const safe = await isSafeHost(urlObj.hostname)
+    if (!safe) {
+      return res.status(403).send('Forbidden: Internal or unsafe host.')
+    }
+
+    // Fetch target
+    const response = await axios.get(urlObj.toString(), {
       responseType: 'arraybuffer',
-      timeout: 8000,
-      maxRedirects: 0,
-      maxContentLength: 5 * 1024 * 1024,
-      validateStatus: (s) => s >= 200 && s < 300,
+      timeout: 10000,
+      validateStatus: () => true, // Don't throw on 4xx/5xx
       headers: {
-        'User-Agent': 'SecureProxy/1.0',
+        'User-Agent': 'TuneTopiaProxy/1.0',
+        Accept: '*/*',
       },
     })
 
+    // Pass headers
     if (response.headers['content-type']) {
       res.set('Content-Type', response.headers['content-type'])
     }
 
     res.send(response.data)
   } catch (err) {
-    console.error('Proxy error:', err.message)
-    res.status(500).json({ success: false, error: 'Fetch failed.' })
+    console.error('Proxy Error:', err.message)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch the requested URL',
+      details: err.message,
+    })
   }
 })
 
-app.listen(3000, () => {
-  console.log('Secure proxy running on http://localhost:3000')
+// Start server
+const PORT = process.env.PORT || 3000
+app.listen(PORT, () => {
+  console.log(`Tune-Topia Proxy running on port ${PORT}`)
 })

@@ -1,4 +1,3 @@
-/* genre page */
 #page-genre {
   position: fixed;
   inset: 0;
@@ -13,14 +12,12 @@
   visibility: visible;
   transition: transform 0.38s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s 0s;
 }
-
-/* topbar */
 #genre-topbar {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  z-index: var(--z-space-between);
+  z-index: var(--z-topbar);
   padding: max(env(safe-area-inset-top, 0px), 14px) var(--s4) var(--s2);
   gap: var(--s2);
   background: var(--bg);
@@ -38,9 +35,6 @@
   text-align: center;
   padding: 0 var(--s2);
 }
-#genre-back-btn { color: var(--text) !important; }
-
-/* scroll */
 #genre-scroll {
   position: absolute;
   inset: 0;
@@ -53,16 +47,12 @@
 }
 
 .genre-section-title { font-size: 18px; font-weight: 700; color: var(--text); padding: var(--s4) var(--s4) var(--s2); }
-
-/* card grid */
 .genre-cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: var(--s3);
   padding: var(--s2) var(--s4) var(--s4);
 }
-
-/* card */
 .genre-card {
   cursor: pointer;
   border-radius: var(--r-md);
@@ -98,12 +88,9 @@
 }
 .genre-card:hover .genre-card-play,
 .genre-card:active .genre-card-play { opacity: 1; }
-
 .genre-card-info { padding: 9px 10px 11px; }
 .genre-card-title { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
 .genre-card-sub   { font-size: 11px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-/* tracks list */
 #genre-tracks-list {
   display: flex;
   flex-direction: column;

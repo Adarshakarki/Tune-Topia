@@ -1,5 +1,7 @@
-/* sections */
-.section { padding: var(--s5) 0 0; }
+.section { 
+  padding: var(--s5) 0 0; 
+  min-height: 180px;
+}
 
 .section-header {
   display: flex;
@@ -20,7 +22,6 @@
   color: var(--accent);
 }
 
-/* horizontal scroll */
 .horiz-scroll {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -66,8 +67,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-/* hero card */
 #hero-card {
   margin: var(--s4) var(--s5);
   border-radius: var(--r-xl);
@@ -129,8 +128,6 @@
 }
 .hero-play:active { transform: scale(0.88); }
 .hero-play .bi { font-size: 20px; }
-
-/* empty state */
 .empty {
   text-align: center;
   padding: 64px var(--s5);
@@ -149,8 +146,6 @@
   color: var(--text-2);
 }
 .empty small { font-size: 13px; display: block; margin-top: 5px; }
-
-/* error state */
 .error-state {
   display: flex;
   flex-direction: column;

@@ -1,16 +1,19 @@
-// Gapless Hybrid Audio Player
+// Player
 import State from '../app/state.js'
 import Queue from './queue.js'
 import History from './history.js'
+import * as Recommendations from './recommendations.js'
 import {
   getStream as tidalStream,
   getTrackRecommendations,
+  searchTracks,
 } from '../api/index.js'
 import { getAudioStream as ytStream, searchVideos } from '../api/index.js'
 
-// --- Audio Elements ---
+// Audio
 const audioA = document.getElementById('audio')
 const audioB = new Audio()
+audioB.crossOrigin = 'anonymous'
 audioB.preload = 'auto'
 
 let _active = audioA
@@ -20,6 +23,9 @@ let _swapping = false
 let _sleepAfterTrack = false
 let _handlersRegistered = false
 let _switching = false
+let _radioMode = false
+const _radioHistory = new Set()
+let _loadingRadio = false
 
 const _preloadLead = 20
 const _listeners = {}
@@ -27,7 +33,7 @@ let _preloaded = null
 let _preloading = false
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
 
-// --- Events ---
+// Events
 export function on(event, cb) {
   if (!_listeners[event]) _listeners[event] = []
   _listeners[event].push(cb)
@@ -39,7 +45,7 @@ function _emit(event, data) {
   ;(_listeners[event] || []).forEach((cb) => cb(data))
 }
 
-// --- MediaSession Integration ---
+// MediaSession
 function _updateMediaSession(track) {
   if (!('mediaSession' in navigator)) return
   
@@ -139,7 +145,7 @@ function _bindAudio(el) {
   el.addEventListener('error', () => {
     if (el !== _active) return
     if (!el.src || el.src === window.location.href) return
-    _emit('error', 'Playback error')
+    _emit('error', 'Playback error');
     next()
   })
   el.addEventListener('timeupdate', () => {
@@ -155,32 +161,76 @@ function _bindAudio(el) {
 _bindAudio(audioA)
 _bindAudio(audioB)
 
-// --- Queue Management ---
+// Management
 function _onEnded() {
   if (_sleepAfterTrack) {
     _sleepAfterTrack = false; _emit('playStateChanged', false); _emit('sleepTimerFired', null); return;
   }
   if (State.get('player.isRepeat')) { _active.currentTime = 0; _active.play(); return; }
   if (_preloaded && !_swapping) { _swapToPreloaded(); return; }
-  if (_swapping) return;
 
   const hasNext = Queue.getNext();
   if (hasNext) { next(); return; }
 
-  const current = State.get('player.currentTrack');
-  if (!current) return;
-
-  getTrackRecommendations(current.id).then(recs => {
-    if (!recs.length) return
-    recs.forEach((r) => Queue.add(r))
-    next()
-  })
+  // If we reached the end and Radio is on, fetch next batch and play
+  if (_radioMode) {
+    _fillRadioQueue().then(() => {
+      if (Queue.getNext()) next();
+    });
+  }
 }
 
-// --- Preloading ---
+async function _fillRadioQueue() {
+  if (_loadingRadio) return;
+  _loadingRadio = true;
+
+  try {
+    const current = State.get('player.currentTrack');
+    let tracks = [];
+
+    // Recommendations
+    if (current?.id && current.source !== 'youtube') {
+      const recs = await getTrackRecommendations(current.id);
+      tracks = recs.filter(t => !_radioHistory.has(t.id));
+    }
+
+    // Fallback
+    if (tracks.length === 0) {
+      const { queries } = Recommendations.getHomeQueries(State, History);
+      const query = queries[Math.floor(Math.random() * queries.length)];
+      if (query) {
+        const results = await searchTracks(query);
+        tracks = results.filter(t => !_radioHistory.has(t.id));
+      }
+    }
+
+    // Batch
+    const batch = tracks.slice(0, 4);
+    if (batch.length > 0) {
+      batch.forEach(r => {
+        _radioHistory.add(r.id);
+        Queue.add(r, false);
+      });
+      _emit('queueUpdated', { tracks: State.get('queue.tracks'), position: State.get('player.queuePosition') });
+    }
+  } catch {
+  } finally {
+    _loadingRadio = false;
+  }
+}
+
+// Preload
 async function _preloadNext() {
-  const nextTrack = Queue.getUpcoming()[0]
-  if (!nextTrack) return
+  const upcoming = Queue.getUpcoming();
+  let nextTrack = upcoming.priority[0] || upcoming.incoming[0];
+
+  if (!nextTrack && _radioMode) {
+    await _fillRadioQueue();
+    const updated = Queue.getUpcoming();
+    nextTrack = updated.priority[0] || updated.incoming[0];
+  }
+
+  if (!nextTrack) return;
   _preloading = true;
   try {
     const stream = await _getStream(nextTrack);
@@ -194,7 +244,7 @@ async function _preloadNext() {
   _preloading = false
 }
 
-// --- Gapless Logic ---
+// Gapless
 function _swapToPreloaded() {
   if (_swapping) return
   _swapping = true;
@@ -215,7 +265,7 @@ function _swapToPreloaded() {
   _preloadNext();
 }
 
-// --- DASH Support ---
+// DASH
 async function _loadDashJs() {
   return new Promise((res, rej) => {
     if (window.dashjs) {
@@ -238,21 +288,24 @@ async function _playDash(manifestXml) {
   _dash.updateSettings({ streaming: { abr: { autoSwitchBitrate: { audio: false } } } });
 }
 
-// --- Stream Resolver ---
+// Stream
 async function _getStream(track) {
   if (track.source === 'youtube') return ytStream(track.id)
   try {
     return await tidalStream(track.id)
   } catch {}
+  /*
   const yt = await searchVideos(`${track.title} ${track.artist} audio`)
   if (yt.length) return ytStream(yt[0].id)
+  */
   throw new Error('Stream unavailable')
 }
 
-// --- Public Controls ---
+// Playback
 export async function play(track, tracks, startIndex = 0) {
   if (tracks) Queue.load(tracks, startIndex);
 
+  _radioHistory.add(track.id);
   _switching = true; _pauseVideo(); _preloaded = null; _preloading = false; _swapping = false;
 
   audioA.pause(); audioA.volume = 1; audioA.src = '';
@@ -271,13 +324,29 @@ export async function play(track, tracks, startIndex = 0) {
     } else {
       _active.src = stream.url
       await _active.play()
-      _ensureMediaSessionHandlers() //ios: register after user gesture
+      _ensureMediaSessionHandlers()
     } History.push(track);
     _emit('queueUpdated', { tracks: State.get('queue.tracks'), position: State.get('player.queuePosition') });
     _updateMediaSession(track);
   } catch (e) {
     _emit('error', e.message || 'Playback error')
   }
+}
+
+export async function startRadio(track = null) {
+  _radioMode = true;
+  _radioHistory.clear();
+  Queue.clear();
+
+  if (track) {
+    _radioHistory.add(track.id);
+    await play(track, [track], 0);
+  } else {
+    await _fillRadioQueue();
+    const first = Queue.advance(1);
+    if (first) await play(first);
+  }
+  _fillRadioQueue();
 }
 
 export async function toggle() {
@@ -302,7 +371,7 @@ export async function prev() {
 export async function playFromQueue(index) {
   const tracks = State.get('queue.tracks')
   if (!tracks[index]) return
-  State.set('player.queuePosition', index)
+  Queue.jump(index)
   await play(tracks[index])
 }
 
@@ -360,13 +429,13 @@ export function setSleepAfterTrack(val) {
   _sleepAfterTrack = val
 }
 
-// --- Video Management ---
+// Video
 function _pauseVideo() {
   const vp = document.getElementById('vp-video')
   if (vp && !vp.paused) vp.pause()
 }
 
-//nowplaying-ui
+// UI
 const _npPanel = document.getElementById('now-playing');
 export const openNowPlaying = () => { _npPanel?.classList.add('open'); _emit('panelOpened', null); };
 export const closeNowPlaying = () => { _npPanel?.classList.remove('open'); _emit('panelClosed', null); };
@@ -385,9 +454,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   $el('np-down-btn')?.addEventListener('click', closeNowPlaying)
 
-  $el('np-more-btn')?.addEventListener('click', () => {
-    $el('np-more-sheet')?.classList.add('open')
-  })
   $el('np-more-sheet-overlay')?.addEventListener('click', () => {
     $el('np-more-sheet')?.classList.remove('open')
   })

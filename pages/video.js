@@ -1,4 +1,6 @@
+// Video
 import { getTidalVideoStream } from '../api/index.js'
+import * as UI from '../app/ui.js'
 import { getVideoStream as getYTVideoStream } from '../api/index.js'
 import * as Router from '../app/router.js'
 import { toggle as toggleLike, isLiked } from './likedVideos.js'
@@ -31,7 +33,7 @@ function _ensurePage() {
     <div class="vp-wrap" id="vp-wrap">
       <div class="vp-header" id="vp-header">
         <button class="vp-back-btn" id="vp-back-btn">
-          <i class="bi bi-chevron-left"></i>
+          ${UI.getIcon('chevron-left')}
         </button>
         <div class="vp-header-info">
           <div class="vp-title" id="vp-title"></div>
@@ -39,26 +41,26 @@ function _ensurePage() {
         </div>
         <div class="vp-source-badge" id="vp-source-badge"></div>
         <button class="vp-like-btn" id="vp-like-btn" title="Like video">
-          <i class="bi bi-heart" id="vp-like-icon"></i>
+          <i id="vp-like-icon"></i>
         </button>
       </div>
       <div class="vp-video-wrap" id="vp-video-wrap">
         <video id="vp-video" playsinline preload="metadata"></video>
         <div class="vp-spinner" id="vp-spinner"><div class="vp-spin-ring"></div></div>
         <div class="vp-error" id="vp-error">
-          <i class="bi bi-exclamation-circle"></i>
+          ${UI.getIcon('error')}
           <span id="vp-error-msg">Could not load video</span>
         </div>
       </div>
       <div class="vp-center-controls" id="vp-center-controls">
         <button class="vp-ctrl-btn" id="vp-seek-back" title="-10s">
-          <i class="bi bi-arrow-counterclockwise"></i><span>10</span>
+          ${UI.getIcon('refresh')}<span>10</span>
         </button>
         <button class="vp-play-btn" id="vp-play-btn">
-          <i class="bi bi-play-fill" id="vp-play-icon"></i>
+          <i id="vp-play-icon"></i>
         </button>
         <button class="vp-ctrl-btn" id="vp-seek-fwd" title="+10s">
-          <i class="bi bi-arrow-clockwise"></i><span>10</span>
+          ${UI.getIcon('refresh')}<span>10</span>
         </button>
       </div>
       <div class="vp-controls" id="vp-controls">
@@ -71,7 +73,7 @@ function _ensurePage() {
         </div>
         <div class="vp-btn-row">
           <button class="vp-ctrl-btn vp-fs-btn" id="vp-fullscreen-btn">
-            <i class="bi bi-fullscreen" id="vp-fs-icon"></i>
+            <i id="vp-fs-icon"></i>
           </button>
         </div>
       </div>
@@ -128,7 +130,7 @@ export async function open(track) {
     page.style.cssText = `
       position: fixed;
       inset: 0;
-      z-index: 350;
+      z-index: var(--z-fullscreen);
       background: #000;
       display: flex;
       flex-direction: column;
@@ -204,7 +206,7 @@ function _syncLikeBtn(track) {
   if (!btn || !icon) return
   const liked = isLiked(track.id)
   btn.classList.toggle('liked', liked)
-  icon.className = liked ? 'bi bi-heart-fill' : 'bi bi-heart'
+  icon.innerHTML = UI.getIcon(liked ? 'heartFill' : 'heart');
 }
 
 function _bindControls() {
@@ -245,7 +247,7 @@ function _bindControls() {
 
   document.addEventListener('fullscreenchange', () => {
     const icon = $('vp-fs-icon')
-    if (icon) icon.className = document.fullscreenElement ? 'bi bi-fullscreen-exit' : 'bi bi-fullscreen'
+    if (icon) icon.innerHTML = UI.getIcon(document.fullscreenElement ? 'close' : 'external');
   })
 
   const bar = $('vp-progress-bar')
@@ -310,7 +312,7 @@ function _bindControls() {
 
 function _setPlayIcon(playing) {
   const icon = $('vp-play-icon')
-  if (icon) icon.className = playing ? 'bi bi-pause-fill' : 'bi bi-play-fill'
+  if (icon) icon.innerHTML = UI.getIcon(playing ? 'pause' : 'play');
 }
 
 function _fmt(s) {

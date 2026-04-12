@@ -1,5 +1,4 @@
 :root {
-  /* internal panel layers */
   --z-bg:          0;
   --z-art:         1;
   --z-gradient:    2;
@@ -8,33 +7,23 @@
   --z-topbar:      20;
   --z-sheet-inner: 25;
 
-  /* page chrome */
   --z-sticky: 30;
   --z-tabs:   38;
   --z-header: 40;
   --z-filter: 45;
 
-  /* overlay surfaces */
-  --z-sidebar-backdrop: 190;
-  --z-sidebar:          200;
+  --z-subpage:          100;
+  --z-subpage-2:        110;
+  --z-sidebar:          150;
+  --z-sidebar-backdrop: 160;
 
-  /* sub-pages (Artist, Album) slide over main content */
-  --z-subpage:   250;
-  --z-subpage-2: 255;
+  --z-player-bar-container: 200;
 
-  /* bottom navigation group (container for mini-player + nav-bar) */
-  /* sits above sub-pages but below fullscreen views */
-  --z-player: 5000;
+  --z-sheet:      300;
+  --z-modal:      350;
+  --z-picker:     400;
 
-  /* internal nav layering within the container */
-  --z-nav:    5001;
+  --z-fullscreen: 500;
 
-  /* fullscreen views (Now Playing, Video) - usually covers player bar */
-  --z-fullscreen: 10000;
-
-  /* global ui */
-  --z-sheet:  11000;
-  --z-modal:  12000;
-  --z-picker: 13000;
-  --z-toast:  14000;
+  --z-toast:      1000;
 }

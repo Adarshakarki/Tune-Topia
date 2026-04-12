@@ -1,6 +1,8 @@
+// Account
 import * as UI from '../app/ui.js'
 import State from '../app/state.js'
 import * as Capsule from './capsule.js'
+import { escHtml } from '../api/utils.js'
 
 const $ = (id) => document.getElementById(id)
 
@@ -25,14 +27,17 @@ export function initEvents(showFn) {
   $('home-account-btn')?.addEventListener('click', () => { _sync(); $('profile-popup-sheet')?.classList.add('open'); });
   $('profile-popup-overlay')?.addEventListener('click', _close);
   
-  // Popup actions
-  const routes = { 'popup-goto-profile': 'account', 'popup-goto-settings': 'settings', 'popup-goto-about': 'about' };
+  // Popup
+  const routes = { 
+    'popup-goto-profile': 'account', 
+    'popup-goto-settings': 'settings', 
+    'popup-goto-about': 'about'
+  };
   Object.entries(routes).forEach(([id, pg]) => $(id)?.addEventListener('click', () => { _close(); _showPage(pg); }));
 
-  $('popup-signin')?.addEventListener('click', () => { _close(); UI.toast('Sign in coming soon'); });
   $('profile-settings-btn')?.addEventListener('click', () => _showPage('settings'));
 
-  // Profile Edit
+  // Edit
   $('profile-edit-btn')?.addEventListener('click', () => {
     _editing = !_editing;
     $('profile-edit-section').style.display = _editing ? 'block' : 'none';
@@ -40,6 +45,12 @@ export function initEvents(showFn) {
       const u = State.get('user');
       if ($('username-input')) $('username-input').value = u.name || '';
       if ($('pfp-url-input')) $('pfp-url-input').value = u.pfp || '';
+      if ($('cover-url-input')) $('cover-url-input').value = u.cover || '';
+      if ($('bio-input')) $('bio-input').value = u.bio || '';
+      for (let i = 1; i <= 4; i++) {
+        const input = $(`social-${i}-input`);
+        if (input) input.value = u.socials?.[i - 1]?.url || '';
+      }
       _syncEl('pfp-edit-img', 'pfp-edit-preview', u.pfp || '');
     }
   });
@@ -49,13 +60,20 @@ export function initEvents(showFn) {
 
   $('profile-save-btn')?.addEventListener('click', () => {
     const n = $('username-input')?.value.trim() || 'Friend', p = $('pfp-url-input')?.value.trim() || '';
-    State.setUser(n, p); UI.renderGreeting();
+    const c = $('cover-url-input')?.value.trim() || '', b = $('bio-input')?.value.trim() || '';
+    const socials = [1, 2, 3, 4].map(i => ({ url: $(`social-${i}-input`)?.value.trim() })).filter(s => s.url);
+
+    State.set('user.name', n);
+    State.set('user.pfp', p);
+    State.set('user.cover', c);
+    State.set('user.bio', b);
+    State.set('user.socials', socials);
+    UI.renderGreeting();
     import('../app/init.js').then(m => m.renderAccountBtn());
     _editing = false; $('profile-edit-section').style.display = 'none'; _sync();
     UI.toast('Profile saved');
   });
 
-  $('profile-signin-btn')?.addEventListener('click', () => UI.toast('Sign in coming soon'));
   Capsule.initEvents();
 }
 
@@ -69,10 +87,52 @@ function _syncEl(imgId, wrapId, url) {
   if (ph) ph.style.display = safe ? 'none' : 'flex';
 }
 
+function _getSocialInfo(url) {
+  try {
+    const domain = new URL(url).hostname.toLowerCase();
+    if (domain.includes('pinterest')) return { icon: 'pinterest', name: 'Pinterest' };
+    if (domain.includes('instagram')) return { icon: 'instagram', name: 'Instagram' };
+    if (domain.includes('github')) return { icon: 'github', name: 'GitHub' };
+    if (domain.includes('twitter') || domain.includes('x.com')) return { icon: 'twitter-x', name: 'Twitter' };
+    if (domain.includes('youtube')) return { icon: 'youtube', name: 'YouTube' };
+    if (domain.includes('linkedin')) return { icon: 'linkedin', name: 'LinkedIn' };
+    if (domain.includes('facebook')) return { icon: 'facebook', name: 'Facebook' };
+    if (domain.includes('discord')) return { icon: 'discord', name: 'Discord' };
+    if (domain.includes('spotify')) return { icon: 'spotify', name: 'Spotify' };
+    return { icon: 'link-45deg', name: 'Link' };
+  } catch {
+    return { icon: 'link-45deg', name: 'Link' };
+  }
+}
+
 function _sync() {
-  const n = State.get('user.name') || 'Friend', p = State.get('user.pfp') || '';
-  if ($('profile-display-name')) $('profile-display-name').textContent = n;
-  _syncEl('pfp-img', 'pfp-preview', p);
-  if ($('pfp-popup-name')) $('pfp-popup-name').textContent = n;
-  _syncEl('pfp-popup-img', 'pfp-popup-wrap', p);
+  const u = State.get('user') || {};
+  const name = u.name || 'Friend', pfp = u.pfp || '', cover = u.cover || '', bio = u.bio || '';
+  const socials = u.socials || [];
+
+  if ($('profile-display-name')) $('profile-display-name').textContent = name;
+  if ($('profile-bio')) $('profile-bio').textContent = bio;
+
+  _syncEl('pfp-img', 'pfp-preview', pfp);
+
+  const card = document.querySelector('.account-card');
+  if (card) {
+    const safeCover = _safeImg(cover);
+    // Default business card design: subtle mesh gradient
+    const defaultDesign = 'radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%)';
+    card.style.backgroundImage = safeCover ? `url('${safeCover}')` : defaultDesign;
+  }
+
+  const socialList = $('profile-social-links');
+  if (socialList) {
+    socialList.innerHTML = socials.slice(0, 4).map(s => {
+      const info = _getSocialInfo(s.url);
+      return `<a href="${escHtml(s.url)}" target="_blank" class="account-social-pill">
+        <i class="bi bi-${info.icon}"></i> <span>${info.name}</span>
+      </a>`;
+    }).join('');
+  }
+
+  if ($('pfp-popup-name')) $('pfp-popup-name').textContent = name;
+  _syncEl('pfp-popup-img', 'pfp-popup-wrap', pfp);
 }

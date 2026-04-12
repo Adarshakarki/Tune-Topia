@@ -1,3 +1,4 @@
+// Cache
 const _mem = new Map(), LS = 'tt_c_';
 
 // Check if key exists and is not expired

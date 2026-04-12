@@ -1,3 +1,4 @@
+// Likes
 import * as UI from './ui.js'
 import State from './state.js'
 import { toggle } from '../modules/likedSongs.js'

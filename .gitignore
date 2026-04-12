@@ -1,2 +1,4 @@
 .vite
 changes.md
+node_modules
+package-lock.json

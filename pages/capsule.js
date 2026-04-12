@@ -1,3 +1,4 @@
+// Capsule
 const $ = (id) => document.getElementById(id)
 let _period = '7d'
 
@@ -27,8 +28,7 @@ function _getHistory() {
     if (_period === '7d') filtered = all.filter(e => e.playedAt && now - e.playedAt < 7 * ms);
     if (_period === '30d') filtered = all.filter(e => e.playedAt && now - e.playedAt < 30 * ms);
     return filtered.sort((a, b) => b.playedAt - a.playedAt)
-  } catch (e) {
-    console.error('Capsule: storage error', e)
+  } catch {
     return []
   }
 }
@@ -44,8 +44,6 @@ function _renderAll(h) {
 }
 
 function _renderListeningTime(history) {
-  // Only sum actual time spent listening.
-  // This prevents skipped tracks (where listenedMs is 0) from inflating the total.
   const totalSecs = history.reduce((s, e) => s + (Number(e.listenedMs || 0) / 1000), 0);
 
   const hrs = Math.floor(totalSecs / 3600), mins = Math.floor((totalSecs % 3600) / 60);
@@ -63,7 +61,6 @@ function _renderTopTracks(history) {
   const counts = {}
 
   history.forEach((e) => {
-    // Only count tracks that were actually listened to (flushed)
     if (!e.listenedMs) return;
     const key = e.id || `${e.title}-${e.artist}`
     if (!key || key.includes('undefined')) return
@@ -134,7 +131,6 @@ function _renderTopArtist(history) {
 
   const data = {}
   history.forEach((e) => {
-    // Only count artists where tracks were actually listened to
     if (!e.artist || !e.listenedMs) return
     if (!data[e.artist]) data[e.artist] = { count: 0, cover: '' }
     data[e.artist].count++
@@ -160,7 +156,7 @@ function _renderTopAlbum(history) {
 
   const data = {}
   history.forEach((e) => {
-    // Only count albums where tracks were actually listened to
+    // Filter valid
     if (!e.album || !e.listenedMs) return
     if (!data[e.album]) data[e.album] = { count: 0, cover: '' }
     data[e.album].count++
@@ -194,7 +190,7 @@ function _renderHeatmap(history) {
   const today = new Date()
   const cells = []
 
-  // - 56 days = 8 rows × 14 cols, compact grid -
+  // 56-day grid
   for (let i = 55; i >= 0; i--) {
     const d = new Date()
     d.setDate(today.getDate() - i)
@@ -212,7 +208,7 @@ function _renderHeatmap(history) {
 function _renderDiscovery(history) {
   const el = $('capsule-discovery')
   if (!el) return
-  // Only count artists from tracks that weren't skipped
+  // Unskipped
   const uniqueArtists = new Set(history.filter(e => e.listenedMs > 0).map(e => e.artist).filter(Boolean));
   el.textContent = uniqueArtists.size;
   el.style.color = THEME.text

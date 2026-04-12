@@ -1,8 +1,7 @@
-/* artist sub-page */
 #page-artist {
   position: fixed;
   inset: 0;
-  z-index: var(--z-subpage);
+  z-index: var(--z-subpage-2);
   transform: translateX(100%);
   visibility: hidden;
   background: var(--art-dark, oklch(0.13 0.012 48));
@@ -14,7 +13,6 @@
   transition: transform 0.38s cubic-bezier(0.32, 0.72, 0, 1), background 0.7s ease, visibility 0s 0s;
 }
 
-/* topbar */
 #artist-topbar {
   position: absolute;
   top: 0;
@@ -28,7 +26,8 @@
   gap: var(--s2);
   background: linear-gradient(to bottom, oklch(0 0 0 / 0.32) 0%, transparent 100%);
 }
-#artist-back-btn { color: oklch(1 0 0 / 0.85); }
+#artist-back-btn { color: oklch(1 0 0 / 0.85) !important; }
+#page-artist[data-light='true'] #artist-back-btn { color: oklch(0.12 0 0 / 0.8) !important; }
 #artist-topbar-title {
   flex: 1;
   min-width: 0;
@@ -42,7 +41,6 @@
   padding: 0 var(--s2);
 }
 
-/* scroll */
 #artist-scroll {
   position: absolute;
   inset: 0;
@@ -57,7 +55,6 @@
 #artist-scroll::-webkit-scrollbar-track { background: transparent; }
 #artist-scroll::-webkit-scrollbar-thumb { background: oklch(1 0 0 / 0.2); border-radius: 4px; }
 
-/* hero */
 #artist-hero {
   position: relative;
   width: 100%;
@@ -92,7 +89,6 @@
   pointer-events: none;
 }
 
-/* name */
 #artist-hero-name-wrap {
   position: absolute;
   bottom: 0;
@@ -111,7 +107,6 @@
   text-shadow: 0 2px 20px oklch(0 0 0 / 0.65);
 }
 
-/* follow / play row */
 #artist-follow-wrap {
   display: flex;
   justify-content: center;
@@ -147,11 +142,9 @@
 }
 #artist-play-btn:active { opacity: 0.75; }
 
-/* sections */
 .art-section { padding: var(--s4) 0 var(--s2); }
 .art-section-title { font-size: 18px; font-weight: 700; color: oklch(1 0 0 / 0.95); padding: 0 var(--s5); margin-bottom: var(--s2); }
 
-/* track list - scoped */
 #page-artist .alb-track {
   display: flex;
   align-items: center;
@@ -182,12 +175,10 @@
 .art-track-thumb { width: 42px; height: 42px; border-radius: var(--r-sm); object-fit: cover; flex-shrink: 0; }
 .art-track-thumb.skeleton { border-radius: var(--r-sm); }
 
-/* playing state */
 #page-artist .alb-track.playing             { background: oklch(1 0 0 / 0.07); }
 #page-artist .alb-track.playing .alb-track-title { color: var(--accent); }
 #page-artist .alb-track.playing .alb-track-num   { color: var(--accent); }
 
-/* discography grid */
 #artist-discography {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -223,7 +214,6 @@
 .art-album-year  { font-size: 11px; color: oklch(1 0 0 / 0.5); margin-top: 2px; }
 .art-album-skel .art-album-cover-wrap { background: oklch(1 0 0 / 0.08); }
 
-/* wikipedia section */
 #artist-wiki-section {
   margin: var(--s2) var(--s5) var(--s5);
   background: oklch(1 0 0 / 0.07);
@@ -266,7 +256,6 @@
 #artist-wiki-link:hover { color: oklch(1 0 0 / 0.85); }
 #artist-wiki-link i { font-size: 11px; margin-left: 4px; }
 
-/* light variant */
 #page-artist[data-light='true'] #artist-hero-name { color: oklch(1 0 0); text-shadow: 0 2px 24px oklch(0 0 0 / 0.75); }
 #page-artist[data-light='true'] #artist-topbar-title,
 #page-artist[data-light='true'] .art-section-title,

@@ -1,4 +1,3 @@
-/* tablet 600-899 */
 @media (min-width: 600px) and (max-width: 899px) {
   .card-grid   { grid-template-columns: repeat(3, 1fr); }
   .artist-grid { grid-template-columns: repeat(4, 1fr); }
@@ -6,8 +5,6 @@
   .horiz-card  { width: 150px; }
   .horiz-art   { width: 150px; height: 150px; }
 }
-
-/* wide desktop 1280+ */
 @media (min-width: 1280px) {
   :root { --sb-w: 240px; }
 
@@ -16,8 +13,6 @@
   .horiz-card  { width: 175px; }
   .horiz-art   { width: 175px; height: 175px; }
 }
-
-/* reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

@@ -1,3 +1,4 @@
+// Player Events
 import * as Player from '../modules/player.js'
 import * as UI from './ui.js'
 import State from './state.js'
@@ -7,22 +8,47 @@ import { fetchLyrics } from '../modules/lyrics.js';
 
 let _amEl, _cleanup;
 
-// Load AM-Lyrics
-import('@uimaxbai/am-lyrics/am-lyrics.js').catch(() => {
-  const s = document.createElement('script');
-  Object.assign(s, { type: 'module', src: 'https://cdn.jsdelivr.net/npm/@uimaxbai/am-lyrics/dist/src/am-lyrics.min.js' });
-  document.head.appendChild(s);
-});
+let _raf;
+let _lastTime = 0, _lastSync = performance.now();
+let _cachedAudio = null;
 
-// Bind player events
+const _tick = () => {
+  const audio = _cachedAudio || (_cachedAudio = document.querySelector('audio'));
+  if (audio && !audio.paused && audio.duration) {
+    const now = performance.now();
+    if (audio.currentTime !== _lastTime) {
+      _lastTime = audio.currentTime;
+      _lastSync = now;
+    }
+    const smoothTime = _lastTime + (now - _lastSync) / 1000;
+    const pct = (Math.min(smoothTime, audio.duration) / audio.duration) * 100;
+    UI.updateProgress(pct, smoothTime, audio.duration);
+    _raf = requestAnimationFrame(_tick);
+  } else {
+    _raf = null;
+  }
+};
+
+
+// Global observer for theme changes
+const _themeObs = new MutationObserver(() => {
+  if (_amEl) _amEl.highlightColor = _getHi();
+});
+_themeObs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+// Event bindings
 export function bind() {
   Player.on('trackChanged', t => {
     UI.setTrackInfo(t); setCurrentId(t.id); refreshActiveTracks(); _loadLyrics(t);
-    UI.renderQueue(State.get('queue.tracks') || [], State.get('player.queuePosition') || 0);
+    UI.renderQueue(State.get('queue.tracks') || [], State.get('player.queuePosition'), Queue.getUpcoming());
   });
   Player.on('sleepTimerFired', () => UI.toast('Sleep timer: playback stopped'));
-  Player.on('playStateChanged', UI.setPlayState);
-  Player.on('progress', ({ pct, current, duration }) => UI.updateProgress(pct, current, duration));
+  Player.on('playStateChanged', playing => {
+    UI.setPlayState(playing);
+    if (playing && !_raf) _tick();
+    if ('mediaSession' in navigator) navigator.mediaSession.playbackState = playing ? 'playing' : 'paused';
+  });
+  Player.on('progress', ({ pct, current, duration }) => { if (!_raf) UI.updateProgress(pct, current, duration); });
   Player.on('shuffleChanged', UI.setShuffle);
   Player.on('repeatChanged', UI.setRepeat);
   Player.on('volumeChanged', UI.updateVolume);
@@ -78,8 +104,7 @@ async function _loadLyrics(track) {
   const title = _clean(track.title ?? ''), artist = _primary(track);
   const dur = track.duration > 5000 ? Math.round(track.duration / 1000) : Math.round(track.duration ?? 0);
 
-  // Clear previous lyrics and satisfy .every() checks by initializing as an empty array.
-  // We avoid setting songTitle/Artist as attributes to prevent the component's slow internal fetch.
+  // Reset component state
   el.lyrics = [];
   Object.assign(el, { 
     songTitle: title, 
@@ -87,11 +112,9 @@ async function _loadLyrics(track) {
     highlightColor: _getHi() 
   });
 
-  // Use our app's optimized lyrics module (LRCLIB)
+  // Load lyrics from LRCLIB
   fetchLyrics(title, artist, track.album, track.duration).then(res => {
     if (res.synced && res.synced.length > 0) {
-      // The parser now ensures every synced line has a .words array, 
-      // forcing the component into word-by-word mode consistently.
       el.lyrics = res.synced;
     } else if (res.plain) {
       el.lyrics = res.plain.split('\n').map(text => ({ text, time: 0 }));
@@ -115,13 +138,9 @@ async function _loadLyrics(track) {
   audio.addEventListener('pause', onPause);
   if (!audio.paused) tick();
 
-  const obs = new MutationObserver(() => el.setAttribute('highlight-color', _getHi()));
-  obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-
   _cleanup = () => {
     onPause();
     ['timeupdate', 'seeked'].forEach(ev => audio.removeEventListener(ev, sync));
     audio.removeEventListener('play', onPlay); audio.removeEventListener('pause', onPause);
-    obs.disconnect();
   };
 }

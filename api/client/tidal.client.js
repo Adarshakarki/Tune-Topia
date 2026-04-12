@@ -1,5 +1,4 @@
-// Low-level Tidal API Client
-
+// Tidal Client
 import { fetchJSON, tryBases } from '../utils.js'
 
 const HARDCODED_BASES = [
@@ -32,7 +31,7 @@ const _isSafe = u => {
   } catch { return false; }
 };
 
-// --- Instance Management ---
+// Bases
 export async function getBases() {
   if (_resolved) return _resolved;
   const urls = UPTIMES.sort(() => Math.random() - 0.5);
@@ -46,7 +45,7 @@ export async function getBases() {
   return HARDCODED_BASES;
 }
 
-// --- Generic fetcher ---
+// GET
 export async function get(path, bases, opts = {}) {
   let all = [...(bases || await getBases()), ...HARDCODED_BASES];
   all = [...new Set(all)];

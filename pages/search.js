@@ -1,3 +1,4 @@
+// Search
 import * as UI from '../app/ui.js'
 import State from '../app/state.js'
 import { playTrack } from '../app/playback.js'
@@ -19,7 +20,6 @@ import {
   attachArtistEvents,
 } from './home.js'
 const $ = (id) => document.getElementById(id)
-import { getIcon } from '../app/icons.js'
 let _searchTimer
 
 export function init() {
@@ -124,7 +124,6 @@ function _renderResults() {
   } else if (tab === 'playlists') {
     _renderPlaylists(results, listEl)
   } else {
-    // Prioritize Tidal tracks over YouTube tracks in the search list
     const sorted = [...results].sort((a, b) => {
       const aIsYt = a.source === 'youtube', bIsYt = b.source === 'youtube';
       return aIsYt === bIsYt ? 0 : aIsYt ? 1 : -1;
@@ -134,7 +133,7 @@ function _renderResults() {
   }
 }
 
-// ── Videos ────────────────────────────────────────────────────
+// Video
 
 function _renderVideos(results, container) {
   if (!container) return
@@ -146,14 +145,14 @@ function _renderVideos(results, container) {
   const _badge = (v) => {
     const isTidal = v.source === 'tidal-video' || v.source === 'tidal'
     return isTidal
-      ? `<span class="vc-source-badge vc-badge-tidal">Tidal</span>` //
-      : `<span class="vc-source-badge vc-badge-yt">YT</span>` //
+      ? `<span class="vc-source-badge vc-badge-tidal">Tidal</span>`
+      : `<span class="vc-source-badge vc-badge-yt">YT</span>`
   }
 
   const _heart = (v) =>
     isVideoLiked(v.id)
-      ? `<i class="bi bi-heart-fill vc-like-icon liked"></i>`
-      : `<i class="bi bi-heart vc-like-icon"></i>`
+      ? `<span class="vc-like-icon liked">${UI.getIcon('heartFill')}</span>`
+      : `<span class="vc-like-icon">${UI.getIcon('heart')}</span>`
 
   container.innerHTML = results
     .map(
@@ -161,7 +160,7 @@ function _renderVideos(results, container) {
     <div class="vc-row" data-index="${i}">
       <div class="vc-thumb-wrap">
         <img src="${escHtml(v.thumbnail || v.cover || '')}" alt="" onerror="this.src=\'\'" class="vc-thumb"/>
-        <div class="vc-overlay">${getIcon('play', '', 'font-size:22px;color:#fff')}</div>
+        <div class="vc-overlay" style="font-size:22px;color:#fff">${UI.getIcon('play')}</div>
         ${_badge(v)}
         ${v.dur ? `<span class="vc-dur">${escHtml(v.dur)}</span>` : ''}
       </div>
@@ -180,13 +179,7 @@ function _renderVideos(results, container) {
       const v = results[parseInt(btn.dataset.index)]
       if (!v) return
       toggleVideoLike(v)
-      const icon = btn.querySelector('.vc-like-icon')
-      const liked = isVideoLiked(v.id)
-      if (icon) {
-        icon.className = liked
-          ? 'bi bi-heart-fill vc-like-icon liked'
-          : 'bi bi-heart vc-like-icon'
-      }
+      btn.innerHTML = _heart(v);
     })
   })
 
@@ -198,8 +191,7 @@ function _renderVideos(results, container) {
   })
 }
 
-// ── Playlists ─────────────────────────────────────────────────
-
+// Playlists
 function _renderPlaylists(results, container) {
   if (!container) return
   if (!results.length) {
@@ -212,7 +204,7 @@ function _renderPlaylists(results, container) {
       <div class="pls-card" data-index="${i}"> 
         <div class="pls-art-wrap">
           <img src="${escHtml(p.coverSmall || p.cover || '')}" alt="" onerror="this.src=''" class="pls-art"/>
-          <div class="pls-overlay"><i class="bi bi-play-fill" style="font-size:26px;color:#fff"></i></div>
+          <div class="pls-overlay" style="font-size:26px;color:#fff">${UI.getIcon('play')}</div>
         </div>
         <div class="pls-info">
           <div class="pls-title">${escHtml(p.title || '')}</div>
@@ -225,7 +217,9 @@ function _renderPlaylists(results, container) {
   container.querySelectorAll('.pls-card').forEach((card) => {
     card.addEventListener('click', () => {
       const p = results[parseInt(card.dataset.index)]
-      if (p) PlaylistPage.open(p.id || p)
+      if (p) {
+        PlaylistPage.open({ ...p, id: p.id || p.uuid });
+      }
     })
   })
 }
@@ -266,7 +260,7 @@ function _showResults() {
   if (r) r.style.display = '';
 }
 
-// ── Genre ─────────────────────────────────────────────────────
+// Genre
 
 export async function openGenre(genreId, label) {
   _showBrowse()
@@ -299,7 +293,8 @@ function _showGenreResults(label, data) {
     section.id = 'genre-results-section'
     section.style.cssText = 'margin-top:24px'
     section.innerHTML = `
-      <div style="margin-bottom:14px">
+      <div style="margin-bottom:14px; display:flex; align-items:center; gap:12px">
+        <button class="back-btn" id="genre-section-back">${UI.getIcon('chevron-left')}</button>
         <span id="genre-results-title" style="font-size:17px;font-weight:700;color:var(--text-primary,#fff)"></span>
       </div>
       <div id="genre-playlists-grid" class="genre-cards-grid"></div>
@@ -308,6 +303,7 @@ function _showGenreResults(label, data) {
         <div id="genre-albums-grid" class="genre-cards-grid"></div>
       </div>`
     $('search-empty-state')?.appendChild(section)
+    $('genre-section-back')?.addEventListener('click', _showBrowse);
   }
 
   const titleEl = $('genre-results-title')
@@ -389,7 +385,7 @@ function _renderGenreCards(grid, items, onClick, getDisplay) {
         <div style="position:relative;aspect-ratio:1;overflow:hidden;background:var(--surface-2,#222)">
           <img src="${escHtml(d.cover)}" onerror="this.src=''" alt="" style="width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s"/>
           <div class="genre-card-play" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.45);opacity:0;transition:opacity .2s"> 
-            <i class="bi bi-play-fill" style="font-size:30px;color:#fff"></i>
+            <span style="font-size:30px;color:#fff">${UI.getIcon('play')}</span>
           </div>
         </div>
         <div style="padding:9px 10px 11px">

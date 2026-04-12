@@ -1,3 +1,4 @@
+// Constants
 // Mood & Genre definitions
 export const MOODS = [
   { label: 'Hip-Hop', genreId: 'hip_hop', c1: '#5856d6', c2: '#2d2c8e', img: 'assets/moods/hip-hop.jpg' },

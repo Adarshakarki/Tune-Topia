@@ -1,4 +1,4 @@
-// Theme and Typography Management
+// Theme
 import State from '../app/state.js'
 
 export let THEMES = [{ id: 'default', name: 'Default' }];

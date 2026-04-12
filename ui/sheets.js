@@ -8,11 +8,24 @@ import { escHtml } from '../api/utils.js'
 import { openPicker } from '../pages/playlists-ui.js'
 import { onLike } from '../app/likes.js'
 import { has as isLiked } from '../modules/likedSongs.js'
-import { ICONS } from '../app/icons.js'
 import { downloadTrack } from '../modules/downloader.js'
 
 const $ = id => document.getElementById(id);
 let _timer = null, _qIdx = -1, _tsTrack = null, _tsOpts = {};
+
+export const getTrack = () => _tsTrack;
+
+async function _handleDownload(t) {
+  if (!t) return;
+  UI.toast('Preparing download…');
+  try {
+    const dlKey = localStorage.getItem('tt_download_quality') || 'mp3_320';
+    const streamQual = dlKey.startsWith('hires') ? 'hires' : (dlKey.startsWith('lossless') ? 'lossless' : 'high');
+    const { getStream, getAudioStream } = await import('../api/index.js');
+    const s = t.source === 'youtube' ? await getAudioStream(t.id) : await getStream(t.id, streamQual);
+    await downloadTrack(t, s);
+  } catch (e) { UI.toast(e.message || 'Download failed'); }
+}
 
 // --- Track Options ---
 export function openTrackSheet(t, opts = {}) {
@@ -33,10 +46,10 @@ export function openTrackSheet(t, opts = {}) {
     p.append(img, info);
   }
 
-  const l = isLiked(t.id), btn = $('tsheet-like'), lbl = $('tsheet-like-label'), ico = btn?.querySelector('i');
+  const l = isLiked(t.id), btn = $('tsheet-like'), lbl = $('tsheet-like-label');
   if (btn) btn.classList.toggle('liked', l);
   if (lbl) lbl.textContent = l ? 'Unlike' : 'Like';
-  if (ico) ico.className = `bi ${l ? ICONS.heartFill : ICONS.heart}`;
+  if (btn) btn.innerHTML = l ? UI.getIcon('heartFill') : UI.getIcon('heart');
 
   const show = (id, v) => { const e = $(id); if (e) e.style.display = v ? '' : 'none'; };
   const visibility = {
@@ -87,9 +100,9 @@ export function initEvents() {
   $('track-sheet-overlay')?.addEventListener('click', _closeTS);
   $('tsheet-like')?.addEventListener('click', () => {
     if (!_tsTrack) return; onLike(_tsTrack);
-    const l = isLiked(_tsTrack.id), btn = $('tsheet-like'), lbl = $('tsheet-like-label'), ico = btn?.querySelector('i');
+    const l = isLiked(_tsTrack.id), btn = $('tsheet-like'), lbl = $('tsheet-like-label');
     if (btn) btn.classList.toggle('liked', l); if (lbl) lbl.textContent = l ? 'Unlike' : 'Like';
-    if (ico) ico.className = `bi ${l ? ICONS.heartFill : ICONS.heart}`;
+    if (btn) btn.innerHTML = l ? UI.getIcon('heartFill') : UI.getIcon('heart');
   });
 
   $('tsheet-add-queue')?.addEventListener('click', () => { if (_tsTrack) { Queue.addNext(_tsTrack); UI.toast('Added to queue'); _closeTS(); } });
@@ -106,14 +119,7 @@ export function initEvents() {
   $('tsheet-go-artist')?.addEventListener('click', () => _go('../pages/artist.js', (m, t) => m.open(t.artistId ? { id: t.artistId, name: t.artist, cover: t.cover } : { id: '', name: t.artist?.split(',')[0].trim(), cover: t.cover })));
   $('tsheet-go-album')?.addEventListener('click', () => _go('../pages/album.js', (m, t) => t.albumId ? m.open({ id: t.albumId, title: t.album, cover: t.cover, artist: t.artist }) : UI.toast('Album info not available')));
 
-  $('tsheet-download')?.addEventListener('click', async () => {
-    if (!_tsTrack) return; const t = _tsTrack; _closeTS(); UI.toast('Preparing download…');
-    try {
-      const { getStream, getAudioStream } = await import('../api/index.js');
-      const s = t.source === 'youtube' ? await getAudioStream(t.id) : await getStream(t.id);
-      await downloadTrack(t, s);
-    } catch (e) { UI.toast(e.message || 'Download failed'); }
-  });
+  $('tsheet-download')?.addEventListener('click', () => { if (_tsTrack) { const t = _tsTrack; _closeTS(); _handleDownload(t); } });
 
   $('tsheet-move-up')?.addEventListener('click', () => { _tsOpts.onMoveUp?.(); _closeTS(); });
   $('tsheet-move-down')?.addEventListener('click', () => { _tsOpts.onMoveDown?.(); _closeTS(); });
@@ -148,14 +154,7 @@ export function initEvents() {
     const t = Player.getCurrentTrack(); if (t) window.open(t.source === 'youtube' ? `https://youtu.be/${t.id}` : `https://tidal.com/track/${t.id}`, '_blank'); UI.closeMoreSheet();
   });
 
-  $('sheet-download')?.addEventListener('click', async () => {
-    const t = Player.getCurrentTrack(); if (!t) return; UI.closeMoreSheet(); UI.toast('Preparing download…');
-    try {
-      const { getStream, getAudioStream } = await import('../api/index.js'), { downloadTrack } = await import('../modules/downloader.js');
-      const s = t.source === 'youtube' ? await getAudioStream(t.id) : await getStream(t.id);
-      await downloadTrack(t, s);
-    } catch (e) { UI.toast(e.message || 'Download failed'); }
-  });
+  $('sheet-download')?.addEventListener('click', () => { const t = Player.getCurrentTrack(); if (t) { UI.closeMoreSheet(); _handleDownload(t); } });
   $('sheet-add-playlist')?.addEventListener('click', () => { const t = Player.getCurrentTrack(); if (t) { UI.closeMoreSheet(); setTimeout(() => openPicker(t), 300); } });
 
   $('np-queue-item-sheet-overlay')?.addEventListener('click', _closeQS);

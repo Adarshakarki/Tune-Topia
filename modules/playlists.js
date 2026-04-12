@@ -1,3 +1,4 @@
+// Playlists
 const KEY = 'library.playlists';
 let _S = null;
 
@@ -11,8 +12,8 @@ export const getAll = () => _S.get(KEY) || [];
 export const get = (id) => getAll().find(p => String(p.id) === String(id)) || null;
 
 // Lifecycle
-export function create({ name, description = '', cover = '' }) {
-  const pl = { id: _uid(), name: name.trim(), description: description.trim(), cover: cover.trim(), createdAt: Date.now(), tracks: [] };
+export function create({ name, description = '', cover = '', tracks = [] }) {
+  const pl = { id: _uid(), name: name.trim(), description: description.trim(), cover: cover.trim(), createdAt: Date.now(), tracks: [...tracks] };
   _S.set(KEY, [...getAll(), pl]);
   return pl;
 }

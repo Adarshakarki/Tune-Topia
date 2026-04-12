@@ -1,9 +1,10 @@
+// Playback
 import * as Player from '../modules/player.js'
 
 export let currentId = null
 let _cur = null, _start = null
 
-// Start track playback
+// Play
 export function playTrack(tracks, index) {
   const t = tracks[index];
   if (!t) return;
@@ -16,7 +17,7 @@ export function playTrack(tracks, index) {
   refreshActiveTracks()
 }
 
-// Update UI playing states
+// Sync
 export function refreshActiveTracks() {
   document.querySelectorAll('[data-tid]').forEach(el => {
     const act = el.dataset.tid === currentId;
@@ -33,7 +34,7 @@ export function refreshActiveTracks() {
 
 export function setCurrentId(id) { currentId = id; }
 
-// Record start in history
+// History
 function _record(t) {
   if (!t?.id) return;
   try {
@@ -44,7 +45,7 @@ function _record(t) {
   _notify();
 }
 
-// Finalize listen duration
+// Flush
 function _flush() {
   if (!_cur || !_start) return;
   const ms = Date.now() - _start;
@@ -61,7 +62,7 @@ function _flush() {
   } catch {}
 }
 
-// Update capsule if active
+// Notify
 function _notify() {
   if (document.getElementById('page-account')?.classList.contains('active')) {
     import('./router.js').then(R => import('../pages/capsule.js').then(C => C.render()));

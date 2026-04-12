@@ -1,3 +1,4 @@
+// Album
 import { getAlbumTracks, searchTracks, searchVideos } from '../api/index.js'
 import { escHtml } from '../api/utils.js'
 import * as UI from '../app/ui.js'
@@ -5,12 +6,13 @@ import { toggle, has } from '../modules/likedSongs.js'
 import { toggleAlbum, hasAlbum } from '../modules/library.js'
 import Queue from '../modules/queue.js'
 import * as Player from '../modules/player.js'
+import * as BulkDownloader from '../modules/bulkdownloader.js'
 
 const $ = (id) => document.getElementById(id)
 
 let _album = null, _tracks = [], _sheetTrack = null, _playFn = null;
 
-// Lifecycle
+// Init
 export function init(playTrackFn) {
   _playFn = playTrackFn;
   $('album-back-btn')?.addEventListener('click', close);
@@ -26,7 +28,12 @@ export function init(playTrackFn) {
     Player.toggleShuffle(); close();
   });
 
-  // Track options sheet
+  $('album-download')?.addEventListener('click', () => {
+    if (_tracks.length) BulkDownloader.downloadTracks(_tracks, _album?.title);
+    else UI.toast('Wait for tracks to load...');
+  });
+
+  // Sheet
   $('album-track-sheet-overlay')?.addEventListener('click', _closeSheet);
   $('album-sheet-play-next')?.addEventListener('click', () => { if (_sheetTrack) { Queue.addNext(_sheetTrack); _closeSheet(); } });
   $('album-sheet-add-queue')?.addEventListener('click', () => { if (_sheetTrack) { Queue.add(_sheetTrack); _closeSheet(); } });
@@ -50,6 +57,11 @@ export async function open(album) {
   $('album-tracklist').innerHTML = _skeleton();
   page.classList.add('open');
   document.body.style.overflow = 'hidden';
+
+  const Router = await import('../app/router.js');
+  const slug = (album.title || '').toLowerCase().replace(/[^a-z0-9]+/g, '_');
+  Router.updateURL('album', { ...album, album: slug });
+
   UI.updatePlayerPosition();
 
   if (album.cover) UI.extractColor(album.cover, (r, g, b) => _applyColor(r, g, b));
@@ -58,7 +70,6 @@ export async function open(album) {
     let ts = [];
     if (album.id) { try { ts = await getAlbumTracks(album.id); } catch {} }
     if (!ts.length) { try { ts = await searchTracks(`${album.title} ${album.artist || ''}`); } catch {} }
-    if (!ts.length) ts = await searchVideos(`${album.title} ${album.artist || ''}`);
 
     const seen = new Set();
     _tracks = ts.filter(t => { const k = `${t.title}|${t.artist}`.toLowerCase(); return !seen.has(k) && seen.add(k); });
@@ -78,9 +89,9 @@ export function close() {
   UI.updatePlayerPosition();
 }
 
-// UI Helpers
+// Utils
 function _applyColor(r, g, b) {
-  const dr = Math.round(r * 0.88), dg = Math.round(g * 0.88), db = Math.round(b * 0.88);
+  const dr = Math.round(r * 0.95), dg = Math.round(g * 0.95), db = Math.round(b * 0.95);
   const page = $('page-album'); if (!page) return;
   const dark = `rgb(${dr},${dg},${db})`;
   page.style.setProperty('--alb-dark', dark);
@@ -118,7 +129,7 @@ function _syncLike() {
   const saved = hasAlbum(_album?.id);
   const btn = $('album-hero-like');
   if (btn) {
-    btn.innerHTML = `<i class="bi ${saved ? 'bi-heart-fill' : 'bi-heart'}"></i>`;
+    btn.innerHTML = UI.getIcon(saved ? 'heartFill' : 'heart');
     btn.classList.toggle('liked', saved);
   }
   $('album-save-btn')?.classList.toggle('saved', saved);
@@ -136,7 +147,7 @@ function _renderTracklist(ts) {
         <div class="alb-track-artist">${escHtml(t.artist || '')}</div>
       </div>
       <span class="alb-track-dur">${t.dur || ''}</span>
-      <button class="alb-track-more" data-index="${i}"><i class="bi bi-three-dots"></i></button>
+      <button class="alb-track-more" data-index="${i}">${UI.getIcon('more')}</button>
     </div>`).join('');
 
   el.querySelectorAll('.alb-track').forEach(row => {

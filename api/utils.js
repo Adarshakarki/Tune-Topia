@@ -1,5 +1,4 @@
-// Core API Utilities and Resource Helpers
-
+// Utilities
 const BASE_TIMEOUT = 12000, RETRY_DELAY = 500;
 export const CORS_PROXY = 'https://tune-topia.onrender.com/proxy?url=';
 
@@ -35,7 +34,7 @@ export async function tryBases(bases, path, retries = 2) {
   throw new Error(`All providers failed:\n${errs.join('\n')}`);
 }
 
-// --- Resource Helpers ---
+// Helpers
 export const tidalCover = (id, s = 320) => 
   id ? `https://resources.tidal.com/images/${id.replace(/-/g, '/')}/${s}x${s}.jpg` : '';
 
@@ -58,7 +57,10 @@ export function normalizeTrack(t, source = 'tidal') {
     album: t.album?.title || '', albumId: String(t.album?.id || ''),
     cover: tidalCover(t.album?.cover, 640), coverSmall: tidalCover(t.album?.cover, 160),
     duration: t.duration || 0, dur: fmtDur(t.duration), quality: t.audioQuality || '',
-    tags: t.mediaMetadata?.tags || [], explicit: !!t.explicit, source
+    tags: t.mediaMetadata?.tags || [], explicit: !!t.explicit, source,
+    mixes: t.mixes || null,
+    streamReady: t.streamReady,
+    allowStreaming: t.allowStreaming,
   };
 }
 
@@ -69,7 +71,7 @@ export const qualityBadge = t => {
   return t.quality === 'YT' ? { label: 'YT', cls: 'yt' } : null;
 };
 
-// --- Formatting Utilities ---
+// Format
 const _pad = n => String(Math.floor(n)).padStart(2, '0');
 export const fmtDur = s => (!s || isNaN(s) || !isFinite(s)) ? '' : `${Math.floor(s / 60)}:${_pad(s % 60)}`;
 export const fmtTime = s => (!s || isNaN(s) || !isFinite(s)) ? '0:00' : `${Math.floor(s / 60)}:${_pad(s % 60)}`;

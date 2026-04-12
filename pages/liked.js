@@ -1,9 +1,9 @@
+// Liked
 import * as UI from '../app/ui.js'
 import State from '../app/state.js'
 import { playTrack } from '../app/playback.js'
 import { updateLikedCount } from '../app/likes.js'
 import { attachTrackEvents } from './home.js'
-import { getIcon } from '../app/icons.js'
 
 const $ = (id) => document.getElementById(id)
 let _likedSort = 'recent'
@@ -21,7 +21,7 @@ export function render() {
   const el = $('liked-tracks')
   if (!el) return
   if (!songs.length) {
-    el.innerHTML = `<div class="empty">${getIcon('heart')}<p>No liked songs</p><small>Like songs to see them here</small></div>`
+    el.innerHTML = `<div class="empty">${UI.getIcon('heart')}<p>No liked songs</p><small>Like songs to see them here</small></div>`
     return
   }
   UI.renderTracks(songs, el, null)

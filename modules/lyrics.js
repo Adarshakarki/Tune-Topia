@@ -1,4 +1,4 @@
-// Lyrics fetching and parsing (LRCLIB Integration)
+// Lyrics
 
 import { fetchJSON } from '../api/utils.js';
 
@@ -46,6 +46,11 @@ export async function fetchLyrics(title, artist, album = '', duration = 0) {
 export function parseSynced(raw) {
   if (!raw) return [];
 
+  // Reuse a single element for text cleaning to avoid heavy DOMParser overhead in loops
+  const doc = document.createDocumentFragment();
+  const helperDiv = document.createElement('div');
+  doc.appendChild(helperDiv);
+
   const parseTime = t => {
     const p = t?.split(':');
     return p?.length === 2 ? parseInt(p[0]) * 60 + parseFloat(p[1]) : 0;
@@ -69,13 +74,13 @@ export function parseSynced(raw) {
 
       // Securely extract text content to avoid injection vulnerabilities
       const cleanText = (html) => {
-        const doc = new DOMParser().parseFromString(html, 'text/html');
-        return doc.body.textContent || "";
+        helperDiv.innerHTML = html;
+        return helperDiv.textContent || "";
       };
 
       return {
         time: startTime,
-        text: cleanText(rawContent).trim(),
+        text: rawContent.includes('<') ? cleanText(rawContent).trim() : rawContent.trim(),
         words: ws.length > 0 ? ws : null,
       };
     })

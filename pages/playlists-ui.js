@@ -1,8 +1,8 @@
+// Playlists UI
 import * as UI from '../app/ui.js'
 import * as Playlists from '../modules/playlists.js'
 import { escHtml } from '../api/utils.js'
 import * as UserPlaylistPage from './userplaylist.js'
-import { getIcon, ICONS } from '../app/icons.js'
 import * as LibraryPage from './library.js'
 
 const $ = (id) => document.getElementById(id)
@@ -14,7 +14,7 @@ export function renderPage() {
   if (!el) return
   const all = Playlists.getAll()
   if (!all.length) {
-    el.innerHTML = `<div class="empty">${getIcon('collection')}<p>No playlists yet</p><small>Tap + to create your first playlist</small></div>`
+    el.innerHTML = `<div class="empty">${UI.getIcon('collection')}<p>No playlists yet</p><small>Tap + to create your first playlist</small></div>`
     return
   }
   el.innerHTML = `<div class="pl-page-grid">${all
@@ -22,8 +22,8 @@ export function renderPage() {
       (pl) => `
     <div class="pl-page-card" data-pl-id="${pl.id}">
       <div class="pl-page-art" style="${pl.cover ? `background-image:url(${pl.cover});background-size:cover;background-position:center` : 'background:linear-gradient(135deg,#5b21b6,#7c3aed)'}">
-        ${pl.cover ? '' : getIcon('queue')}
-        <button class="lib-pl-delete pl-page-delete" data-pl-id="${pl.id}" title="Delete">${getIcon('trash')}</button>
+        ${pl.cover ? '' : UI.getIcon('queue')}
+        <button class="lib-pl-delete pl-page-delete" data-pl-id="${pl.id}" title="Delete">${UI.getIcon('trash')}</button>
       </div>
       <div class="pl-page-info">
         <span class="pl-page-name">${escHtml(pl.name)}</span>
@@ -56,6 +56,7 @@ export function renderPage() {
 
 export function openCreateModal() {
   _editingId = null;
+  if ($('pl-modal-create')) delete $('pl-modal-create')._importedTracks;
   ['pl-modal-name-input', 'pl-modal-desc-input', 'pl-modal-cover-input'].forEach(id => $(id).value = '');
   _updateModalCover('');
   const title = $('pl-modal-title'), btn = $('pl-modal-create');
@@ -91,7 +92,7 @@ function _updateModalCover(url) {
     Object.assign(el.style, { backgroundImage: `url(${url})`, backgroundSize: 'cover' });
     el.innerHTML = '';
   } else {
-    el.style.backgroundImage = ''; el.innerHTML = getIcon('queue');
+    el.style.backgroundImage = ''; el.innerHTML = UI.getIcon('queue');
   }
 }
 
@@ -111,11 +112,14 @@ function _createPlaylist() {
     LibraryPage.render()
     UI.toast(`✓ "${name}" updated`)
   } else {
-    Playlists.create({ name, description: desc, cover })
+    const createBtn = $('pl-modal-create');
+    const tracks = createBtn?._importedTracks || [];
+    Playlists.create({ name, description: desc, cover, tracks })
+    if (createBtn) delete createBtn._importedTracks;
     closeCreateModal()
     renderPage()
     LibraryPage.render()
-    UI.toast(`✓ "${name}" created`)
+    UI.toast(`✓ "${name}" created${tracks.length ? ` with ${tracks.length} songs` : ''}`)
   }
   _editingId = null
 }
@@ -132,7 +136,7 @@ export function openPicker(track) {
       .map(
         (pl) => `
       <button class="sheet-action pl-picker-item" data-pl-id="${pl.id}">
-        <div class="pl-picker-cover" style="${pl.cover ? `background-image:url(${pl.cover});background-size:cover` : 'background:linear-gradient(135deg,#6d28d9,#4f46e5)'}">${pl.cover ? '' : getIcon('queue')}
+        <div class="pl-picker-cover" style="${pl.cover ? `background-image:url(${pl.cover});background-size:cover` : 'background:linear-gradient(135deg,#6d28d9,#4f46e5)'}">${pl.cover ? '' : UI.getIcon('queue')}
         </div>
         <div class="pl-picker-info">
           <span class="pl-picker-name">${escHtml(pl.name)}</span>

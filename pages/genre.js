@@ -1,3 +1,4 @@
+// Genre
 import { escHtml, tidalCover, fmtDur } from '../api/utils.js'
 import * as UI from '../app/ui.js'
 
@@ -5,10 +6,10 @@ const $ = (id) => document.getElementById(id)
 
 let _openPl = null, _openAlb = null, _playTs = null, _ts = [];
 
-// Lifecycle
+// Init
 export function init(openPl, openAlb, playTs) {
   _openPl = openPl; _openAlb = openAlb; _playTs = playTs;
-  $('genre-back-btn')?.addEventListener('click', close);
+  $('genre-back-btn')?.addEventListener('click', (e) => { e.stopPropagation(); close(); });
 }
 
 export async function open(id, label) {
@@ -26,7 +27,7 @@ export async function open(id, label) {
 
 export function close() { $('page-genre')?.classList.remove('open'); document.body.style.overflow = ''; UI.updatePlayerPosition(); }
 
-// Data
+// Fetch
 async function _fetch(id) {
   const r = await fetch(`https://hot.monochrome.tf/explore/genre/?id=${encodeURIComponent(id)}`, { signal: AbortSignal.timeout(8000) });
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -38,7 +39,7 @@ async function _fetch(id) {
   };
 }
 
-// UI Rendering
+// Render
 function _skels() {
   [$('genre-albums-section'), $('genre-tracks-section')].forEach(s => s && (s.style.display = 'none'));
   if ($('genre-playlists-grid')) $('genre-playlists-grid').innerHTML = Array(8).fill(0).map(() => `
@@ -102,7 +103,7 @@ function _renderCards(grid, items, onClick, getDisplay) {
       <div class="genre-card" data-index="${i}">
         <div class="genre-card-img">
           <img src="${escHtml(d.cover)}" onerror="this.src=''"/>
-          <div class="genre-card-play"><i class="bi bi-play-fill"></i></div>
+          <div class="genre-card-play">${UI.getIcon('play')}</div>
         </div>
         <div class="genre-card-info">
           <div class="genre-card-title">${escHtml(d.title)}</div>

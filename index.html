@@ -2,7 +2,7 @@
 <html lang="en" data-theme="light">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover,interactive-widget=resizes-content" />
     <meta name="theme-color" content="#F5F0E8" id="theme-color-meta" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -13,6 +13,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="style.css" />
     <link rel="manifest" href="manifest.json" />
+    <script type="module">
+      import 'https://cdn.jsdelivr.net/npm/@uimaxbai/am-lyrics/dist/src/am-lyrics.min.js';
+    </script>
   </head>
   <body>
     <div id="shell">
@@ -24,37 +27,39 @@
             <span class="sb-logo-text">Tune Topia</span>
           </div>
           <button class="sb-collapse-btn" id="sb-collapse-btn" aria-label="Collapse sidebar">
-            <i class="bi bi-layout-sidebar-reverse"></i>
+            <i data-icon="sidebar"></i>
           </button>
         </div>
         <nav class="sb-nav">
-          <a class="sb-item active" data-page="home"><i class="bi bi-house-fill"></i><span>Home</span></a>
-          <a class="sb-item" data-page="search"><i class="bi bi-search"></i><span>Search</span></a>
-          <a class="sb-item" data-page="new"><i class="bi bi-stars"></i><span>What's New</span></a>
+          <a class="sb-item active" data-page="home"><i data-icon="home"></i><span>Home</span></a>
+          <a class="sb-item" data-page="search"><i data-icon="search"></i><span>Search</span></a>
+          <a class="sb-item" data-page="new"><i data-icon="stars"></i><span>What's New</span></a>
           <div class="sb-label">Library</div>
-          <a class="sb-item" data-page="recent"><i class="bi bi-clock-history"></i><span>Recently Played</span></a>
-          <a class="sb-item" data-page="artists"><i class="bi bi-people-fill"></i><span>Artists</span></a>
-          <a class="sb-item" data-page="albums"><i class="bi bi-disc-fill"></i><span>Albums</span></a>
-          <a class="sb-item" data-page="history"><i class="bi bi-journal-text"></i><span>History</span></a>
+          <a class="sb-item" data-page="artists"><i data-icon="person"></i><span>Artists</span></a>
+          <a class="sb-item" data-page="albums"><i data-icon="cd"></i><span>Albums</span></a>
+          <a class="sb-item" data-page="history"><i data-icon="history"></i><span>History</span></a>
           <div class="sb-label">Playlists</div>
-          <a class="sb-item" data-page="liked"><i class="bi bi-heart-fill"></i><span>Liked Songs</span></a>
-          <a class="sb-item" data-page="liked-videos"><i class="bi bi-play-circle-fill"></i><span>Liked Videos</span></a>
-          <a class="sb-item" data-page="playlists"><i class="bi bi-collection-play-fill"></i><span>My Playlists</span></a>
+          <a class="sb-item" data-page="liked"><i data-icon="heartFill"></i><span>Liked Songs</span></a>
+          <a class="sb-item" data-page="liked-videos"><i data-icon="camera"></i><span>Liked Videos</span></a>
+          <a class="sb-item" data-page="playlists"><i data-icon="collection"></i><span>My Playlists</span></a>
         </nav>
       </aside>
 
       <div id="main-wrap">
         <div id="main-content">
 
-          <!-- HOME -->
+          <!-- Home -->
           <div id="page-home" class="page active">
             <header class="page-header">
               <div class="page-header-left">
                 <div class="greeting" id="home-greeting">Good morning, Friend</div>
               </div>
               <div class="page-header-right">
+                <button class="icon-btn" id="home-radio-btn" aria-label="Infinite Radio" title="Infinite Radio">
+                  <i data-icon="infinite"></i>
+                </button>
                 <button class="icon-btn" id="home-account-btn" aria-label="Account">
-                  <i class="bi bi-person-circle" id="home-account-icon"></i>
+                  <i data-icon="person" id="home-account-icon"></i>
                 </button>
               </div>
             </header>
@@ -69,14 +74,6 @@
                   <div class="horiz-inner" id="home-new-row"></div>
                 </div>
               </section>
-              <section class="section" id="home-foryou-section" style="display: none">
-                <div class="section-header">
-                  <h2 class="section-title">For You</h2>
-                </div>
-                <div class="horiz-scroll">
-                  <div class="horiz-inner" id="home-foryou-row"></div>
-                </div>
-              </section>
               <section class="section" id="home-playlists-section">
                 <div class="section-header">
                   <h2 class="section-title">Featured Playlists</h2>
@@ -86,20 +83,52 @@
                   <div class="horiz-inner" id="home-playlists-row"></div>
                 </div>
               </section>
-              <section class="section" id="home-artists-section" style="display: none">
-                <div class="section-header">
-                  <h2 class="section-title">Popular Artists</h2>
-                </div>
-                <div class="horiz-scroll">
-                  <div class="horiz-inner" id="home-artists-row"></div>
-                </div>
-              </section>
               <section class="section" id="home-recent-section" style="display: none">
                 <div class="section-header">
                   <h2 class="section-title">Recently Played</h2>
                 </div>
                 <div class="horiz-scroll">
                   <div class="horiz-inner" id="home-recent-row"></div>
+                </div>
+              </section>
+              <section class="section" id="home-user-playlists-section" style="display: none">
+                <div class="section-header">
+                  <h2 class="section-title">Your Playlists</h2>
+                </div>
+                <div class="horiz-scroll">
+                  <div class="horiz-inner" id="home-user-playlists-row"></div>
+                </div>
+              </section>
+              <section class="section" id="home-albums-section">
+                <div class="section-header">
+                  <h2 class="section-title">Recommended Albums</h2>
+                </div>
+                <div class="horiz-scroll">
+                  <div class="horiz-inner" id="home-albums-row"></div>
+                </div>
+              </section>
+              <section class="section" id="home-videos-section">
+                <div class="section-header">
+                  <h2 class="section-title">Recommended Videos</h2>
+                </div>
+                <div class="horiz-scroll">
+                  <div class="horiz-inner" id="home-videos-row"></div>
+                </div>
+              </section>
+              <section class="section" id="home-foryou-section">
+                <div class="section-header">
+                  <h2 class="section-title">For You</h2>
+                </div>
+                <div class="horiz-scroll">
+                  <div class="horiz-inner" id="home-foryou-row"></div>
+                </div>
+              </section>
+              <section class="section" id="home-artists-section">
+                <div class="section-header">
+                  <h2 class="section-title">Recommended Artists</h2>
+                </div>
+                <div class="horiz-scroll">
+                  <div class="horiz-inner" id="home-artists-row"></div>
                 </div>
               </section>
               <section class="section">
@@ -111,15 +140,15 @@
             </div>
           </div>
 
-          <!-- SEARCH -->
+          <!-- Search -->
           <div id="page-search" class="page">
             <header class="page-header page-header-search">
               <div class="search-bar-wrap">
                 <div class="search-bar">
-                  <i class="bi bi-search"></i>
+                  <i data-icon="search"></i>
                   <input id="search-input" type="text" placeholder="Artists, songs, albums…" autocomplete="off" spellcheck="false" />
                   <button id="search-clear" class="search-clear-btn" style="display: none">
-                    <i class="bi bi-x-lg"></i>
+                    <i data-icon="close"></i>
                   </button>
                 </div>
               </div>
@@ -130,6 +159,7 @@
                 <button class="search-tab" data-tab="video">Video</button>
                 <button class="search-tab" data-tab="albums">Albums</button>
                 <button class="search-tab" data-tab="artists">Artists</button>
+                <button class="search-tab" data-tab="playlists">Playlists</button>
               </div>
             </div>
             <div class="page-body">
@@ -144,7 +174,7 @@
             </div>
           </div>
 
-          <!-- LIBRARY -->
+          <!-- Library -->
           <div id="page-library" class="page">
             <header class="page-header ph-center">
               <h1 class="page-title pt-center">Library</h1>
@@ -160,75 +190,75 @@
               </section>
               <div class="lib-menu">
                 <div class="lib-item" id="lib-liked" data-page="liked">
-                  <div class="lib-item-icon"><i class="bi bi-heart-fill"></i></div>
+                  <div class="lib-item-icon"><i data-icon="heartFill"></i></div>
                   <div class="lib-item-body">
                     <span class="lib-item-name">Liked Songs</span>
                     <span class="lib-item-sub" id="liked-count-label">0 songs</span>
                   </div>
-                  <i class="bi bi-chevron-right lib-chevron"></i>
+                  <i data-icon="chevron-right" class="lib-chevron"></i>
                 </div>
                 <div class="lib-item" id="lib-playlists" data-page="playlists">
-                  <div class="lib-item-icon"><i class="bi bi-collection-fill"></i></div>
+                  <div class="lib-item-icon"><i data-icon="collection"></i></div>
                   <div class="lib-item-body">
                     <span class="lib-item-name">Playlists</span>
                     <span class="lib-item-sub" id="playlists-count-label">0 playlists</span>
                   </div>
-                  <i class="bi bi-chevron-right lib-chevron"></i>
+                  <i data-icon="chevron-right" class="lib-chevron"></i>
                 </div>
                 <div class="lib-item" id="lib-albums" data-page="albums">
-                  <div class="lib-item-icon"><i class="bi bi-disc-fill"></i></div>
+                  <div class="lib-item-icon"><i data-icon="music"></i></div>
                   <div class="lib-item-body">
                     <span class="lib-item-name">Saved Albums</span>
                     <span class="lib-item-sub" id="saved-albums-label">0 albums</span>
                   </div>
-                  <i class="bi bi-chevron-right lib-chevron"></i>
+                  <i data-icon="chevron-right" class="lib-chevron"></i>
                 </div>
                 <div class="lib-item" id="lib-artists" data-page="artists">
-                  <div class="lib-item-icon"><i class="bi bi-people-fill"></i></div>
+                  <div class="lib-item-icon"><i data-icon="person"></i></div>
                   <div class="lib-item-body">
                     <span class="lib-item-name">Followed Artists</span>
                     <span class="lib-item-sub" id="followed-artists-label">0 artists</span>
                   </div>
-                  <i class="bi bi-chevron-right lib-chevron"></i>
+                  <i data-icon="chevron-right" class="lib-chevron"></i>
                 </div>
                 <div class="lib-item" id="lib-liked-videos" data-page="liked-videos">
-                  <div class="lib-item-icon"><i class="bi bi-camera-video-fill"></i></div>
+                  <div class="lib-item-icon"><i data-icon="play"></i></div>
                   <div class="lib-item-body">
                     <span class="lib-item-name">Liked Videos</span>
                     <span class="lib-item-sub" id="liked-videos-count-label">0 videos</span>
                   </div>
-                  <i class="bi bi-chevron-right lib-chevron"></i>
+                  <i data-icon="chevron-right" class="lib-chevron"></i>
                 </div>
                 <div class="lib-item" id="lib-history" data-page="history">
-                  <div class="lib-item-icon"><i class="bi bi-clock-history"></i></div>
+                  <div class="lib-item-icon"><i data-icon="history"></i></div>
                   <div class="lib-item-body">
                     <span class="lib-item-name">History</span>
                   </div>
-                  <i class="bi bi-chevron-right lib-chevron"></i>
+                  <i data-icon="chevron-right" class="lib-chevron"></i>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- LIKED SONGS -->
+          <!-- Liked -->
           <div id="page-liked" class="page">
             <header class="page-header ph-center">
-              <button class="back-btn" data-back="library"><i class="bi bi-chevron-left"></i></button>
+              <button class="back-btn" data-back="library"><i data-icon="chevron-left"></i></button>
               <div class="page-header-right">
-                <button class="icon-btn" id="liked-sort-btn"><i class="bi bi-sort-down"></i></button>
+                <button class="icon-btn" id="liked-sort-btn"><i data-icon="sort"></i></button>
               </div>
             </header>
             <div class="liked-hero">
-              <div class="liked-hero-icon"><i class="bi bi-heart-fill"></i></div>
+              <div class="liked-hero-icon"><i data-icon="heartFill"></i></div>
               <div class="liked-hero-info">
                 <h2 class="liked-hero-title">Liked Songs</h2>
                 <p class="liked-hero-sub" id="liked-hero-sub">0 songs</p>
               </div>
-              <button class="play-btn-round" id="liked-play-all"><i class="bi bi-play-fill"></i></button>
+              <button class="play-btn-round" id="liked-play-all"><i data-icon="play"></i></button>
             </div>
             <div class="liked-filter-row">
               <div class="filter-bar">
-                <i class="bi bi-search"></i>
+                <i data-icon="search"></i>
                 <input id="liked-filter-input" type="search" placeholder="Find in liked songs…" autocomplete="off" />
               </div>
               <div class="sort-badge" id="liked-sort-label">Recent</div>
@@ -236,13 +266,13 @@
             <div id="liked-tracks"></div>
           </div>
 
-          <!-- LIKED VIDEOS -->
+          <!-- Liked Videos -->
           <div id="page-liked-videos" class="page">
             <header class="page-header ph-center">
-              <button class="back-btn" data-back="library"><i class="bi bi-chevron-left"></i></button>
+              <button class="back-btn" data-back="library"><i data-icon="chevron-left"></i></button>
             </header>
             <div class="liked-hero">
-              <div class="liked-hero-icon"><i data-icon="play"></i></div>
+              <div class="liked-hero-icon"><i data-icon="camera"></i></div>
               <div class="liked-hero-info">
                 <h2 class="liked-hero-title">Liked Videos</h2>
                 <p class="liked-hero-sub" id="lv-count">0 videos</p>
@@ -250,52 +280,76 @@
             </div>
             <div class="liked-filter-row">
               <div class="filter-bar">
-                <i class="bi bi-search"></i>
+                <i data-icon="search"></i>
                 <input id="lv-filter-input" type="search" placeholder="Find a video…" autocomplete="off" />
               </div>
               <div class="sort-badge" id="lv-sort-label">Recent</div>
             </div>
             <div id="lv-list"></div>
           </div>
+          
+          <!-- Login -->
+          <div id="page-login" class="page">
+            <header class="page-header ph-center">
+              <button class="back-btn" data-back="account"><i data-icon="chevron-left"></i></button>
+              <h1 class="page-title pt-center">Sign In</h1>
+            </header>
+            <div class="page-body" id="login-content"></div>
+          </div>
 
-          <!-- PROFILE -->
+          <!-- Account -->
           <div id="page-account" class="page">
             <header class="page-header ph-center">
-              <button class="back-btn" data-back="home"><i class="bi bi-chevron-left"></i></button>
+              <button class="back-btn" data-back="home"><i data-icon="chevron-left"></i></button>
               <h1 class="page-title pt-center">Profile</h1>
               <div class="page-header-right">
                 <button class="icon-btn" id="profile-settings-btn" title="Settings">
-                  <i class="bi bi-gear"></i>
+                  <i data-icon="settings"></i>
                 </button>
               </div>
             </header>
             <div class="page-body">
-              <div class="profile-hero-card">
-                <div class="pfp-wrap pfp-large" id="pfp-preview">
-                  <img id="pfp-img" src="" alt="" style="display: none" />
-                  <div class="pfp-placeholder"><i class="bi bi-person-fill"></i></div>
+              <div class="account-card">
+                <div class="account-card-header" id="account-card-header">
+                  <div class="pfp-wrap pfp-large" id="pfp-preview">
+                    <img id="pfp-img" src="" alt="" style="display: none" />
+                    <div class="pfp-placeholder"><i data-icon="person"></i></div>
+                  </div>
                 </div>
-                <div class="profile-hero-info">
+                <div class="account-card-body">
                   <div class="profile-hero-name" id="profile-display-name">Friend</div>
-                  <div class="profile-hero-sub">Local account</div>
+                  <div class="profile-bio" id="profile-bio"></div>
+                  <div class="profile-social-links" id="profile-social-links"></div>
+                  <button class="icon-btn profile-edit-abs" id="profile-edit-btn" title="Edit Profile"><i data-icon="edit"></i></button>
                 </div>
-                <button class="icon-btn" id="profile-edit-btn"><i class="bi bi-pencil"></i></button>
               </div>
+
               <div class="settings-section" id="profile-edit-section" style="display: none">
                 <div class="settings-card">
-                  <div class="profile-pfp-row">
-                    <div class="pfp-wrap" id="pfp-edit-preview">
-                      <img id="pfp-edit-img" src="" alt="" style="display: none" />
-                      <div class="pfp-placeholder"><i class="bi bi-person-fill"></i></div>
-                    </div>
-                    <div class="pfp-inputs">
-                      <input class="settings-input" id="pfp-url-input" type="url" placeholder="Profile picture URL" />
-                      <input class="settings-input" id="username-input" type="text" placeholder="Your name" />
-                      <div class="btn-row">
-                        <button class="settings-save-btn" id="profile-save-btn">Save</button>
-                        <button class="settings-save-btn settings-cancel-btn" id="profile-cancel-btn">Cancel</button>
+                  <div class="profile-edit-grid">
+                    <div class="pfp-edit-col">
+                      <div class="pfp-wrap" id="pfp-edit-preview">
+                        <img id="pfp-edit-img" src="" alt="" style="display: none" />
+                        <div class="pfp-placeholder"><i data-icon="person"></i></div>
                       </div>
                     </div>
+                    <div class="profile-inputs-col">
+                      <input class="settings-input" id="username-input" type="text" placeholder="Display Name" />
+                      <input class="settings-input" id="pfp-url-input" type="url" placeholder="Avatar URL" />
+                      <input class="settings-input" id="bio-input" type="text" placeholder="Short Bio" />
+                      <input class="settings-input" id="cover-url-input" type="url" placeholder="Cover Image URL" />
+                      <div class="social-inputs-label">Social Links</div>
+                      <div class="social-input-group">
+                        <input class="settings-input" id="social-1-input" type="url" placeholder="Link 1" />
+                        <input class="settings-input" id="social-2-input" type="url" placeholder="Link 2" />
+                        <input class="settings-input" id="social-3-input" type="url" placeholder="Link 3" />
+                        <input class="settings-input" id="social-4-input" type="url" placeholder="Link 4" />
+                      </div>
+                    </div>
+                  </div>
+                  <div class="btn-row" style="margin-top: var(--s4)">
+                    <button class="settings-save-btn settings-cancel-btn" id="profile-cancel-btn">Cancel</button>
+                    <button class="settings-save-btn" id="profile-save-btn">Save Changes</button>
                   </div>
                 </div>
               </div>
@@ -306,7 +360,7 @@
                       <span class="settings-row-label">Sync across devices</span>
                       <span class="settings-row-sub">Sign in to back up your library to the cloud</span>
                     </div>
-                    <button class="settings-save-btn btn-nowrap" id="profile-signin-btn">Sign in</button>
+                    <button class="settings-save-btn btn-nowrap" id="profile-signin-btn" data-page="login">Sign in</button>
                   </div>
                 </div>
               </div>
@@ -367,10 +421,10 @@
             </div>
           </div>
 
-          <!-- SETTINGS -->
+          <!-- Settings -->
           <div id="page-settings" class="page">
             <header class="page-header ph-center">
-              <button class="back-btn" data-back="home"><i class="bi bi-chevron-left"></i></button>
+              <button class="back-btn" data-back="home"><i data-icon="chevron-left"></i></button>
               <h1 class="page-title pt-center">Settings</h1>
             </header>
             <div class="page-body">
@@ -432,22 +486,61 @@
                     </div>
                   </div>
                   <div class="quality-options" id="quality-options">
-                    <button class="quality-btn" data-quality="low">
-                      <span class="quality-label">Low</span>
-                      <span class="quality-desc">AAC 96kbps · saves data</span>
+                    <button class="quality-btn" data-quality="hires">
+                      <span class="quality-label">Hi-Res</span>
+                      <span class="quality-desc">FLAC 24-bit</span>
+                    </button>
+                    <button class="quality-btn" data-quality="lossless">
+                      <span class="quality-label">Lossless</span>
+                      <span class="quality-desc">FLAC 16-bit</span>
                     </button>
                     <button class="quality-btn" data-quality="high">
                       <span class="quality-label">High</span>
                       <span class="quality-desc">AAC 320kbps</span>
                     </button>
-                    <button class="quality-btn active" data-quality="lossless">
-                      <span class="quality-label">Lossless</span>
-                      <span class="quality-desc">CD Quality · FLAC 16-bit</span>
+                    <button class="quality-btn" data-quality="low">
+                      <span class="quality-label">Low</span>
+                      <span class="quality-desc">AAC 96kbps</span>
                     </button>
+                  </div>
+                </div>
+              </div>
+              <div class="settings-section">
+                <div class="settings-section-title">Downloads</div>
+                <div class="settings-card">
+                  <div class="settings-row">
+                    <div class="settings-row-info">
+                      <span class="settings-row-label">Download Quality</span>
+                      <span class="settings-row-sub" id="download-quality-sub">MP3 320kbps</span>
+                    </div>
+                  </div>
+                  <div class="quality-options" id="download-quality-options">
                     <button class="quality-btn" data-quality="hires">
                       <span class="quality-label">Hi-Res</span>
-                      <span class="quality-desc">FLAC 24-bit · MQA</span>
+                      <span class="quality-desc">FLAC 24-bit</span>
                     </button>
+                    <button class="quality-btn" data-quality="lossless">
+                      <span class="quality-label">Lossless</span>
+                      <span class="quality-desc">FLAC 16-bit</span>
+                    </button>
+                    <div class="quality-group-label">MP3</div>
+                    <div class="quality-row">
+                      <button class="quality-btn" data-quality="mp3_320">320k</button>
+                      <button class="quality-btn" data-quality="mp3_256">256k</button>
+                      <button class="quality-btn" data-quality="mp3_96">96k</button>
+                    </div>
+                    <div class="quality-group-label">AAC</div>
+                    <div class="quality-row">
+                      <button class="quality-btn" data-quality="aac_320">320k</button>
+                      <button class="quality-btn" data-quality="aac_256">256k</button>
+                      <button class="quality-btn" data-quality="aac_96">96k</button>
+                    </div>
+                    <div class="quality-group-label">OGG</div>
+                    <div class="quality-row">
+                      <button class="quality-btn" data-quality="ogg_320">320k</button>
+                      <button class="quality-btn" data-quality="ogg_256">256k</button>
+                      <button class="quality-btn" data-quality="ogg_96">96k</button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -480,23 +573,35 @@
                 </div>
               </div>
               <div class="settings-section">
-                <div class="settings-section-title">Equalizer</div>
                 <div class="settings-card eq-card">
-                  <div id="eq-container">
-                    <div class="eq-loading">Loading…</div>
+                  <div class="settings-row">
+                    <div class="settings-row-info">
+                      <span class="settings-row-label">Equalizer</span>
+                      <span class="settings-row-sub">Enable high-fidelity audio processing</span>
+                    </div>
+                    <button class="toggle-btn" id="eq-master-toggle" role="switch" aria-checked="false">
+                      <div class="toggle-thumb"></div>
+                    </button>
+                  </div>
+                  <div id="eq-content-wrap" style="display: none;">
+                    <div class="eq-type-switcher quality-options" style="margin: 0 var(--s5) var(--s4);">
+                      <button class="eq-type-btn active" data-eq-type="legacy">Legacy</button>
+                      <button class="eq-type-btn" data-eq-type="parametric">Parametric</button>
+                    </div>
+                    <div id="eq-container"></div>
                   </div>
                 </div>
               </div>
               <div class="settings-section">
                 <div class="settings-section-title">API Instances</div>
                 <div class="settings-card" id="status-api-list">
-                  <div class="status-loading"><i class="bi bi-arrow-repeat spinning"></i> Checking…</div>
+                  <div class="status-loading"><i data-icon="refresh" class="spinning"></i> Checking…</div>
                 </div>
               </div>
               <div class="settings-section">
                 <div class="settings-section-title">Streaming Instances</div>
                 <div class="settings-card" id="status-streaming-list">
-                  <div class="status-loading"><i class="bi bi-arrow-repeat spinning"></i> Checking…</div>
+                  <div class="status-loading"><i data-icon="refresh" class="spinning"></i> Checking…</div>
                 </div>
               </div>
               <div class="settings-section">
@@ -507,7 +612,7 @@
                       <span class="settings-row-label">Clear Cache</span>
                       <span class="settings-row-sub" id="cache-size-label">Calculating…</span>
                     </div>
-                    <button class="icon-btn" id="clear-cache-btn"><i class="bi bi-trash"></i></button>
+                    <button class="icon-btn" id="clear-cache-btn"><i data-icon="trash"></i></button>
                   </div>
                 </div>
               </div>
@@ -520,7 +625,7 @@
                       <span class="settings-row-sub" id="update-status-label">Up to date</span>
                     </div>
                     <button class="icon-btn" id="check-update-btn" title="Check for update">
-                      <i class="bi bi-arrow-clockwise" id="check-update-icon"></i>
+                      <i data-icon="refresh" id="check-update-icon"></i>
                     </button>
                   </div>
                   <div class="settings-row no-border" id="update-available-row" style="display: none">
@@ -540,25 +645,18 @@
                       <span class="settings-row-label">Export Backup</span>
                       <span class="settings-row-sub">Save your library, playlists &amp; settings</span>
                     </div>
-                    <button class="icon-btn" id="backup-export-btn"><i class="bi bi-download"></i></button>
+                    <button class="icon-btn" id="backup-export-btn"><i data-icon="download"></i></button>
                   </div>
                   <div class="settings-row no-border">
                     <div class="settings-row-info">
                       <span class="settings-row-label">Import Backup</span>
                       <span class="settings-row-sub">Restore from a previous backup file</span>
                     </div>
-                    <button class="icon-btn" id="backup-import-btn"><i class="bi bi-upload"></i></button>
+                    <button class="icon-btn" id="backup-import-btn"><i data-icon="import"></i></button>
                   </div>
-                </div>
-              </div>
-              <div class="settings-section">
-                <div class="settings-card">
                   <div class="settings-row no-border">
                     <div class="settings-row-info">
-                      <span class="settings-row-label settings-note">
-                        Using local storage ·
-                        <span id="settings-guest-note">Export backups regularly so you never lose your library</span>
-                      </span>
+                      <span class="settings-row-sub">Using local storage · <span id="settings-guest-note">Export and import backups regularly so you never lose your library</span></span>
                     </div>
                   </div>
                 </div>
@@ -566,19 +664,19 @@
             </div>
           </div>
 
-          <!-- ABOUT -->
+          <!-- About -->
           <div id="page-about" class="page">
-            <header class="page-header">
-              <button class="back-btn" id="about-back-btn" data-back="home"><i class="bi bi-chevron-left"></i></button>
-              <h1 class="page-title">About</h1>
+            <header class="page-header ph-center">
+              <button class="back-btn" data-back="home"><i data-icon="chevron-left"></i></button>
+              <h1 class="page-title pt-center">About</h1>
             </header>
             <div class="page-body" id="about-content"></div>
           </div>
 
-          <!-- NEW RELEASES -->
+          <!-- New -->
           <div id="page-new" class="page">
             <header class="page-header ph-center">
-              <button class="back-btn" data-back="home"><i class="bi bi-chevron-left"></i></button>
+              <button class="back-btn" data-back="home"><i data-icon="chevron-left"></i></button>
               <h1 class="page-title pt-center">What's New</h1>
             </header>
             <div class="page-body">
@@ -586,10 +684,10 @@
             </div>
           </div>
 
-          <!-- SAVED ALBUMS -->
+          <!-- Albums -->
           <div id="page-albums" class="page">
             <header class="page-header ph-center">
-              <button class="back-btn" data-back="library"><i class="bi bi-chevron-left"></i></button>
+              <button class="back-btn" data-back="library"><i data-icon="chevron-left"></i></button>
               <h1 class="page-title pt-center">Albums</h1>
             </header>
             <div class="page-body">
@@ -602,10 +700,10 @@
             </div>
           </div>
 
-          <!-- SONGS -->
+          <!-- Songs -->
           <div id="page-songs" class="page">
             <header class="page-header ph-center">
-              <button class="back-btn" data-back="library"><i class="bi bi-chevron-left"></i></button>
+              <button class="back-btn" data-back="library"><i data-icon="chevron-left"></i></button>
               <h1 class="page-title pt-center">Songs</h1>
             </header>
             <div class="track-list-header">
@@ -616,10 +714,10 @@
             </div>
           </div>
 
-          <!-- FOLLOWED ARTISTS -->
+          <!-- Artists -->
           <div id="page-artists" class="page">
             <header class="page-header ph-center">
-              <button class="back-btn" data-back="library"><i class="bi bi-chevron-left"></i></button>
+              <button class="back-btn" data-back="library"><i data-icon="chevron-left"></i></button>
               <h1 class="page-title pt-center">Artists</h1>
             </header>
             <div class="page-body">
@@ -631,10 +729,10 @@
             </div>
           </div>
 
-          <!-- RECENTLY PLAYED -->
+          <!-- Recent -->
           <div id="page-recent" class="page">
             <header class="page-header ph-center">
-              <button class="back-btn" data-back="library"><i class="bi bi-chevron-left"></i></button>
+              <button class="back-btn" data-back="library"><i data-icon="chevron-left"></i></button>
               <h1 class="page-title pt-center">Recently Played</h1>
             </header>
             <div class="page-body">
@@ -642,10 +740,10 @@
             </div>
           </div>
 
-          <!-- HISTORY -->
+          <!-- History -->
           <div id="page-history" class="page">
             <header class="page-header ph-center">
-              <button class="back-btn" data-back="library"><i class="bi bi-chevron-left"></i></button>
+              <button class="back-btn" data-back="library"><i data-icon="chevron-left"></i></button>
               <h1 class="page-title pt-center">History</h1>
             </header>
             <div class="track-list-header">
@@ -656,13 +754,13 @@
             </div>
           </div>
 
-          <!-- USER PLAYLISTS -->
+          <!-- Playlists -->
           <div id="page-playlists" class="page">
             <header class="page-header ph-center">
-              <button class="back-btn" data-back="library"><i class="bi bi-chevron-left"></i></button>
+              <button class="back-btn" data-back="library"><i data-icon="chevron-left"></i></button>
               <h1 class="page-title pt-center">Playlists</h1>
               <div class="page-header-right">
-                <button class="icon-btn" id="playlists-create-btn"><i class="bi bi-plus-lg"></i></button>
+                <button class="icon-btn" id="playlists-create-btn"><i data-icon="plus"></i></button>
               </div>
             </header>
             <div class="page-body">
@@ -674,14 +772,14 @@
       </div>
     </div>
 
-    <!-- NOW PLAYING -->
+    <!-- Now Playing -->
     <div id="now-playing">
       <div id="np-bg-wrap">
         <img id="np-bg-art" src="" alt="" />
         <div id="np-bg-blur"></div>
       </div>
       <div id="np-topbar">
-        <button class="np-icon-btn" id="np-close-btn"><i class="bi bi-chevron-down"></i></button>
+        <button class="np-icon-btn" id="np-close-btn"><i data-icon="chevron-down"></i></button>
       </div>
       <div id="np-artwork-wrap">
         <img id="np-artwork-img" src="" alt="" />
@@ -696,8 +794,8 @@
             </div>
             <div id="np-artist">—</div>
           </div>
-          <button class="np-love-btn" id="np-love-btn"><i class="bi bi-heart" id="np-love-icon"></i></button>
-          <button class="np-more-inline-btn" id="np-more-btn"><i class="bi bi-three-dots"></i></button>
+          <button class="np-love-btn" id="np-love-btn"><i data-icon="heart" id="np-love-icon"></i></button>
+          <button class="np-more-inline-btn" id="np-more-btn"><i data-icon="more"></i></button>
         </div>
         <div id="np-progress-wrap">
           <div id="np-progress-bar"><div id="np-progress-fill"></div></div>
@@ -707,21 +805,21 @@
           </div>
         </div>
         <div id="np-main-controls">
-          <button class="np-ctrl" id="np-prev-btn"><i class="bi bi-skip-start-fill"></i></button>
-          <button class="np-play-btn" id="np-play-btn"><i class="bi bi-play-fill" id="np-play-icon"></i></button>
-          <button class="np-ctrl" id="np-next-btn"><i class="bi bi-skip-end-fill"></i></button>
+          <button class="np-ctrl" id="np-prev-btn"><i data-icon="prev"></i></button>
+          <button class="np-play-btn" id="np-play-btn"><i data-icon="play" id="np-play-icon"></i></button>
+          <button class="np-ctrl" id="np-next-btn"><i data-icon="next"></i></button>
         </div>
         <div id="np-volume">
-          <i class="bi bi-volume-down-fill vol-icon"></i>
+          <i data-icon="volume-low" class="vol-icon"></i>
           <div id="vol-bar"><div id="vol-fill"></div></div>
-          <i class="bi bi-volume-up-fill vol-icon"></i>
+          <i data-icon="volume-high" class="vol-icon"></i>
         </div>
         <div id="np-secondary-controls">
           <button class="np-sec-btn" id="np-lyrics-btn">
-            <i class="bi bi-chat-square-quote-fill"></i><span>Lyrics</span>
+            <i data-icon="chat"></i><span>Lyrics</span>
           </button>
           <button class="np-sec-btn" id="np-queue-toggle-btn">
-            <i class="bi bi-music-note-list"></i><span>Queue</span>
+            <i data-icon="queue"></i><span>Queue</span>
           </button>
         </div>
       </div>
@@ -730,9 +828,9 @@
         <div class="np-overlay-mini-ctrl">
           <div id="np-lyrics-mini-bar"><div id="np-lyrics-mini-fill"></div></div>
           <div class="np-overlay-ctrl-row">
-            <button class="np-panel-ctrl-btn" id="np-lyrics-prev"><i class="bi bi-skip-start-fill"></i></button>
-            <button class="np-panel-ctrl-btn np-panel-play" id="np-lyrics-play"><i class="bi bi-play-fill" id="np-lyrics-play-icon"></i></button>
-            <button class="np-panel-ctrl-btn" id="np-lyrics-next"><i class="bi bi-skip-end-fill"></i></button>
+            <button class="np-panel-ctrl-btn" id="np-lyrics-prev"><i data-icon="prev"></i></button>
+            <button class="np-panel-ctrl-btn np-panel-play" id="np-lyrics-play"><i data-icon="play" id="np-lyrics-play-icon"></i></button>
+            <button class="np-panel-ctrl-btn" id="np-lyrics-next"><i data-icon="next"></i></button>
           </div>
         </div>
       </div>
@@ -748,10 +846,10 @@
         <div class="bottom-sheet-card">
           <div class="bottom-sheet-handle"></div>
           <div class="bottom-sheet-track-row" id="np-queue-item-preview"></div>
-          <button class="sheet-action" id="qsheet-play-now"><i class="bi bi-play-fill"></i>Play Now</button>
-          <button class="sheet-action" id="qsheet-move-up"><i class="bi bi-arrow-up"></i>Move Up</button>
-          <button class="sheet-action" id="qsheet-move-down"><i class="bi bi-arrow-down"></i>Move Down</button>
-          <button class="sheet-action" id="qsheet-remove"><i class="bi bi-trash"></i>Remove from Queue</button>
+          <button class="sheet-action" id="qsheet-play-now"><i data-icon="play"></i>Play Now</button>
+          <button class="sheet-action" id="qsheet-move-up"><i data-icon="chevron-up"></i>Move Up</button>
+          <button class="sheet-action" id="qsheet-move-down"><i data-icon="chevron-down"></i>Move Down</button>
+          <button class="sheet-action" id="qsheet-remove"><i data-icon="trash"></i>Remove from Queue</button>
         </div>
       </div>
       <div id="np-more-sheet" class="bottom-sheet">
@@ -759,41 +857,43 @@
         <div class="bottom-sheet-card">
           <div class="bottom-sheet-handle"></div>
           <div class="bottom-sheet-track-row" id="sheet-track-preview"></div>
-          <button class="sheet-action" id="sheet-add-queue"><i class="bi bi-music-note-list"></i> Add to Queue</button>
-          <button class="sheet-action" id="sheet-add-playlist"><i class="bi bi-plus-lg"></i> Add to Playlist</button>
-          <button class="sheet-action" id="sheet-share"><i class="bi bi-share-fill"></i> Share</button>
-          <button class="sheet-action" id="sheet-open-source"><i class="bi bi-box-arrow-up-right"></i> Open on Tidal / YouTube</button>
-          <button class="sheet-action" id="sheet-download"><i class="bi bi-download"></i> Download</button>
+          <button class="sheet-action" id="sheet-play-next"><i data-icon="next"></i> Play Next</button>
+          <button class="sheet-action" id="sheet-start-mix" data-action="mix"><i data-icon="stars"></i> Start Mix</button>
+          <button class="sheet-action" id="sheet-add-queue"><i data-icon="queue"></i> Add to Queue</button>
+          <button class="sheet-action" id="sheet-add-playlist"><i data-icon="plus"></i> Add to Playlist</button>
+          <button class="sheet-action" id="sheet-share"><i data-icon="share"></i> Share</button>
+          <button class="sheet-action" id="sheet-open-source"><i data-icon="external"></i> Open on Tidal / YouTube</button>
+          <button class="sheet-action" id="sheet-download"><i data-icon="download"></i> Download</button>
         </div>
       </div>
     </div>
 
-    <!-- SLEEP TIMER -->
+    <!-- Sleep Timer -->
     <div id="sleep-timer-popup" class="sleep-timer-overlay">
       <div class="sleep-timer-backdrop" id="sleep-timer-sheet-overlay"></div>
       <div class="sleep-timer-card">
         <div class="sleep-timer-header">
-          <span class="sleep-timer-title"><i class="bi bi-moon-stars"></i> Sleep Timer</span>
+          <span class="sleep-timer-title"><i data-icon="moon"></i> Sleep Timer</span>
           <button id="sleep-timer-cancel-btn" class="sleep-timer-cancel" style="display: none">Cancel Timer</button>
         </div>
         <div id="sleep-timer-status" class="sleep-timer-status" style="display: none"></div>
         <div class="sleep-timer-options">
-          <button class="sleep-timer-opt" data-mins="15"><i class="bi bi-moon"></i><span>15 min</span></button>
-          <button class="sleep-timer-opt" data-mins="30"><i class="bi bi-moon"></i><span>30 min</span></button>
-          <button class="sleep-timer-opt" data-mins="45"><i class="bi bi-moon"></i><span>45 min</span></button>
-          <button class="sleep-timer-opt" data-mins="60"><i class="bi bi-moon-stars"></i><span>1 hr</span></button>
-          <button class="sleep-timer-opt" data-mins="90"><i class="bi bi-moon-stars"></i><span>1.5 hr</span></button>
-          <button class="sleep-timer-opt" id="sleep-timer-end-of-track" data-mins="eot"><i class="bi bi-music-note"></i><span>End of track</span></button>
+          <button class="sleep-timer-opt" data-mins="15"><i data-icon="moon"></i><span>15 min</span></button>
+          <button class="sleep-timer-opt" data-mins="30"><i data-icon="moon"></i><span>30 min</span></button>
+          <button class="sleep-timer-opt" data-mins="45"><i data-icon="moon"></i><span>45 min</span></button>
+          <button class="sleep-timer-opt" data-mins="60"><i data-icon="moon"></i><span>1 hr</span></button>
+          <button class="sleep-timer-opt" data-mins="90"><i data-icon="moon"></i><span>1.5 hr</span></button>
+          <button class="sleep-timer-opt" id="sleep-timer-end-of-track" data-mins="eot"><i data-icon="music"></i><span>End of track</span></button>
         </div>
       </div>
     </div>
 
-    <!-- ALBUM PAGE -->
+    <!-- Album -->
     <div id="page-album" class="sub-page">
       <div id="album-topbar">
-        <button class="np-icon-btn" id="album-back-btn"><i class="bi bi-chevron-left"></i></button>
+        <button class="np-icon-btn back-btn" id="album-back-btn"><i data-icon="chevron-left"></i></button>
         <span id="album-topbar-title"></span>
-        <button class="np-icon-btn album-hero-like" id="album-hero-like"><i class="bi bi-heart"></i></button>
+        <button class="np-icon-btn album-hero-like" id="album-hero-like"><i data-icon="heart"></i></button>
       </div>
       <div id="album-scroll">
         <div id="album-hero"><img id="album-hero-art" src="" alt="" /></div>
@@ -804,8 +904,9 @@
             <div id="album-hero-meta"></div>
           </div>
           <div id="album-actions">
-            <button id="album-shuffle"><i class="bi bi-shuffle"></i> Shuffle</button>
-            <button id="album-play-all"><i class="bi bi-play-fill"></i> Play</button>
+            <button id="album-shuffle" class="action-btn"><i data-icon="shuffle"></i> Shuffle</button>
+            <button id="album-play-all" class="action-btn"><i data-icon="play"></i> Play</button>
+            <button id="album-download" class="action-btn-circle" title="Download Album"><i data-icon="download"></i></button>
           </div>
           <div id="album-tracklist"></div>
         </div>
@@ -815,18 +916,19 @@
         <div class="bottom-sheet-card">
           <div class="bottom-sheet-handle"></div>
           <div id="album-sheet-preview" class="bottom-sheet-track-row"></div>
-          <button class="sheet-action" id="album-sheet-play-next"><i class="bi bi-skip-forward-fill"></i> Play Next</button>
-          <button class="sheet-action" id="album-sheet-add-queue"><i class="bi bi-list-ul"></i> Add to Queue</button>
-          <button class="sheet-action" id="album-sheet-like"><i class="bi bi-heart"></i> Like</button>
-          <button class="sheet-action" id="album-sheet-share"><i class="bi bi-share-fill"></i> Share</button>
+          <button class="sheet-action" id="album-sheet-play-next"><i data-icon="next"></i> Play Next</button>
+          <button class="sheet-action" id="album-sheet-start-mix" data-action="mix"><i data-icon="stars"></i> Start Mix</button>
+          <button class="sheet-action" id="album-sheet-add-queue"><i data-icon="queue"></i> Add to Queue</button>
+          <button class="sheet-action" id="album-sheet-like"><i data-icon="heart"></i> Like</button>
+          <button class="sheet-action" id="album-sheet-share"><i data-icon="share"></i> Share</button>
         </div>
       </div>
     </div>
 
-    <!-- PLAYLIST PAGE -->
+    <!-- Playlist -->
     <div id="page-playlist" class="sub-page">
       <div id="pl-topbar">
-        <button class="np-icon-btn" id="pl-back-btn"><i class="bi bi-chevron-left"></i></button>
+        <button class="np-icon-btn back-btn" id="pl-back-btn"><i data-icon="chevron-left"></i></button>
         <span id="pl-topbar-title"></span>
         <div class="topbar-spacer"></div>
       </div>
@@ -839,8 +941,9 @@
             <div id="pl-hero-meta"></div>
           </div>
           <div id="pl-actions">
-            <button id="pl-shuffle-btn"><i class="bi bi-shuffle"></i> Shuffle</button>
-            <button id="pl-play-all"><i class="bi bi-play-fill"></i> Play</button>
+            <button id="pl-shuffle-btn" class="action-btn"><i data-icon="shuffle"></i> Shuffle</button>
+            <button id="pl-play-all" class="action-btn"><i data-icon="play"></i> Play</button>
+            <button id="pl-download" class="action-btn-circle" title="Download Playlist"><i data-icon="download"></i></button>
           </div>
           <div id="pl-tracklist"></div>
         </div>
@@ -850,18 +953,56 @@
         <div class="bottom-sheet-card">
           <div class="bottom-sheet-handle"></div>
           <div id="pl-sheet-preview" class="bottom-sheet-track-row"></div>
-          <button class="sheet-action" id="pl-sheet-play-next"><i class="bi bi-skip-forward-fill"></i> Play Next</button>
-          <button class="sheet-action" id="pl-sheet-add-queue"><i class="bi bi-list-ul"></i> Add to Queue</button>
-          <button class="sheet-action" id="pl-sheet-like"><i class="bi bi-heart"></i> Like</button>
-          <button class="sheet-action" id="pl-sheet-share"><i class="bi bi-share-fill"></i> Share</button>
+          <button class="sheet-action" id="pl-sheet-play-next"><i data-icon="next"></i> Play Next</button>
+          <button class="sheet-action" id="pl-sheet-start-mix" data-action="mix"><i data-icon="stars"></i> Start Mix</button>
+          <button class="sheet-action" id="pl-sheet-add-queue"><i data-icon="queue"></i> Add to Queue</button>
+          <button class="sheet-action" id="pl-sheet-like"><i data-icon="heart"></i> Like</button>
+          <button class="sheet-action" id="pl-sheet-share"><i data-icon="share"></i> Share</button>
         </div>
       </div>
     </div>
 
-    <!-- ARTIST PAGE -->
+    <!-- Mix -->
+    <div id="page-mix" class="sub-page">
+      <div id="mix-topbar">
+        <button class="np-icon-btn back-btn" id="mix-back-btn"><i data-icon="chevron-left"></i></button>
+        <span id="mix-topbar-title"></span>
+        <div class="topbar-spacer"></div>
+      </div>
+      <div id="mix-scroll">
+        <div id="mix-hero"><img id="mix-hero-art" src="" alt="" /></div>
+        <div id="mix-controls">
+          <div id="mix-info">
+            <div id="mix-hero-title"></div>
+            <div id="mix-hero-desc"></div>
+            <div id="mix-hero-meta"></div>
+          </div>
+          <div id="mix-actions">
+            <button id="mix-shuffle-btn" class="action-btn"><i data-icon="shuffle"></i> Shuffle</button>
+            <button id="mix-play-all" class="action-btn"><i data-icon="play"></i> Play</button>
+            <button id="mix-download" class="action-btn-circle" title="Download Mix"><i data-icon="download"></i></button>
+          </div>
+          <div id="mix-tracklist"></div>
+        </div>
+      </div>
+      <div id="mix-track-sheet" class="bottom-sheet">
+        <div class="bottom-sheet-overlay" id="mix-track-sheet-overlay"></div>
+        <div class="bottom-sheet-card">
+          <div class="bottom-sheet-handle"></div>
+          <div id="mix-sheet-preview" class="bottom-sheet-track-row"></div>
+          <button class="sheet-action" id="mix-sheet-play-next"><i data-icon="next"></i> Play Next</button>
+          <button class="sheet-action" id="mix-sheet-start-mix" data-action="mix"><i data-icon="stars"></i> Start Mix</button>
+          <button class="sheet-action" id="mix-sheet-add-queue"><i data-icon="queue"></i> Add to Queue</button>
+          <button class="sheet-action" id="mix-sheet-like"><i data-icon="heart"></i> Like</button>
+          <button class="sheet-action" id="mix-sheet-share"><i data-icon="share"></i> Share</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Artist -->
     <div id="page-artist" class="sub-page">
       <div id="artist-topbar">
-        <button class="np-icon-btn" id="artist-back-btn"><i class="bi bi-chevron-left"></i></button>
+        <button class="np-icon-btn back-btn" id="artist-back-btn"><i data-icon="chevron-left"></i></button>
         <span id="artist-topbar-title"></span>
         <div class="topbar-spacer"></div>
       </div>
@@ -872,7 +1013,7 @@
         </div>
         <div id="artist-follow-wrap">
           <button id="artist-follow-btn">Follow</button>
-          <button id="artist-play-btn"><i class="bi bi-play-fill"></i></button>
+          <button id="artist-play-btn"><i data-icon="play"></i></button>
         </div>
         <div class="art-section">
           <div class="art-section-title">Top Songs</div>
@@ -886,11 +1027,11 @@
           <div class="art-wiki-inner">
             <img id="artist-wiki-img" src="" alt="" style="display: none" />
             <div class="art-wiki-text">
-              <div class="art-wiki-label"><i class="bi bi-wikipedia"></i> Wikipedia</div>
+              <div class="art-wiki-label"><i data-icon="info"></i> Wikipedia</div>
               <div id="artist-wiki-extract"></div>
             </div>
           </div>
-          <a id="artist-wiki-link" href="#" target="_blank" rel="noopener">Read on Wikipedia <i class="bi bi-box-arrow-up-right"></i></a>
+          <a id="artist-wiki-link" href="#" target="_blank" rel="noopener">Read on Wikipedia <i data-icon="external"></i></a>
         </div>
       </div>
       <div id="artist-track-sheet" class="bottom-sheet">
@@ -898,18 +1039,19 @@
         <div class="bottom-sheet-card">
           <div class="bottom-sheet-handle"></div>
           <div id="artist-sheet-preview" class="bottom-sheet-track-row"></div>
-          <button class="sheet-action" id="artist-sheet-play-next"><i class="bi bi-skip-forward-fill"></i> Play Next</button>
-          <button class="sheet-action" id="artist-sheet-add-queue"><i class="bi bi-list-ul"></i> Add to Queue</button>
-          <button class="sheet-action" id="artist-sheet-like"><i class="bi bi-heart"></i> Like</button>
-          <button class="sheet-action" id="artist-sheet-share"><i class="bi bi-share-fill"></i> Share</button>
+          <button class="sheet-action" id="artist-sheet-play-next"><i data-icon="next"></i> Play Next</button>
+          <button class="sheet-action" id="artist-sheet-start-mix" data-action="mix"><i data-icon="stars"></i> Start Mix</button>
+          <button class="sheet-action" id="artist-sheet-add-queue"><i data-icon="queue"></i> Add to Queue</button>
+          <button class="sheet-action" id="artist-sheet-like"><i data-icon="heart"></i> Like</button>
+          <button class="sheet-action" id="artist-sheet-share"><i data-icon="share"></i> Share</button>
         </div>
       </div>
     </div>
 
-    <!-- GENRE PAGE -->
+    <!-- Genre -->
     <div id="page-genre" class="sub-page">
       <div id="genre-topbar">
-        <button class="np-icon-btn" id="genre-back-btn"><i class="bi bi-chevron-left"></i></button>
+        <button class="np-icon-btn back-btn" id="genre-back-btn"><i data-icon="chevron-left"></i></button>
         <span id="genre-topbar-title"></span>
         <div class="topbar-spacer"></div>
       </div>
@@ -929,17 +1071,17 @@
       </div>
     </div>
 
-    <!-- USER PLAYLIST PAGE -->
+    <!-- User Playlist -->
     <div id="page-user-playlist" class="sub-page">
       <div id="upl-topbar">
-        <button class="np-icon-btn" id="upl-back-btn"><i class="bi bi-chevron-left"></i></button>
+        <button class="np-icon-btn back-btn" id="upl-back-btn"><i data-icon="chevron-left"></i></button>
         <span id="upl-topbar-title"></span>
-        <button class="np-icon-btn" id="upl-edit-btn"><i class="bi bi-pencil"></i></button>
+        <button class="np-icon-btn" id="upl-edit-btn"><i data-icon="edit"></i></button>
       </div>
       <div id="upl-scroll">
         <div id="upl-hero">
           <img id="upl-hero-art" src="" alt="" />
-          <div id="upl-hero-placeholder"><i class="bi bi-collection-fill"></i></div>
+          <div id="upl-hero-placeholder"><i data-icon="collection"></i></div>
         </div>
         <div id="upl-controls">
           <div id="upl-info">
@@ -948,12 +1090,13 @@
             <div id="upl-meta"></div>
           </div>
           <div id="upl-actions">
-            <button id="upl-shuffle-btn"><i class="bi bi-shuffle"></i> Shuffle</button>
-            <button id="upl-play-all"><i class="bi bi-play-fill"></i> Play</button>
+            <button id="upl-shuffle-btn"><i data-icon="shuffle"></i> Shuffle</button>
+            <button id="upl-play-all"><i data-icon="play"></i> Play</button>
+            <button id="upl-download" class="action-btn-circle" title="Download Playlist"><i data-icon="download"></i></button>
           </div>
           <div class="liked-filter-row">
             <div class="filter-bar">
-              <i class="bi bi-search"></i>
+              <i data-icon="search"></i>
               <input id="upl-filter-input" type="search" placeholder="Find in playlist…" autocomplete="off" />
             </div>
             <div class="sort-badge" id="upl-sort-label">Default</div>
@@ -963,26 +1106,28 @@
       </div>
     </div>
 
-    <!-- GLOBAL TRACK SHEET -->
+    <!-- Track Options -->
     <div id="track-options-sheet" class="bottom-sheet">
       <div class="bottom-sheet-overlay" id="track-sheet-overlay"></div>
       <div class="bottom-sheet-card">
         <div class="bottom-sheet-handle"></div>
         <div id="track-sheet-preview" class="bottom-sheet-track-row"></div>
-        <button class="sheet-action" id="tsheet-like"><i class="bi bi-heart"></i> <span id="tsheet-like-label">Like</span></button>
-        <button class="sheet-action" id="tsheet-add-queue"><i class="bi bi-music-note-list"></i> Add to Queue</button>
-        <button class="sheet-action" id="tsheet-add-playlist"><i class="bi bi-plus-lg"></i> Add to Playlist</button>
-        <button class="sheet-action" id="tsheet-go-artist"><i class="bi bi-person-circle"></i> Go to Artist</button>
-        <button class="sheet-action" id="tsheet-go-album"><i class="bi bi-disc-fill"></i> Go to Album</button>
-        <button class="sheet-action" id="tsheet-download"><i class="bi bi-download"></i> Download</button>
-        <button class="sheet-action" id="tsheet-move-up" style="display: none"><i class="bi bi-arrow-up"></i> Move Up</button>
-        <button class="sheet-action" id="tsheet-move-down" style="display: none"><i class="bi bi-arrow-down"></i> Move Down</button>
-        <button class="sheet-action sheet-action-danger" id="tsheet-remove" style="display: none"><i class="bi bi-trash"></i> Remove from Playlist</button>
+        <button class="sheet-action" id="tsheet-like"><i data-icon="heart"></i> <span id="tsheet-like-label">Like</span></button>
+        <button class="sheet-action" id="tsheet-play-next"><i data-icon="play"></i> Play Next</button>
+        <button class="sheet-action" id="tsheet-start-mix" data-action="mix"><i data-icon="stars"></i> Start Mix</button>
+        <button class="sheet-action" id="tsheet-add-queue"><i data-icon="queue"></i> Add to Queue</button>
+        <button class="sheet-action" id="tsheet-add-playlist"><i data-icon="plus"></i> Add to Playlist</button>
+        <button class="sheet-action" id="tsheet-go-artist"><i data-icon="person"></i> Go to Artist</button>
+        <button class="sheet-action" id="tsheet-go-album"><i data-icon="music"></i> Go to Album</button>
+        <button class="sheet-action" id="tsheet-download"><i data-icon="download"></i> Download</button>
+        <button class="sheet-action" id="tsheet-move-up" style="display: none"><i data-icon="chevron-up"></i> Move Up</button>
+        <button class="sheet-action" id="tsheet-move-down" style="display: none"><i data-icon="chevron-down"></i> Move Down</button>
+        <button class="sheet-action sheet-action-danger" id="tsheet-remove" style="display: none"><i data-icon="trash"></i> Remove from Playlist</button>
       </div>
     </div>
 
     <footer class="bottom-nav-container">
-      <!-- PLAYER BAR -->
+      <!-- Player Bar -->
       <div id="player-bar">
         <div id="player-bar-bg"></div>
         <div id="player-bar-inner">
@@ -996,16 +1141,16 @@
               <div id="bar-artist">—</div>
             </div>
             <button class="bar-like-btn" id="bar-like-btn">
-              <i class="bi bi-heart" id="bar-like-icon"></i>
+              <i data-icon="heart" id="bar-like-icon"></i>
             </button>
           </div>
           <div id="bar-controls">
             <div id="bar-ctrl-row">
-              <button class="bar-ctrl" id="bar-shuffle-btn" title="Shuffle"><i class="bi bi-shuffle"></i></button>
-              <button class="bar-ctrl" id="bar-prev-btn" title="Previous"><i class="bi bi-skip-start-fill"></i></button>
-              <button class="bar-play-btn" id="bar-play-btn"><i class="bi bi-play-fill" id="bar-play-icon"></i></button>
-              <button class="bar-ctrl" id="bar-next-btn" title="Next"><i class="bi bi-skip-end-fill"></i></button>
-              <button class="bar-ctrl" id="bar-repeat-btn" title="Repeat"><i class="bi bi-repeat"></i></button>
+              <button class="bar-ctrl" id="bar-shuffle-btn" title="Shuffle"><i data-icon="shuffle"></i></button>
+              <button class="bar-ctrl" id="bar-prev-btn" title="Previous"><i data-icon="prev"></i></button>
+              <button class="bar-play-btn" id="bar-play-btn"><i data-icon="play" id="bar-play-icon"></i></button>
+              <button class="bar-ctrl" id="bar-next-btn" title="Next"><i data-icon="next"></i></button>
+              <button class="bar-ctrl" id="bar-repeat-btn" title="Repeat"><i data-icon="repeat"></i></button>
             </div>
             <div id="bar-progress-wrap">
               <span id="bar-time-cur">0:00</span>
@@ -1016,16 +1161,16 @@
             </div>
           </div>
           <div id="bar-right">
-            <button class="bar-ctrl" id="bar-lyrics-btn" title="Lyrics"><i class="bi bi-chat-square-quote-fill"></i></button>
-            <button class="bar-ctrl" id="bar-queue-btn" title="Queue"><i class="bi bi-music-note-list"></i></button>
-            <button class="bar-ctrl" id="bar-more-btn" title="More options"><i class="bi bi-three-dots"></i></button>
-            <i class="bi bi-volume-down-fill bar-vol-icon"></i>
+            <button class="bar-ctrl" id="bar-lyrics-btn" title="Lyrics"><i data-icon="chat"></i></button>
+            <button class="bar-ctrl" id="bar-queue-btn" title="Queue"><i data-icon="queue"></i></button>
+            <button class="bar-ctrl" id="bar-more-btn" title="More options"><i data-icon="more"></i></button>
+            <i data-icon="volume-low" class="bar-vol-icon"></i>
             <div id="bar-vol-bar"><div id="bar-vol-fill"></div></div>
-            <i class="bi bi-volume-up-fill bar-vol-icon"></i>
+            <i data-icon="volume-high" class="bar-vol-icon"></i>
           </div>
           <div id="bar-mini-controls">
             <button class="bar-ctrl bar-play-btn" id="mini-play-btn">
-              <i class="bi bi-play-fill" id="mini-play-icon"></i>
+              <i data-icon="play" id="mini-play-icon"></i>
             </button>
           </div>
         </div>
@@ -1034,49 +1179,51 @@
         </div>
       </div>
 
-      <!-- MOBILE BOTTOM NAV -->
+      <!-- Bottom Nav -->
       <nav id="bottom-nav">
-        <button class="nav-btn active" data-page="home"><i class="bi bi-house-fill"></i><span>Home</span></button>
-        <button class="nav-btn" data-page="search"><i class="bi bi-search"></i><span>Search</span></button>
-        <button class="nav-btn" data-page="library"><i class="bi bi-music-note-beamed"></i><span>Library</span></button>
+        <button class="nav-btn active" data-page="home"><i data-icon="home"></i><span>Home</span></button>
+        <button class="nav-btn" data-page="search"><i data-icon="search"></i><span>Search</span></button>
+        <button class="nav-btn" data-page="library"><i data-icon="music"></i><span>Library</span></button>
       </nav>
     </footer>
 
     <div id="toast"></div>
-    <audio id="audio"></audio>
+    <audio id="audio" crossorigin="anonymous"></audio>
 
-    <!-- CREATE PLAYLIST MODAL -->
+    <!-- Create Playlist -->
     <div id="playlist-modal-overlay" class="pl-modal-overlay" style="display: none">
       <div class="pl-modal">
         <div class="pl-modal-header">
           <span class="pl-modal-title" id="pl-modal-title">New Playlist</span>
-          <button class="pl-modal-close" id="pl-modal-close"><i class="bi bi-x-lg"></i></button>
+          <button class="pl-modal-close" id="pl-modal-close"><i data-icon="close"></i></button>
         </div>
         <div class="pl-modal-cover-row">
-          <div class="pl-modal-cover" id="pl-modal-cover-preview"><i class="bi bi-music-note-list"></i></div>
+          <div class="pl-modal-cover" id="pl-modal-cover-preview"><i data-icon="queue"></i></div>
           <input class="settings-input" id="pl-modal-cover-input" type="url" placeholder="Cover image URL (optional)" />
         </div>
         <input class="settings-input" id="pl-modal-name-input" type="text" placeholder="Playlist name" maxlength="60" />
         <input class="settings-input" id="pl-modal-desc-input" type="text" placeholder="Description (optional)" maxlength="120" />
         <div class="pl-modal-actions">
+          <button class="pl-modal-btn pl-modal-import" id="pl-modal-import-btn"><i data-icon="import"></i> Import File</button>
+          <input type="file" id="pl-import-file" style="display: none" accept=".json,.csv" />
           <button class="pl-modal-btn pl-modal-cancel" id="pl-modal-cancel">Cancel</button>
           <button class="pl-modal-btn pl-modal-create" id="pl-modal-create">Create</button>
         </div>
       </div>
     </div>
 
-    <!-- PLAYLIST PICKER -->
+    <!-- Playlist Picker -->
     <div id="playlist-picker-sheet" class="bottom-sheet">
       <div class="bottom-sheet-overlay" id="playlist-picker-overlay"></div>
       <div class="bottom-sheet-card">
         <div class="bottom-sheet-handle"></div>
         <div class="pl-picker-header"><span class="pl-picker-title">Add to Playlist</span></div>
         <div id="playlist-picker-list"></div>
-        <button class="sheet-action" id="playlist-picker-new"><i class="bi bi-plus-circle"></i> New Playlist</button>
+        <button class="sheet-action" id="playlist-picker-new"><i data-icon="plus"></i> New Playlist</button>
       </div>
     </div>
 
-    <!-- PROFILE POPUP -->
+    <!-- Profile -->
     <div id="profile-popup-sheet" class="bottom-sheet">
       <div class="bottom-sheet-overlay" id="profile-popup-overlay"></div>
       <div class="bottom-sheet-card">
@@ -1084,27 +1231,24 @@
         <div class="profile-popup-hero">
           <div class="pfp-wrap pfp-popup" id="pfp-popup-wrap">
             <img id="pfp-popup-img" src="" alt="" style="display: none" />
-            <div class="pfp-placeholder"><i class="bi bi-person-fill"></i></div>
+            <div class="pfp-placeholder"><i data-icon="person"></i></div>
           </div>
           <div class="profile-popup-info">
             <div class="profile-popup-name" id="pfp-popup-name">Friend</div>
             <div class="profile-popup-sub">Local account</div>
           </div>
         </div>
-        <button class="sheet-action" id="popup-goto-profile"><i class="bi bi-person-fill"></i> Profile &amp; Sound Capsule</button>
-        <button class="sheet-action" id="popup-goto-settings"><i class="bi bi-gear-fill"></i> Settings</button>
-        <button class="sheet-action" id="popup-signin"><i class="bi bi-cloud-fill"></i> Sign in to sync</button>
-        <button class="sheet-action" id="popup-goto-about"><i class="bi bi-info-circle"></i> About</button>
+        <button class="sheet-action" id="popup-goto-profile"><i data-icon="person"></i> Profile &amp; Sound Capsule</button>
+        <button class="sheet-action" id="popup-goto-settings"><i data-icon="settings"></i> Settings</button>
+        <button class="sheet-action" id="popup-goto-about"><i data-icon="info"></i> About</button>
       </div>
     </div>
 
     <script type="module" src="app/init.js"></script>
     <script>
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker
-          .register('./sw.js')
-          .then((reg) => console.log('Service Worker registered!', reg))
-          .catch((err) => console.error('Service Worker failed:', err))
+        navigator.serviceWorker.register('./sw.js')
+          .catch((err) => console.error('SW failed:', err));
       }
     </script>
   </body>

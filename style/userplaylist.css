@@ -1,8 +1,7 @@
-/* user playlist sub-page */
 #page-user-playlist {
   position: fixed;
   inset: 0;
-  z-index: var(--z-subpage);
+  z-index: var(--z-subpage-2);
   transform: translateX(100%);
   visibility: hidden;
   background: var(--pl-dark, oklch(0.13 0.012 48));
@@ -14,7 +13,6 @@
   transition: transform 0.38s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s 0s;
 }
 
-/* topbar */
 #upl-topbar {
   position: absolute;
   top: 0;
@@ -40,8 +38,6 @@
   text-align: center;
   padding: 0 var(--s2);
 }
-
-/* scroll */
 #upl-scroll {
   position: absolute;
   inset: 0;
@@ -51,8 +47,6 @@
   scrollbar-width: thin;
   scrollbar-color: oklch(1 0 0 / 0.2) transparent;
 }
-
-/* hero */
 #upl-hero {
   position: relative;
   width: 100%;
@@ -85,8 +79,6 @@
   background: linear-gradient(to bottom, transparent 0%, var(--pl-dark, oklch(0.13 0.012 48)) 100%);
   pointer-events: none;
 }
-
-/* controls */
 #upl-controls { padding: 0 var(--s5) var(--s6); }
 #upl-info     { padding: var(--s3) 0 var(--s1); text-align: center; }
 
@@ -99,8 +91,6 @@
 }
 #upl-desc { font-size: 13px; color: oklch(1 0 0 / 0.55); margin-bottom: 4px; }
 #upl-meta { font-size: 12px; color: oklch(1 0 0 / 0.4); font-weight: 500; }
-
-/* action buttons */
 #upl-actions {
   display: flex;
   align-items: center;
@@ -140,8 +130,6 @@
 #upl-play-all:active { opacity: 0.75; }
 
 #upl-tracklist { padding-bottom: calc(var(--bar-h-mobile) + var(--s6)); }
-
-/* more button */
 .upl-track-more {
   padding: var(--s2);
   color: oklch(1 0 0 / 0.35);
@@ -151,16 +139,12 @@
   transition: color 0.15s;
 }
 .upl-track-more .bi { font-size: 16px; }
-
-/* tracklist overrides */
 #upl-tracklist .track-card         { background: transparent; border-bottom-color: oklch(1 0 0 / 0.07); }
 #upl-tracklist .track-card:active  { background: oklch(1 0 0 / 0.07); }
 #upl-tracklist .track-card.playing { background: oklch(1 0 0 / 0.1); }
 #upl-tracklist .track-name         { color: oklch(1 0 0); }
 #upl-tracklist .track-name.playing { color: var(--accent); }
 #upl-tracklist .track-meta         { color: oklch(1 0 0 / 0.45); }
-
-/* filter row */
 #upl-controls .liked-filter-row {
   display: flex;
   align-items: center;

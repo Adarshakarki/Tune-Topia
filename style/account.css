@@ -1,30 +1,153 @@
-/* profile hero */
-.profile-hero-card {
+.account-card {
+  margin: var(--s4) var(--s5);
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  transition: transform 0.2s ease;
+  min-height: 220px;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: stretch;
+  color: #ffffff;
+  z-index: 1;
+}
+
+.account-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.1));
+  z-index: -1;
+}
+
+.account-card-header {
+  width: 35%;
   display: flex;
   align-items: center;
-  gap: var(--s4);
+  justify-content: center;
   padding: var(--s5);
-  background: var(--surface);
-  border-top: 0.5px solid var(--border);
-  border-bottom: 0.5px solid var(--border);
+  position: relative;
 }
-.pfp-large { width: 72px !important; height: 72px !important; }
 
-.profile-hero-info { flex: 1; min-width: 0; }
+.account-card .pfp-wrap {
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  box-shadow: var(--shadow-md);
+  z-index: 2;
+}
+
+.pfp-large { width: 100px !important; height: 100px !important; }
+
+.account-card-body {
+  flex: 1;
+  padding: var(--s6) var(--s6) var(--s6) var(--s4);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
 .profile-hero-name {
   font-family: var(--font-primary);
-  font-size: 22px;
+  font-size: 28px;
   font-weight: 700;
-  color: var(--text);
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
-.profile-hero-sub { font-size: 13px; color: var(--text-3); margin-top: 4px; }
+
+.profile-bio {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.5;
+  max-width: 90%;
+  margin-top: 2px;
+}
+
+.profile-social-links {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--s4);
+  margin-top: var(--s3);
+}
+
+.account-social-pill {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  background: rgba(255, 255, 255, 0.15);
+  padding: 6px 12px;
+  border-radius: var(--r-full);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  backdrop-filter: blur(8px);
+  border: 0.5px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.2s ease;
+}
+
+.account-social-pill:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+}
+
+.profile-edit-abs {
+  position: absolute;
+  top: var(--s4);
+  right: var(--s4);
+  background: var(--surface-2);
+  color: var(--text-2);
+  z-index: 3;
+}
 
 #page-account .page-body    { padding-bottom: var(--s6); }
 #page-account .settings-section { margin-bottom: var(--s3); }
 
 .page-header-right { margin-left: auto; }
 
-/* profile popup sheet */
+.btn-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--s2);
+}
+
+.profile-edit-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--s5);
+  padding: var(--s5);
+}
+
+.pfp-edit-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.profile-inputs-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+.social-inputs-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-3);
+  margin-top: var(--s2);
+}
+
+.social-input-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--s2);
+}
+
 .profile-popup-hero {
   display: flex;
   align-items: center;
@@ -36,12 +159,11 @@
 .profile-popup-sub  { font-size: 12px; color: var(--text-3); margin-top: 2px; }
 
 @media (min-width: 900px) {
-  .profile-hero-card {
-    margin: var(--s3) 28px 0;
-    border-radius: var(--r-lg);
-    border: 0.5px solid var(--border);
-    padding: var(--s4) var(--s5);
+  .account-card {
+    margin: var(--s4) 28px;
   }
+  .account-card-header { height: 180px; }
+  .pfp-large { width: 96px !important; height: 96px !important; }
   #page-account .settings-card {
     border: 0.5px solid var(--border);
     border-radius: var(--r-lg);

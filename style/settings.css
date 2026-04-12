@@ -1,4 +1,3 @@
-/* settings sections */
 .settings-section { margin-bottom: var(--s4); }
 .settings-section-title {
   font-size: 11px;
@@ -13,8 +12,6 @@
   border-top: 0.5px solid var(--border);
   border-bottom: 0.5px solid var(--border);
 }
-
-/* profile */
 .profile-pfp-row {
   display: flex;
   align-items: center;
@@ -101,8 +98,6 @@
   transition: opacity 0.15s, transform 0.15s var(--spring);
 }
 .settings-save-btn:active { opacity: 0.75; transform: scale(0.96); }
-
-/* toggle row */
 .settings-row {
   display: flex;
   align-items: center;
@@ -136,8 +131,6 @@
   transition: transform 0.25s var(--spring);
 }
 .toggle-btn[aria-checked='true'] .toggle-thumb { transform: translateX(20px); }
-
-/* instance status */
 .status-row {
   display: flex;
   align-items: center;
@@ -203,4 +196,69 @@
   #page-account .page-body { max-width: 100%; padding: 0 28px var(--s6); }
   #page-account .settings-section-title { padding-left: 0; padding-right: 0; }
   #page-account .settings-card { margin: 0; }
+}
+.quality-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s2);
+  padding: var(--s2) var(--s4) var(--s3);
+}
+.quality-btn,
+.theme-btn,
+.header-font-btn,
+.body-font-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: var(--s2) var(--s3);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: background 0.14s, border-color 0.14s;
+  text-align: left;
+}
+.quality-btn:hover,
+.theme-btn:hover,
+.header-font-btn:hover,
+.body-font-btn:hover { background: var(--surface-3); }
+.quality-btn:active,
+.theme-btn:active,
+.header-font-btn:active,
+.body-font-btn:active { opacity: 0.7; }
+.quality-btn.active,
+.theme-btn.active,
+.header-font-btn.active,
+.body-font-btn.active { background: var(--accent-dim); border-color: var(--accent); }
+
+.quality-label { font-size: 13px; font-weight: 700; color: var(--text); }
+.quality-btn.active .quality-label, .theme-btn.active .quality-label, .header-font-btn.active .quality-label, .body-font-btn.active .quality-label { color: var(--accent); }
+.quality-desc  { font-size: 11px; color: var(--text-3); line-height: 1.3; }
+
+.quality-group-label {
+  grid-column: 1 / -1;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  padding: var(--s3) 0 2px;
+  margin-top: var(--s1);
+}
+
+.quality-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s2);
+}
+
+.quality-row .quality-btn {
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  padding: var(--s2);
+  min-height: 42px;
 }

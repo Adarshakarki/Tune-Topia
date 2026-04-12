@@ -1,3 +1,4 @@
+// Backup
 const BACKUP_VERSION = 1
 
 const STATE_KEYS = ['library.likedSongs', 'library.savedAlbums', 'library.followedArtists', 'library.playlists', 'user.name', 'user.pfp', 'ui.theme', 'ui.themeMode', 'ui.fontPrimaryLink', 'ui.fontSecondaryLink']

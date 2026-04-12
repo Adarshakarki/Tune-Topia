@@ -1,4 +1,3 @@
-/* lyrics panel */
 #np-lyrics-panel {
   display: flex;
   flex-direction: column;
@@ -14,8 +13,6 @@
   flex-direction: column;
   min-height: 0;
 }
-
-/* am-lyrics web component */
 am-lyrics {
   --am-lyrics-font-family: var(--font-primary);
   --am-lyrics-font-size: 24px;
@@ -30,8 +27,6 @@ am-lyrics {
   width: 100%;
   height: 100%;
 }
-
-/* placeholder */
 .np-lyrics-placeholder {
   position: absolute;
   top: 50%;
@@ -46,8 +41,6 @@ am-lyrics {
 .np-lyrics-placeholder .bi { font-size: 44px; display: block; margin: 0 auto 14px; }
 .np-lyrics-placeholder p   { font-family: var(--font-primary); font-size: 19px; font-weight: 600; margin: 0; }
 .np-lyrics-placeholder small { font-size: 13px; color: oklch(1 0 0 / 0.15); margin-top: 8px; display: block; }
-
-/* mini controls at bottom of overlay */
 .np-overlay-mini-ctrl {
   flex-shrink: 0;
   z-index: 10;

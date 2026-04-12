@@ -1,8 +1,7 @@
-/* video player - fixed fullscreen */
 #page-video {
   position: fixed;
   inset: 0;
-  z-index: var(--z-fullscreen);
+  z-index: var(--z-fullscreen); /* This is correct for fullscreen */
   background: #000;
   display: none;
   flex-direction: column;
@@ -15,8 +14,6 @@
   flex-direction: column;
   background: #000;
 }
-
-/* header */
 .vp-header {
   position: absolute;
   top: 0;
@@ -38,7 +35,7 @@
   border-radius: 50%;
   background: none;
   border: none;
-  color: #fff;
+  color: inherit;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -70,8 +67,6 @@
 .vp-like-btn .bi { font-size: 22px; }
 .vp-like-btn:active { transform: scale(1.25); }
 .vp-like-btn.liked { color: #ff4d6d; }
-
-/* video area */
 .vp-video-wrap {
   flex: 1;
   position: relative;
@@ -82,8 +77,6 @@
   overflow: hidden;
 }
 #vp-video { width: 100%; height: 100%; object-fit: contain; display: block; }
-
-/* spinner */
 .vp-spinner {
   position: absolute;
   inset: 0;
@@ -102,8 +95,6 @@
 }
 @keyframes vp-spin { to { transform: rotate(360deg); } }
 .vp-spinner.hidden { display: none; }
-
-/* error */
 .vp-error {
   position: absolute;
   inset: 0;
@@ -119,8 +110,6 @@
 }
 .vp-error.visible { display: flex; }
 .vp-error .bi { font-size: 40px; opacity: 0.5; }
-
-/* center controls */
 .vp-center-controls {
   position: absolute;
   top: 50%;
@@ -165,8 +154,6 @@
 .vp-ctrl-btn span { font-size: 10px; font-weight: 700; line-height: 1; }
 .vp-ctrl-btn:hover  { color: #fff; transform: scale(1.1); }
 .vp-ctrl-btn:active { transform: scale(0.9); }
-
-/* bottom controls */
 .vp-controls {
   position: absolute;
   bottom: 0;

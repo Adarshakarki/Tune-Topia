@@ -1,8 +1,7 @@
-/* playlist sub-page */
 #page-playlist {
   position: fixed;
   inset: 0;
-  z-index: var(--z-subpage);
+  z-index: var(--z-subpage-2);
   transform: translateX(100%);
   visibility: hidden;
   background: var(--pl-dark, oklch(0.13 0.012 48));
@@ -14,7 +13,6 @@
   transition: transform 0.38s cubic-bezier(0.32, 0.72, 0, 1), background 0.7s ease, visibility 0s 0s;
 }
 
-/* topbar */
 #pl-topbar {
   position: absolute;
   top: 0;
@@ -41,7 +39,6 @@
   padding: 0 var(--s2);
 }
 
-/* scroll */
 #pl-scroll {
   position: absolute;
   inset: 0;
@@ -52,7 +49,6 @@
   scrollbar-color: oklch(1 0 0 / 0.2) transparent;
 }
 
-/* hero */
 #pl-hero {
   position: relative;
   width: 100%;
@@ -87,7 +83,6 @@
   pointer-events: none;
 }
 
-/* info */
 #pl-info { padding: var(--s3) var(--s5) var(--s1); text-align: center; }
 #pl-hero-title {
   font-family: var(--font-primary);
@@ -100,7 +95,6 @@
 #pl-hero-desc { font-size: 13px; color: oklch(1 0 0 / 0.55); margin-bottom: 4px; }
 #pl-hero-meta { font-size: 12px; color: oklch(1 0 0 / 0.4); font-weight: 500; }
 
-/* actions */
 #pl-actions {
   display: flex;
   align-items: center;
@@ -141,7 +135,6 @@
 
 #pl-tracklist { padding-bottom: calc(var(--bar-h-mobile) + var(--s6)); }
 
-/* track rows */
 #page-playlist .alb-track {
   display: flex;
   align-items: center;
@@ -170,7 +163,6 @@
 }
 #page-playlist .alb-track-more:active { color: oklch(1 0 0); }
 
-/* playing state */
 .alb-track.playing { background: oklch(1 0 0 / 0.07); }
 .alb-track.playing .alb-track-title { color: var(--accent); }
 .alb-track.playing .alb-track-num   { color: var(--accent); }
@@ -179,7 +171,6 @@
 #page-playlist .alb-track.playing .alb-track-title { color: var(--accent); }
 #page-playlist .alb-track.playing .alb-track-num   { color: var(--accent); }
 
-/* light variant */
 #page-playlist[data-light='true'] #pl-hero-title,
 #page-playlist[data-light='true'] .alb-track-title,
 #page-playlist[data-light='true'] #pl-topbar-title { color: oklch(0.15 0 0 / 0.88); }
@@ -193,7 +184,6 @@
 #page-playlist[data-light='true'] #pl-play-all    { background: oklch(0.15 0 0 / 0.85); color: oklch(1 0 0); }
 #page-playlist[data-light='true'] #pl-shuffle-btn { background: oklch(0.15 0 0 / 0.1); color: oklch(0.15 0 0 / 0.8); }
 
-/* horizontal scroll cards - scoped to playlist page */
 .horiz-scroll { overflow: hidden; width: 100%; }
 .horiz-inner {
   display: flex;

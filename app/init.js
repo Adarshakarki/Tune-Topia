@@ -1,3 +1,4 @@
+// Initialization
 import State from './state.js'
 import * as UI from './ui.js'
 import * as Player from '../modules/player.js'
@@ -17,60 +18,93 @@ import * as SearchPage from '../pages/search.js'
 import * as AlbumPage from '../pages/album.js'
 import * as ArtistPage from '../pages/artist.js'
 import * as GenrePage from '../pages/genre.js'
+import * as MixPage from '../pages/mix.js'
 import * as PlaylistPage from '../pages/playlist.js'
 import * as UserPlaylistPage from '../pages/userplaylist.js'
 import * as LikedVideosPage from '../pages/likedVideos.js'
 import * as VideoPage from '../pages/video.js'
 import * as AboutPage from '../pages/about.js'
+import * as LoginPage from '../pages/login.js'
 import { playTrack } from './playback.js'
+import * as processor from '../modules/processor.js'
+import * as EQ from '../modules/eq.js'
 import * as Theme from '../modules/theme.js'
-import { ICONS } from './icons.js'
 
 const $ = (id) => document.getElementById(id)
 
-// Update account PFP
 export function renderAccountBtn() {
   const btn = $('home-account-btn'), pfp = State.get('user.pfp');
   if (!btn) return;
-  if (!pfp) return btn.innerHTML = `<i class="bi ${ICONS.person}" id="home-account-icon"></i>`;
+  if (!pfp) return btn.innerHTML = UI.getIcon('person');
 
   const img = new Image();
   img.src = pfp;
   img.style.cssText = "width:100%;height:100%;object-fit:cover;border-radius:var(--r-full);";
   img.onload = () => { btn.innerHTML = ''; btn.appendChild(img); };
-  img.onerror = () => btn.innerHTML = `<i class="bi ${ICONS.person}"></i>`;
+  img.onerror = () => btn.innerHTML = UI.getIcon('person');
 }
 
 function _stripBackButtonText() {
   document.querySelectorAll('.back-btn').forEach(btn => {
-    const icon = btn.querySelector('i.bi');
-    if (icon) { btn.textContent = ''; btn.appendChild(icon); }
+    btn.innerHTML = UI.getIcon('chevron-left');
   });
 }
 
 async function init() {
   State.init();
-  await Theme.fetchThemes(); // Wait for manifest so applyTheme knows about specialty skins
+  _fixViewportHeight();
 
-  // Apply the "Skin" (Monochrome, Midnight, etc)
-  Theme.applyTheme(State.get('ui.theme') || 'none');
-  
-  // Apply the "Appearance Mode" (Dark vs Light)
+  const audioEl = $('audio');
+  if (audioEl) {
+    processor.init(audioEl);
+    EQ.init();
+  }
+
+  await Theme.fetchThemes();
+
+  const _refreshQueue = () => {
+    const pos = State.get('player.queuePosition');
+    const tracks = State.get('queue.tracks') || [];
+    UI.renderQueue(tracks, pos, Queue.getUpcoming());
+  };
+
+  State.subscribe('queue.tracks', _refreshQueue);
+  State.subscribe('player.queuePosition', _refreshQueue);
+  State.subscribe('queue.priorityOffset', _refreshQueue);
+  State.subscribe('player.isShuffle', _refreshQueue);
+  State.subscribe('player.isRepeat', _refreshQueue);
+  State.subscribe('library.followedArtists', Library.render);
+  State.subscribe('ui.theme', UI.revertThemeColor);
+  State.subscribe('ui.themeMode', UI.revertThemeColor);
+  State.subscribe('library.savedAlbums', () => {
+    Library.render();
+    if (document.querySelector('#page-albums.active')) Library.loadAlbums();
+  });
+
+  Theme.applyTheme(State.get('ui.theme') || 'default');
   Theme.applyAppearance(State.get('ui.themeMode') || 'light');
 
-  Theme.loadFonts(); // Apply saved fonts from localStorage
+  Theme.loadFonts();
   UI.renderGreeting();
+  UI.replaceHtmlIcons();
   renderAccountBtn();
 
-  // Page Inits
   Playlists.init(State);
   AlbumPage.init(playTrack);
   ArtistPage.init(playTrack, AlbumPage.open);
   PlaylistPage.init(playTrack);
+  MixPage.init(playTrack);
   UserPlaylistPage.init(playTrack, () => { PlaylistsUI.renderPage(); Library.render(); });
   LikedVideosPage.init(VideoPage.open);
   GenrePage.init(PlaylistPage.open, AlbumPage.open, playTrack);
   
+  Router.registerHandler('artist', (p) => ArtistPage.open(p));
+  Router.registerHandler('album', (p) => AlbumPage.open(p));
+  Router.registerHandler('playlist', (p) => PlaylistPage.open(p));
+  Router.registerHandler('mix', (p) => MixPage.open(p));
+  Router.registerHandler('user-playlist', (p) => UserPlaylistPage.open(p.id));
+  Router.registerHandler('genre', (p) => GenrePage.open(p.id, p.label));
+
   PlayerEvents.bind();
   SearchPage.init();
   Liked.initEvents();
@@ -81,36 +115,41 @@ async function init() {
   NowPlaying.init();
   UI.updateVolume(State.get('player.volume') ?? 0.8);
 
-  // Routes
   const routes = {
     'home': Home.load, 'library': Library.render, 'liked': Liked.render,
     'account': AccountPage.render, 'settings': Settings.render, 'albums': Library.loadAlbums,
     'artists': Library.loadArtists, 'history': Library.loadHistory, 'recent': Library.loadRecent,
     'new': Library.loadNew, 'playlists': PlaylistsUI.renderPage, 'liked-videos': LikedVideosPage.onEnter,
-    'about': AboutPage.render
+    'about': AboutPage.render, 'login': LoginPage.render
   };
   Object.entries(routes).forEach(([k, v]) => Router.registerLoader(k, v));
 
-  // App Load
   requestAnimationFrame(() => {
     Home.load();
     const next = () => { Library.render(); _stripBackButtonText(); };
     'requestIdleCallback' in window ? requestIdleCallback(next) : setTimeout(next, 200);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const p = urlParams.get('p');
+    if (p && ['artist', 'album', 'playlist', 'mix', 'user-playlist', 'genre'].includes(p)) {
+      const params = {};
+      urlParams.forEach((v, k) => { if (k !== 'p') params[k] = v; });
+      Router.showPage(p, false, params);
+    }
   });
 
-  // Subscriptions
-  const _refreshQueue = () => UI.renderQueue(State.get('queue.tracks') || [], State.get('player.queuePosition') || 0, Queue.getUpcoming());
-  State.subscribe('queue.tracks', _refreshQueue);
-  State.subscribe('player.queuePosition', _refreshQueue);
-  State.subscribe('player.isShuffle', _refreshQueue);
-  State.subscribe('player.isRepeat', _refreshQueue);
-  State.subscribe('library.followedArtists', Library.render);
-  State.subscribe('library.savedAlbums', () => {
-    Library.render();
-    if (document.querySelector('#page-albums.active')) Library.loadAlbums();
-  });
+  UI.revertThemeColor();
 
-  // Nav
+  _bindNavigationListeners();
+  _bindPlayerUIListeners();
+}
+
+function _fixViewportHeight() {
+  const vh = window.innerHeight * 0.01;
+  document.documentElement.style.setProperty('--vh', `${vh}px`);
+}
+
+function _bindNavigationListeners() {
   document.body.addEventListener('click', e => {
     const p = e.target.closest('[data-page]'), b = e.target.closest('[data-back]');
     if (p) Router.showPage(p.dataset.page);
@@ -118,8 +157,9 @@ async function init() {
   });
 
   $('sidebar-overlay')?.addEventListener('click', Router.closeSidebar);
-  
-  // Queue Actions Delegation
+}
+
+function _bindPlayerUIListeners() {
   $('np-queue-list')?.addEventListener('click', e => {
     const btn = e.target.closest('.q-stack-btn');
     if (!btn) return;
@@ -135,20 +175,96 @@ async function init() {
     }
   });
 
+  $('np-more-btn')?.addEventListener('click', () => {
+    const track = Player.getCurrentTrack();
+    if (track) UI.openMoreSheet(track);
+  });
+
+  $('home-radio-btn')?.addEventListener('click', () => {
+    const current = Player.getCurrentTrack();
+    Player.startRadio(current);
+    UI.toast(current ? `Starting radio based on ${current.title}` : 'Starting personalized radio...');
+  });
+
+  $('np-more-sheet')?.addEventListener('click', e => {
+    const btn = e.target.closest('[data-action="radio"]');
+    if (btn) {
+      const track = $('np-more-sheet')._currentTrack;
+      if (track) {
+        Player.startRadio(track);
+        UI.closeMoreSheet();
+        UI.toast(`Starting radio based on ${track.title}`);
+      }
+    }
+  });
+
+  $('np-more-sheet')?.addEventListener('click', e => {
+    const btn = e.target.closest('[data-action="mix"]');
+    if (btn) {
+      const track = $('np-more-sheet')._currentTrack;
+      if (track) {
+        UI.closeMoreSheet();
+        MixPage.open(track);
+      }
+    }
+  });
+
+  $('track-options-sheet')?.addEventListener('click', e => {
+    const btn = e.target.closest('[data-action="mix"]');
+    if (btn) {
+      const track = Sheets.getTrack();
+      if (track) {
+        UI.closeAllOverlays();
+        MixPage.open(track);
+      }
+    }
+  });
+
+  $('pl-modal-import-btn')?.addEventListener('click', () => $('pl-import-file')?.click());
+  $('pl-import-file')?.addEventListener('change', async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    UI.toast('Reading import file...');
+    try {
+      const { parseImportFile, resolveTracks } = await import('../modules/playlistImport.js');
+      const trackRefs = await parseImportFile(file);
+      
+      if (!trackRefs.length) throw new Error('No tracks found in file');
+      
+      UI.toast(`Finding ${trackRefs.length} songs in library...`);
+      const { resolved, failed } = await resolveTracks(trackRefs, (cur, total) => {
+        if (cur % 5 === 0) UI.toast(`Matching: ${cur}/${total}`);
+      });
+      
+      if (resolved.length > 0) {
+        UI.toast(`Imported ${resolved.length} songs successfully.`);
+        if ($('pl-modal-name-input')) $('pl-modal-name-input').value = file.name.replace(/\.[^/.]+$/, "");
+        const createBtn = $('pl-modal-create');
+        if (createBtn) createBtn._importedTracks = resolved;
+      }
+    } catch (err) {
+      UI.toast(err.message || 'Import failed');
+    }
+    e.target.value = '';
+  });
+
   const shell = $('shell'), sbBtn = $('sb-collapse-btn');
   if (shell && sbBtn) {
     shell.classList.toggle('sb-collapsed', localStorage.getItem('tt_sb_collapsed') === 'true');
     sbBtn.addEventListener('click', () => localStorage.setItem('tt_sb_collapsed', String(shell.classList.toggle('sb-collapsed'))));
   }
 
-  $('sb-theme-btn')?.addEventListener('click', () => {
-    // This button now toggles between dark/light, but the full theme selection is in settings
-  });
+  $('sb-theme-btn')?.addEventListener('click', () => {});
 
   let resizeTimer;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(NowPlaying.syncMoreSheetPosition, 150);
+    resizeTimer = setTimeout(() => {
+      _fixViewportHeight();
+      UI.updatePlayerPosition();
+      NowPlaying.syncMoreSheetPosition();
+    }, 150);
   });
 }
 

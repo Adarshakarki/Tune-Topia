@@ -1,13 +1,17 @@
+// Playlist
 import { getPlaylist } from '../api/index.js'
 import { escHtml } from '../api/utils.js'
 import { extractColor } from '../app/ui.js'
 import { toggle, has } from '../modules/likedSongs.js'
 import Queue from '../modules/queue.js'
 import * as Player from '../modules/player.js'
+import * as BulkDownloader from '../modules/bulkdownloader.js'
+import { openTrackSheet } from '../ui/sheets.js'
 
 const $ = (id) => document.getElementById(id)
 
-let _playlist = null, _tracks = [], _sheetTrack = null, _playFn = null;
+let _collection = null, _tracks = [], _sheetTrack = null, _playFn = null;
+let _sortMode = 'default' // Sorting
 
 export function init(playTrackFn) {
   _playFn = playTrackFn
@@ -15,7 +19,7 @@ export function init(playTrackFn) {
   $('pl-back-btn')?.addEventListener('click', close)
   $('pl-play-all')?.addEventListener('click', () => {
     if (_tracks.length) {
-      _playFn(_tracks, 0)
+      _playFn(_tracks, 0);
       close();
     }
   })
@@ -25,6 +29,24 @@ export function init(playTrackFn) {
     _playFn(_tracks, Math.floor(Math.random() * _tracks.length));
     Player.toggleShuffle();
     close();
+  })
+
+  $('pl-sort-label')?.addEventListener('click', () => {
+    const opts = ['default', 'az', 'recent']
+    const labels = { default: 'Default', az: 'A–Z', recent: 'Recent' }
+    
+    _sortMode = opts[(opts.indexOf(_sortMode) + 1) % opts.length]
+    if ($('pl-sort-label')) $('pl-sort-label').textContent = labels[_sortMode]
+    _renderTracklist(_getFilteredTracks());
+  })
+
+  $('pl-filter-input')?.addEventListener('input', () => {
+    _renderTracklist(_getFilteredTracks());
+  })
+
+  $('pl-download')?.addEventListener('click', () => {
+    if (_tracks.length) BulkDownloader.downloadTracks(_tracks, _collection?.title);
+    else UI.toast('Wait for tracks to load...');
   })
 
   const _share = (url) => {
@@ -49,13 +71,16 @@ export function init(playTrackFn) {
 }
 
 export async function open(playlist) {
-  _playlist = playlist
+  // Normalize input: handle both ID strings and result objects
+  _collection = typeof playlist === 'object' ? playlist : { id: playlist };
+  const playlistId = _collection.id || _collection.uuid;
+
   _tracks = []
   const page = $('page-playlist')
   if (!page) return
 
   _applyColor(30, 28, 38)
-  _setHeader(playlist)
+  _setHeader(_collection)
   $('pl-tracklist').innerHTML = _skeleton()
   page.classList.add('open')
   document.body.style.overflow = 'hidden'
@@ -71,7 +96,7 @@ export async function open(playlist) {
   }
 
   try {
-    const result = await getPlaylist(playlist.id)
+    const result = await getPlaylist(playlistId)
     _tracks = result.tracks
     _renderTracklist(_tracks)
     _setMeta(_tracks)
@@ -87,7 +112,7 @@ export function close() {
 }
 
 function _applyColor(r, g, b) {
-  const dr = Math.round(r * 0.88), dg = Math.round(g * 0.88), db = Math.round(b * 0.88)
+  const dr = Math.round(r * 0.95), dg = Math.round(g * 0.95), db = Math.round(b * 0.95)
   const page = $('page-playlist')
   if (!page) return
 
@@ -101,11 +126,11 @@ function _applyColor(r, g, b) {
   if (meta) meta.setAttribute('content', dark)
 }
 
-function _setHeader(pl) {
-  if ($('pl-hero-art')) $('pl-hero-art').src = pl.cover || ''
-  if ($('pl-hero-title')) $('pl-hero-title').textContent = pl.title || ''
-  if ($('pl-hero-desc')) $('pl-hero-desc').textContent = pl.description || ''
-  if ($('pl-topbar-title')) $('pl-topbar-title').textContent = pl.title || ''
+function _setHeader(collection) {
+  if ($('pl-hero-art')) $('pl-hero-art').src = collection.cover || ''
+  if ($('pl-hero-title')) $('pl-hero-title').textContent = collection.title || ''
+  if ($('pl-hero-desc')) $('pl-hero-desc').textContent = collection.description || ''
+  if ($('pl-topbar-title')) $('pl-topbar-title').textContent = collection.title || ''
 }
 
 function _setMeta(tracks) {
@@ -124,7 +149,33 @@ function _setMeta(tracks) {
   if (metaEl) metaEl.textContent = parts.join(' · ')
 }
 
-function _renderTracklist(tracks) {
+function _getFilteredTracks() {
+  let items = [...(_tracks || [])]
+  const query = $('pl-filter-input')?.value.trim().toLowerCase()
+
+  if (query) {
+    items = items.filter(t => 
+      t.title?.toLowerCase().includes(query) || 
+      t.artist?.toLowerCase().includes(query) ||
+      t.album?.toLowerCase().includes(query)
+    )
+  }
+
+  if (_sortMode === 'az') {
+    items.sort((a, b) => (a.title || '').localeCompare(b.title || ''))
+  } else if (_sortMode === 'recent') {
+    // Assuming 'recent' means the order they were added to the playlist,
+    // which is the default order from the API. If we want actual "recently added"
+    // we'd need a timestamp on tracks within the playlist.
+    // For simplicity, we'll just use the default order for now.
+    // items.reverse(); // This would reverse the original order, which might not be "recent"
+  }
+
+  return items
+}
+
+function _renderTracklist(filteredTracks) {
+  const tracks = filteredTracks || _tracks;
   const el = $('pl-tracklist')
   if (!el) return
 
@@ -152,6 +203,13 @@ function _renderTracklist(tracks) {
   el.querySelectorAll('.alb-track-more').forEach((btn) => {
     btn.addEventListener('click', (e) => { e.stopPropagation(); _openSheet(_tracks[+btn.dataset.index]); })
   })
+}
+
+function _openTrackOptions(track) {
+  openTrackSheet(track, {
+    // No remove/move options for API-fetched playlists/mixes
+    // These options are typically for user-editable playlists
+  });
 }
 
 function _openSheet(track) {

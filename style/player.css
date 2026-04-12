@@ -1,7 +1,5 @@
-/* desktop-only art hidden on mobile */
 #np-desktop-art { display: none; }
 
-/* mini bar art */
 #bar-art {
   width: var(--bar-h-mobile);
   height: var(--bar-h-mobile);
@@ -29,22 +27,21 @@
   flex-shrink: 0;
   margin-left: 4px;
 }
-#np-explicit-tag { display: none; }
+
 #bar-progress-mobile      { height: 3px; background: oklch(1 0 0 / 0.12); }
 #bar-progress-mobile-fill { background: oklch(1 0 0 / 0.65); }
-#bar-title  { color: oklch(1 0 0); }
-#bar-artist { color: oklch(1 0 0 / 0.55); }
+#bar-title  { color: var(--text); }
+#bar-artist { color: var(--text-2); }
 
-.bar-like-btn               { color: oklch(1 0 0 / 0.55); }
-.bar-like-btn.liked .bi     { color: oklch(1 0 0); }
-.bar-ctrl                   { color: oklch(1 0 0 / 0.85); }
-.bar-play-btn               { background: transparent; box-shadow: none; color: oklch(1 0 0); margin: 0 var(--s2); }
+.bar-like-btn               { color: var(--text-3); opacity: 0.7; }
+.bar-like-btn.liked .bi     { color: var(--accent); opacity: 1; }
+.bar-ctrl                   { color: var(--text-2); }
+.bar-play-btn               { background: transparent; box-shadow: none; color: var(--text); margin: 0 var(--s2); }
 #bar-shuffle-btn, #bar-repeat-btn { display: none !important; }
 .bar-play-btn:hover         { opacity: 0.8; }
 .bar-play-btn:active        { opacity: 0.5; transform: scale(0.88); }
 #bar-mini-controls .bar-play-btn { background: transparent; width: 34px; height: 34px; }
 
-/* now playing panel */
 #now-playing {
   position: fixed;
   inset: 0;
@@ -69,7 +66,6 @@
 #np-bg-art  { display: none; }
 #np-bg-blur { display: none; }
 
-/* topbar */
 #np-topbar {
   position: absolute;
   top: 0;
@@ -98,7 +94,6 @@
 .np-icon-btn:active { color: oklch(1 0 0); opacity: 0.6; }
 .np-icon-btn .bi    { font-size: 17px; }
 
-/* artwork */
 #np-artwork-wrap {
   position: absolute;
   top: 0;
@@ -121,7 +116,6 @@
 }
 #now-playing.paused #np-artwork-img { filter: brightness(0.72) saturate(0.75); }
 
-/* artwork fade into bg */
 #np-artwork-wrap::after {
   content: '';
   position: absolute;
@@ -148,7 +142,6 @@
   pointer-events: none;
 }
 
-/* controls column */
 #np-controls-col {
   position: relative;
   z-index: 5;
@@ -162,7 +155,6 @@
   transition: background 0.7s ease;
 }
 
-/* track info */
 #np-info {
   display: flex;
   align-items: flex-start;
@@ -213,7 +205,6 @@
 .np-more-inline-btn:active { color: oklch(1 0 0); }
 .np-more-inline-btn .bi    { font-size: 20px; }
 
-/* progress */
 #np-progress-wrap { padding: 0 var(--s5); flex-shrink: 0; margin-bottom: var(--s3); }
 #np-progress-bar {
   width: 100%;
@@ -226,7 +217,6 @@
 #np-progress-fill { height: 100%; border-radius: var(--r-full); background: oklch(1 0 0); width: 0%; pointer-events: none; }
 .np-times { display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; color: oklch(1 0 0 / 0.4); font-variant-numeric: tabular-nums; font-weight: 600; }
 
-/* main controls */
 #np-main-controls {
   display: flex;
   align-items: center;
@@ -256,7 +246,6 @@
 .np-play-btn:active { transform: scale(0.88); opacity: 0.5; }
 .np-play-btn .bi    { font-size: 32px; }
 
-/* secondary controls */
 #np-secondary-controls {
   display: flex;
   align-items: center;
@@ -280,13 +269,11 @@
 .np-sec-btn .bi    { font-size: 28px; }
 .np-sec-btn span   { display: none; }
 
-/* volume */
 #np-volume { display: flex; align-items: center; gap: var(--s3); padding: 0 var(--s5) var(--s3); flex-shrink: 0; }
 .vol-icon  { color: oklch(1 0 0 / 0.45); font-size: 18px; flex-shrink: 0; }
 #vol-bar   { flex: 1; height: 5px; background: oklch(1 0 0 / 0.2); border-radius: var(--r-full); cursor: pointer; }
 #vol-fill  { height: 100%; border-radius: var(--r-full); background: oklch(1 0 0 / 0.75); width: 80%; pointer-events: none; }
 
-/* overlays */
 .np-overlay {
   position: absolute;
   inset: 0;
@@ -313,7 +300,6 @@
 .np-overlay-topbar .np-icon-btn { color: oklch(1 0 0 / 0.82); }
 .np-overlay-title { flex: 1; font-family: var(--font-primary); font-size: 17px; font-weight: 700; color: oklch(1 0 0); }
 
-/* queue */
 #np-queue-list { flex: 1; overflow-y: auto; padding: var(--s2) 0 max(env(safe-area-inset-bottom, 0px), var(--s5)); }
 .queue-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: oklch(1 0 0 / 0.5); padding: var(--s3) var(--s5) var(--s2); }
 .npq-item { display: flex; align-items: center; gap: var(--s3); padding: var(--s2) var(--s5); cursor: pointer; transition: background 0.14s; }
@@ -327,14 +313,13 @@
 .npq-artist { font-size: 12px; color: oklch(1 0 0 / 0.6); margin-top: 2px; }
 .npq-dur    { font-size: 12px; color: oklch(1 0 0 / 0.28); flex-shrink: 0; font-variant-numeric: tabular-nums; }
 
-/* global fixed sheets */
 .bottom-sheet-global,
 #track-options-sheet,
-#playlist-picker-sheet,
+#playlist-picker-sheet { position: fixed !important; z-index: var(--z-picker); }
 #np-more-sheet,
 #profile-popup-sheet,
 #playlist-modal-overlay,
-#sleep-timer-popup { position: fixed !important; z-index: var(--z-sheet); }
+#sleep-timer-popup { position: fixed !important; z-index: var(--z-modal); }
 
 .bottom-sheet { position: absolute; inset: 0; z-index: var(--z-sheet-inner); }
 .bottom-sheet.open { pointer-events: auto; }
@@ -403,7 +388,6 @@
 }
 .sheet-toggle-state.on { color: var(--accent); background: var(--accent-dim); }
 
-/* queue panel header */
 .np-queue-header { display: flex; align-items: center; justify-content: space-between; padding: var(--s3) var(--s5) var(--s2); border-bottom: 0.5px solid oklch(1 0 0 / 0.1); flex-shrink: 0; }
 .np-queue-title  { font-family: var(--font-primary, 'Playfair Display', serif); font-size: 17px; font-weight: 700; color: oklch(1 0 0); }
 .np-queue-clear-btn {
@@ -511,7 +495,6 @@
 .sleep-timer-opt.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
 .sleep-timer-opt.active .bi { color: var(--accent); }
 
-/* speed options */
 .speed-options { display: flex; gap: 6px; flex-wrap: wrap; padding: 2px var(--s5) var(--s3); }
 .speed-btn {
   flex: 1;
@@ -567,7 +550,6 @@
   }
   #np-desktop-art { display: block; }
 
-  /* desktop NP - cinematic full-bleed */
   #now-playing { flex-direction: column; background: oklch(0 0 0) !important; }
   #np-bg-wrap { display: block; }
   #np-bg-art {
@@ -594,7 +576,6 @@
   #np-topbar .np-icon-btn { background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; color: oklch(1 0 0 / 0.7); }
   #np-topbar .np-icon-btn:hover { background: oklch(1 0 0 / 0.1); color: oklch(1 0 0); }
 
-  /* idle fade */
   #np-controls-col { transition: opacity 0.45s var(--ease), background 0.7s ease; }
   #now-playing.np-idle #np-controls-col,
   #now-playing.np-idle #np-topbar { opacity: 0; pointer-events: none; }
@@ -664,7 +645,6 @@
   .bottom-sheet.open .bottom-sheet-card { transform: translateX(-50%) translateY(0); }
 }
 
-/* compact mobile height */
 @media (max-height: 680px) and (max-width: 899px) {
   #np-artwork-wrap { height: 42dvh; }
   #np-title        { font-size: 18px; }

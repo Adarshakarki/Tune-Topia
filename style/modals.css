@@ -1,8 +1,7 @@
-/* create playlist modal */
 .pl-modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: var(--z-player);
+  z-index: var(--z-modal);
   background: rgba(0,0,0,0.55);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
@@ -92,8 +91,6 @@
 .pl-modal-cancel { background: var(--surface-2); color: var(--text-2); }
 .pl-modal-cancel:hover { background: var(--surface-3); }
 .pl-modal-create { background: var(--accent); color: #fff; }
-
-/* playlist picker */
 .pl-picker-header {
   padding: var(--s2) var(--s5) var(--s3);
   border-bottom: 0.5px solid var(--border);
@@ -137,8 +134,6 @@
 }
 .pl-picker-name { font-size: 15px; font-weight: 600; color: var(--text); }
 .pl-picker-sub  { font-size: 12px; color: var(--text-3); }
-
-/* playlists page grid */
 .pl-page-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -197,8 +192,6 @@
   text-overflow: ellipsis;
 }
 .pl-page-sub { font-size: 12px; color: var(--text-3); }
-
-/* danger action */
 .sheet-action-danger { color: #e05252 !important; }
 
 @media (min-width: 500px) {

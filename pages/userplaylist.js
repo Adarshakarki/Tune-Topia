@@ -1,4 +1,6 @@
+// User Playlist
 import { escHtml } from '../api/utils.js'
+import * as UI from '../app/ui.js'
 import * as Playlists from '../modules/playlists.js'
 import { openTrackSheet } from '../ui/sheets.js'
 import { openEditModal } from './playlists-ui.js'
@@ -8,7 +10,7 @@ const $ = (id) => document.getElementById(id)
 let _playFn = null
 let _onRemoveCallback = null
 let _currentPlaylist = null
-let _sortMode = 'default' // 'default' | 'az' | 'recent'
+let _sortMode = 'default' // Sorting
 
 export function init(playFn, onRemove) {
   _playFn = playFn
@@ -99,19 +101,12 @@ function _render() {
 
   const tracks = _getFilteredTracks()
   if (!pl.tracks.length) {
-    listEl.innerHTML = `<div class="empty">
-      <i class="bi bi-music-note"></i>
-      <p>No songs yet</p>
-      <small>Add songs from the now playing menu</small>
-    </div>`
+    listEl.innerHTML = UI.emptyState('music', 'No songs yet', 'Add songs from the now playing menu');
     return
   }
 
   if (!tracks.length) {
-    listEl.innerHTML = `<div class="empty">
-      <i class="bi bi-search"></i>
-      <p>No results</p>
-    </div>`
+    listEl.innerHTML = UI.emptyState('search', 'No results');
     return
   }
 
@@ -125,7 +120,7 @@ function _render() {
         <div class="track-meta">${escHtml(t.artist)}</div>
       </div>
       <button class="upl-track-more track-more-btn-local">
-        <i class="bi bi-three-dots-vertical"></i>
+        ${UI.getIcon('more')}
       </button>
     </div>`
     )

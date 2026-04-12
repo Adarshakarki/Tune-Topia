@@ -1,9 +1,12 @@
-// Global reactive state management
+// State
 const State = (() => {
   const _state = {
     user: {
-      name: localStorage.getItem('tt_username') || 'Friend',
-      pfp: localStorage.getItem('tt_pfp') || '',
+      name: 'Friend',
+      pfp: '',
+      cover: '',
+      bio: '',
+      socials: [],
       greeting: ''
     },
     player: {
@@ -11,17 +14,20 @@ const State = (() => {
       volume: parseFloat(localStorage.getItem('tt_vol') || '0.8'),
       queuePosition: -1
     },
-    queue: { tracks: [], played: [], upcoming: [] },
+    queue: { tracks: [], played: [], upcoming: [], priorityOffset: 0 },
     search: { query: '', activeTab: 'music', isLoading: false, topResult: null, results: [], mood: null },
     library: { likedSongs: [], savedAlbums: [], followedArtists: [], playlists: [], likedVideos: [] },
-    ui: { theme: 'none', themeMode: 'light', fontPrimaryLink: '', fontSecondaryLink: '', activePage: 'home', npOpen: false, queuePanelOpen: false, lyricsPanelOpen: false }
+    ui: { theme: 'default', themeMode: 'light', fontPrimaryLink: '', fontSecondaryLink: '', activePage: 'home', npOpen: false, queuePanelOpen: false, lyricsPanelOpen: false }
   }, _subs = {};
 
   const get = p => p.split('.').reduce((o, k) => o?.[k], _state);
   const _ls = {
+    'user.name': 'tt_username', 'user.pfp': 'tt_pfp',
+    'user.cover': 'tt_cover', 'user.bio': 'tt_bio', 'user.socials': 'tt_socials',
     'library.likedSongs': 'tt_liked', 'library.savedAlbums': 'tt_albums',
     'library.followedArtists': 'tt_artists', 'library.playlists': 'tt_playlists',
     'library.likedVideos': 'tt_liked_videos', 'queue.tracks': 'tt_queue',
+    'queue.priorityOffset': 'tt_priority_offset',
     'ui.theme': 'tt_theme', 'ui.themeMode': 'tt_theme_mode'
   };
 
@@ -59,7 +65,7 @@ const State = (() => {
           const v = JSON.parse(raw);
           if (v !== null) set(p, v);
         } catch {
-          set(p, raw); // Fallback for raw strings not stored as JSON
+          set(p, raw);
         }
       });
     }

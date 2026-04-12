@@ -1,155 +1,132 @@
-// Equalizer definitions and signal processing
-const BANDS = [
-  { freq: 32, type: 'lowshelf', label: '32' },
-  { freq: 64, type: 'peaking', label: '64' },
-  { freq: 125, type: 'peaking', label: '125' },
-  { freq: 250, type: 'peaking', label: '250' },
-  { freq: 500, type: 'peaking', label: '500' },
-  { freq: 1000, type: 'peaking', label: '1K' },
-  { freq: 2000, type: 'peaking', label: '2K' },
-  { freq: 4000, type: 'peaking', label: '4K' },
-  { freq: 8000, type: 'peaking', label: '8K' },
-  { freq: 16000, type: 'highshelf', label: '16K' },
-]
+import * as processor from './processor.js';
 
-const STORAGE_KEY = 'tt_eq_gains', ENABLED_KEY = 'tt_eq_enabled';
+const STORAGE_KEY = 'tt_eq_gains';
+const ENABLED_KEY = 'tt_eq_enabled';
 const MIN_DB = -12, MAX_DB = 12;
 
-export const PRESETS = {
-  flat: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  bass: [8, 6, 4, 0, 0, 0, 0, 0, 0, 0],
-  treble: [0, 0, 0, 0, 0, 2, 4, 6, 8, 8],
-  vocal: [-2, -1, 0, 3, 5, 5, 3, 0, -1, -2],
-  pop: [-1, 0, 2, 4, 5, 3, 2, 1, 0, -1],
-  rock: [5, 3, 0, -1, -2, 0, 2, 4, 5, 5],
-  jazz: [3, 2, 0, 2, 0, 0, -2, 0, 2, 3],
-  classical: [0, 0, 0, 0, 0, 0, -4, -4, -4, -6],
-  hiphop: [5, 5, 2, 0, -1, -1, 2, 3, 2, 1],
-}
-
-let _gains = BANDS.map(() => 0), _enabled = false;
+let _gains = processor.EQ_BANDS.map(() => 0);
+let _enabled = false;
 
 // --- Persistence ---
 function _save() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(_gains));
   localStorage.setItem(ENABLED_KEY, String(_enabled));
+  _syncAudio();
 }
 
 function _load() {
   const g = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-  if (g?.length === BANDS.length) _gains = g;
+  if (g?.length === processor.EQ_BANDS.length) _gains = g;
   _enabled = localStorage.getItem(ENABLED_KEY) === 'true';
 }
 
-// --- Logic ---
-export function setGain(bandIndex, db) {
-  _gains[bandIndex] = Math.max(MIN_DB, Math.min(MAX_DB, db));
-  _save();
+/**
+ * Updates the processor.js engine with current gains.
+ * If disabled, it sends 0dB (Flat) to the engine while keeping UI state.
+ */
+function _syncAudio() {
+  if (_enabled) {
+    processor.setAllBands(_gains);
+  } else {
+    processor.resetEQ();
+  }
 }
 
-export const getGains = () => [..._gains];
-export const isEnabled = () => _enabled;
-export const connectAudio = () => {}; 
-export const resumeContext = () => {};
-
-export function setEnabled(val) {
-  _enabled = !!val; _save(); _updateToggleBtn();
-}
-
-export function applyPreset(name) {
-  const gains = PRESETS[name]
-  if (!gains) return
-  gains.forEach((db, i) => {
-    _gains[i] = db
-  })
-  _save(); _renderUI();
-}
-
-export function reset() { _gains = BANDS.map(() => 0); _save(); _renderUI(); }
-
-export function init() { _load(); _renderUI(); }
-
-// --- UI Rendering ---
-function _renderUI() {
-  const container = document.getElementById('eq-container');
+/**
+ * Renders the EQ interface into a target container.
+ * @param {HTMLElement} container 
+ */
+export function render(container) {
   if (!container) return;
+  _load();
 
-  const pRows = Object.keys(PRESETS).map(p => 
-    `<button class="eq-preset-btn" data-preset="${p}">${_cap(p)}</button>`).join('');
   container.innerHTML = `
-    <div class="eq-header">
-      <span class="eq-title">Equalizer</span>
-      <button class="eq-toggle-btn ${_enabled ? 'active' : ''}" id="eq-toggle-btn">
-        ${_enabled ? 'On' : 'Off'}
-      </button>
-    </div>
-    <div class="eq-presets" id="eq-presets">
-      ${pRows}
-    </div>
-    <div class="eq-sliders">
-      ${BANDS.map((band, i) => `
-        <div class="eq-band">
-          <span class="eq-db-label" id="eq-db-${i}">${_fmtDb(_gains[i])}</span>
-          <div class="eq-slider-wrap">
-            <input class="eq-slider" type="range" id="eq-band-${i}"
-              min="${MIN_DB}" max="${MAX_DB}" step="0.5" value="${_gains[i]}"
-              ${_enabled ? '' : 'disabled'} />
+    <div class="eq-root">
+      ${_enabled ? `
+      <div class="eq-body">
+        <div class="eq-presets-scroll">
+          <div class="eq-presets-list">
+            ${Object.keys(processor.PRESETS).map(p => `
+              <button class="eq-preset-btn" data-preset="${p}">${p}</button>
+            `).join('')}
           </div>
-          <span class="eq-freq-label">${band.label}</span>
-        </div>`
-      ).join('')}
+        </div>
+        <div class="eq-sliders">
+        ${processor.EQ_BANDS.map((freq, i) => {
+          const label = freq >= 1000 ? `${freq / 1000}k` : freq;
+          const db = _gains[i];
+          return `
+            <div class="eq-band">
+              <span class="eq-freq-label">${label}</span>
+              <div class="eq-slider-outer">
+              <div class="eq-slider-wrap">
+                <input type="range" class="eq-slider" data-index="${i}"
+                       min="${MIN_DB}" max="${MAX_DB}" step="0.5" value="${db}">
+              </div>
+              </div>
+              <span class="eq-db-label" id="eq-val-${i}">${_fmtDb(db)}</span>
+            </div>
+          `;
+        }).join('')}
+        </div>
+      </div>` : ''}
     </div>
-    <button class="eq-reset-btn" id="eq-reset-btn">Reset</button>`;
+  `;
 
-  // --- Events ---
-  document.getElementById('eq-toggle-btn')?.addEventListener('click', () => { setEnabled(!_enabled); _renderUI(); });
+  _attachEventListeners(container);
+  _syncAudio(); // Ensure engine matches loaded state
+}
 
-  BANDS.forEach((_, i) => {
-    const slider = document.getElementById(`eq-band-${i}`), label = document.getElementById(`eq-db-${i}`);
-    slider?.addEventListener('input', () => {
-      const db = parseFloat(slider.value);
-      setGain(i, db);
-      if (label) label.textContent = _fmtDb(db);
-      _highlightPreset();
+function _attachEventListeners(container) {
+  const sliders = container.querySelectorAll('.eq-slider');
+
+  // Band Sliders
+  sliders.forEach(slider => {
+    slider.addEventListener('input', (e) => {
+      const index = parseInt(e.target.dataset.index);
+      const val = parseFloat(e.target.value);
+      _gains[index] = val;
+      const label = container.querySelector(`#eq-val-${index}`);
+      if (label) label.textContent = _fmtDb(val);
+      _save();
     });
   });
 
-  document.getElementById('eq-presets')?.addEventListener('click', e => {
-    const btn = e.target.closest('.eq-preset-btn');
-    if (btn && btn.dataset.preset) { 
-      const presetName = btn.dataset.preset;
-      applyPreset(presetName); 
-      _syncSliders(); 
-      _highlightPreset(presetName); 
+  // Preset Buttons
+  container.querySelectorAll('.eq-preset-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const gains = processor.PRESETS[e.currentTarget.dataset.preset];
+    if (gains) {
+      _gains = [...gains];
+      _save();
+      _updateUIBars(container);
     }
+    });
   });
 
-  document.getElementById('eq-reset-btn')?.addEventListener('click', () => { reset(); _syncSliders(); _highlightPreset('flat'); });
-
-  _highlightPreset();
+  if (_enabled) _updateUIBars(container);
 }
 
-function _updateToggleBtn() {
-  const btn = document.getElementById('eq-toggle-btn');
-  if (!btn) return;
-  btn.textContent = _enabled ? 'On' : 'Off';
-  btn.classList.toggle('active', _enabled);
-  BANDS.forEach((_, i) => { const s = document.getElementById(`eq-band-${i}`); if (s) s.disabled = !_enabled; });
-}
-
-function _syncSliders() {
-  BANDS.forEach((_, i) => {
-    const s = document.getElementById(`eq-band-${i}`), l = document.getElementById(`eq-db-${i}`);
-    if (s) s.value = _gains[i]; if (l) l.textContent = _fmtDb(_gains[i]);
+function _updateUIBars(container) {
+  _gains.forEach((db, i) => {
+    const slider = container.querySelector(`.eq-slider[data-index="${i}"]`);
+    const label = container.querySelector(`#eq-val-${i}`);
+    if (slider) slider.value = db;
+    if (label) label.textContent = _fmtDb(db);
   });
-}
 
-function _highlightPreset(forceName) {
-  document.querySelectorAll('.eq-preset-btn').forEach(btn => {
-    const active = forceName ? btn.dataset.preset === forceName : PRESETS[btn.dataset.preset]?.every((db, i) => db === _gains[i]);
-    btn.classList.toggle('active', active);
+  // Highlight active preset
+  const presetBtns = container.querySelectorAll('.eq-preset-btn');
+  presetBtns.forEach(btn => {
+    const p = processor.PRESETS[btn.dataset.preset];
+    const isMatch = p && p.every((val, idx) => Math.abs(val - _gains[idx]) < 0.1);
+    btn.classList.toggle('active', isMatch);
   });
 }
 
-const _fmtDb = db => db === 0 ? '0' : (db > 0 ? '+' : '') + db.toFixed(1).replace('.0', '');
-const _cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const _fmtDb = db => db === 0 ? '0' : (db > 0 ? '+' : '') + db.toFixed(1).replace('.0', '') + 'dB';
+
+// --- Legacy API compatibility ---
+export function init() { _load(); _syncAudio(); }
+export const isEnabled = () => _enabled;
+export const getGains = () => [..._gains];

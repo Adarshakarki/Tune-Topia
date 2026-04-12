@@ -16,7 +16,7 @@
 
   /* Navigation & Player UI */
   --sidebar-bg: #0a0508;
-  --player-bg: rgba(29, 17, 23, 0.95);
+  --player-bg: rgba(56, 36, 45, 0.95);
   --nav-item-active: #ff4d94;
   --r-lg: 18px;
 }
@@ -32,4 +32,6 @@
   --text: #20010d;
   --text-2: #a61e4d;
   --sidebar-bg: #fff5f8;
+  --player-bg: #ffffff;
+  --glass: #ffffff;
 }

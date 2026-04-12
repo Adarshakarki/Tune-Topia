@@ -1,14 +1,66 @@
-// Icon registry
-export const ICONS = {
-  play: 'bi-play-fill', pause: 'bi-pause-fill', heart: 'bi-heart', heartFill: 'bi-heart-fill',
-  more: 'bi-three-dots-vertical', chat: 'bi-chat-square-quote-fill', queue: 'bi-music-note-list', error: 'bi-wifi-off',
-  music: 'bi-music-note-beamed', disc: 'bi-disc-fill', people: 'bi-people-fill', history: 'bi-clock-history',
-  person: 'bi-person-circle', personFill: 'bi-person-fill', chevronL: 'bi-chevron-left', chevronR: 'bi-chevron-right',
-  shuffle: 'bi-shuffle', repeat: 'bi-repeat', prev: 'bi-skip-start-fill', next: 'bi-skip-end-fill',
-  trash: 'bi-trash', download: 'bi-download', share: 'bi-share-fill', external: 'bi-box-arrow-up-right',
-  plus: 'bi-plus-lg', pencil: 'bi-pencil', search: 'bi-search', house: 'bi-house-fill', stars: 'bi-stars',
-  arrowUp: 'bi-arrow-up', arrowDown: 'bi-arrow-down', moon: 'bi-moon-stars', wiki: 'bi-wikipedia',
-  refresh: 'bi-arrow-repeat', video: 'bi-camera-video-fill'
+// Icons
+const ICON_MAP = {
+  play: 'play-fill',
+  pause: 'pause-fill',
+  more: 'three-dots-vertical',
+  heart: 'heart',
+  heartFill: 'heart-fill',
+  shuffle: 'shuffle',
+  repeat: 'arrow-repeat',
+  plus: 'plus-lg',
+  moon: 'moon-stars',
+  queue: 'list-ul',
+  chat: 'chat-left-quote-fill',
+  atmos: 'speaker',
+  person: 'person-circle',
+  'chevron-left': 'chevron-left',
+  'chevron-down': 'chevron-down',
+  'chevron-up': 'chevron-up',
+  infinite: 'infinity',
+  stars: 'stars',
+  error: 'exclamation-circle',
+  music: 'music-note-beamed',
+  sidebar: 'layout-sidebar-reverse',
+  home: 'house-fill',
+  search: 'search',
+  history: 'clock-history',
+  collection: 'collection',
+  'chevron-right': 'chevron-right',
+  sort: 'sort-down',
+  close: 'x-lg',
+  settings: 'gear-fill',
+  edit: 'pencil',
+  download: 'download',
+  import: 'box-arrow-in-right',
+  trash: 'trash',
+  refresh: 'arrow-clockwise',
+  prev: 'skip-backward-fill',
+  next: 'skip-forward-fill',
+  'volume-low': 'volume-down-fill',
+  'volume-high': 'volume-up-fill',
+  share: 'share',
+  external: 'box-arrow-up-right',
+  info: 'info-circle',
+  cd: 'disc-fill',
+  camera: 'camera-video-fill',
+  github: 'github',
+  google: 'google',
+  warning: 'cone-striped',
 };
 
-export const getIcon = (k, c = '') => `<i class="bi ${ICONS[k] || k} ${c}"></i>`;
+export function getIcon(name) {
+  const icon = ICON_MAP[name] || name;
+  return `<i class="bi bi-${icon}"></i>`;
+}
+
+export function replaceHtmlIcons() {
+  const icons = document.querySelectorAll('[data-icon]');
+  icons.forEach(el => {
+    el.innerHTML = getIcon(el.dataset.icon);
+  });
+}
+
+export function _isAtmos(t) {
+  if (!t) return false;
+  return t.audioModes?.includes('DOLBY_ATMOS') || t.title?.toLowerCase().includes('dolby atmos');
+}

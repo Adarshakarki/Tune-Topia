@@ -1,49 +1,76 @@
+// Home
 import * as UI from '../app/ui.js'
 import State from '../app/state.js'
 import History from '../modules/history.js'
+import * as Cache from '../modules/cache.js'
 import { playTrack } from '../app/playback.js'
-import { searchTracks, getPlaylist, searchArtists, getTrackRecommendations } from '../api/index.js'
-import { searchVideos } from '../api/index.js'
-import { searchPlaylists } from '../api/index.js'
+import { searchTracks, getPlaylist, searchArtists, getTrackRecommendations, searchAlbums, searchVideos, searchPlaylists, searchTidalVideos } from '../api/index.js'
 import { escHtml } from '../api/utils.js'
 import { getHomeQueries } from '../modules/recommendations.js'
 import { PLAYLIST_QUERIES } from '../app/constants.js'
 import * as PlaylistPage from './playlist.js'
 import * as AlbumPage from './album.js'
+import * as Playlists from '../modules/playlists.js'
+import * as VideoPage from './video.js'
+import * as UserPlaylistPage from './userplaylist.js'
 
 const $ = (id) => document.getElementById(id)
 const NEW_RELEASES_PLAYLIST_ID = '1b418bb8-90a7-4f87-901d-707993838346'
+const ARTIST_CACHE_TTL = 3600000; // 1 hour
 
 const _recs = (id) => getTrackRecommendations(id).then(rs => rs.length && import('../modules/queue.js').then(Q => rs.forEach(r => Q.default.add(r))));
 
+const _interleave = (results) => {
+  const ts = [], seen = new Set();
+  const maxLen = Math.max(0, ...results.map(r => r.length));
+  for (let i = 0; i < maxLen; i++) {
+    for (const res of results) {
+      if (res[i] && !seen.has(res[i].id)) {
+        seen.add(res[i].id);
+        ts.push(res[i]);
+      }
+    }
+  }
+  return ts;
+};
+
 export async function load() {
-  const tEl = $('home-tracks'), nRow = $('home-new-row'), pRow = $('home-playlists-row'), fRow = $('home-foryou-row'), aRow = $('home-artists-row');
+  const tEl = $('home-tracks'), nRow = $('home-new-row'), pRow = $('home-playlists-row'), fRow = $('home-foryou-row'), aRow = $('home-artists-row'), albRow = $('home-albums-row'), vidRow = $('home-videos-row'), uplRow = $('home-user-playlists-row');
+  const rRow = $('home-recent-row'), rSec = $('home-recent-section'), uSec = $('home-user-playlists-section');
+
+  // Sync check for local data to prevent layout shift before first paint
+  const h = History.getAll();
+  const up = Playlists.getAll();
+  if (rSec) rSec.style.display = h.length ? '' : 'none';
+  if (uSec) uSec.style.display = up.length ? '' : 'none';
+
   UI.renderHeroSkeleton();
-  if (tEl) tEl.innerHTML = UI.skeletons(10);
+  if (tEl) tEl.innerHTML = UI.skeletons(20);
   if (nRow) nRow.innerHTML = UI.skeletons(6, 'horiz');
   if (pRow) pRow.innerHTML = UI.skeletons(6, 'horiz');
   if (fRow) fRow.innerHTML = UI.skeletons(6, 'horiz');
   if (aRow) aRow.innerHTML = UI.skeletons(6, 'horiz');
+  if (albRow) albRow.innerHTML = UI.skeletons(6, 'horiz');
+  if (vidRow) vidRow.innerHTML = UI.skeletons(6, 'video');
+  if (uplRow) uplRow.innerHTML = UI.skeletons(4, 'horiz');
+  if (rRow) rRow.innerHTML = UI.skeletons(6, 'horiz');
 
-  const h = History.getAll();
-  if (h.length && $('home-recent-section')) { $('home-recent-section').style.display = 'block'; if ($('home-recent-row')) $('home-recent-row').innerHTML = UI.skeletons(6, 'horiz'); } else if ($('home-recent-section')) { $('home-recent-section').style.display = 'none'; }
-
-  const [newTs, recTs] = await Promise.all([_fetchNew(), _fetchRecs()]);
+  const { queries, ytFallback } = getHomeQueries(State, History);
+  const [newTs, recTs] = await Promise.all([_fetchNew(), _fetchRecs(queries, ytFallback)]);
 
   try {
     if (recTs.length) UI.renderHero(recTs[0]);
     if (nRow) { UI.renderHorizCards(newTs, nRow); attachHorizEvents(nRow); }
 
-    const h = History.getAll(), rSec = $('home-recent-section'), rRow = $('home-recent-row');
-    if (h.length && rSec && rRow) { rSec.style.display = ''; UI.renderHorizCards(h, rRow); attachHorizEvents(rRow); }
+    if (h.length && rRow) { UI.renderHorizCards(h, rRow); attachHorizEvents(rRow); }
 
-    if (tEl) { UI.renderTracks(recTs.slice(0, 10), tEl, null); attachTrackEvents(tEl); }
+    if (tEl) { UI.renderTracks(recTs.slice(0, 20), tEl, null); attachTrackEvents(tEl); }
 
-    // Hide sections only if they end up empty to prevent layout shifts
-    if (!h.length && $('home-recent-section')) $('home-recent-section').style.display = 'none';
-
-    _loadForYou(recTs);
+    _loadUserPlaylists();
+    _loadRecommendedAlbums(queries);
+    _loadRecommendedVideos(queries);
     _loadArtists(recTs);
+    _loadForYou(recTs);
     _loadFeaturedPlaylists()
 
     $('hero-card')?.addEventListener('click', () => { const t = $('hero-card')?._track; if (t) { playTrack([t], 0); _recs(t.id); } });
@@ -55,41 +82,92 @@ export async function load() {
 
 async function _fetchNew() {
   try { const r = await getPlaylist(NEW_RELEASES_PLAYLIST_ID); if (r.tracks?.length) return r.tracks; } catch {}
-  try { const rs = await Promise.allSettled(['new music', 'new albums'].map(q => searchTracks(q).catch(() => []))); return rs.flatMap(r => r.status === 'fulfilled' ? r.value : []); } catch { return []; }
+  try { 
+    const rs = await Promise.allSettled(['new music', 'new albums'].map(q => searchTracks(q).catch(() => []))); 
+    const results = rs.map(r => r.status === 'fulfilled' ? r.value : []);
+    return _interleave(results);
+  } catch { return []; }
 }
 
-async function _fetchRecs() {
+async function _fetchRecs(queries, ytFallback) {
   try {
-    const { queries, ytFallback } = getHomeQueries(State, History);
     const rs = await Promise.allSettled(queries.map(q => searchTracks(q).catch(() => [])));
-    const ts = rs.flatMap(r => r.status === 'fulfilled' ? r.value : []);
-    return ts.length ? ts : await searchVideos(ytFallback).catch(() => []);
+    const results = rs.map(r => r.status === 'fulfilled' ? r.value : []);
+    return _interleave(results);
   } catch { return []; }
+}
+
+function _loadUserPlaylists() {
+  const s = $('home-user-playlists-section'), r = $('home-user-playlists-row');
+  if (!s || !r) return;
+  const all = Playlists.getAll(); // Fetches user-created/saved playlists
+  if (all.length) {
+    s.style.display = '';
+    r.innerHTML = all.slice(0, 12).map(pl => `
+      <div class="horiz-card user-pl-card" data-id="${pl.id}">
+        <div class="horiz-art-wrap">
+          <div class="horiz-art" style="${pl.cover ? `background-image:url('${escHtml(pl.cover)}');background-size:cover;background-position:center` : 'background:linear-gradient(135deg,#5b21b6,#7c3aed);display:flex;align-items:center;justify-content:center'}">
+            ${pl.cover ? '' : UI.getIcon('queue')}
+          </div>
+        </div>
+        <div class="horiz-title">${escHtml(pl.name)}</div>
+        <div class="horiz-artist">${pl.tracks.length} track${pl.tracks.length !== 1 ? 's' : ''}</div>
+      </div>`).join('');
+    r.querySelectorAll('.user-pl-card').forEach(c => c.addEventListener('click', () => UserPlaylistPage.open(c.dataset.id)));
+  } else {
+    s.style.display = 'none';
+  }
+}
+
+async function _loadRecommendedAlbums(queries) {
+  const s = $('home-albums-section'), r = $('home-albums-row');
+  if (!s || !r) return;
+  try {
+    const albums = await searchAlbums(queries[0] || 'new albums');
+    if (albums.length) {
+      s.style.display = '';
+      UI.renderHorizCards(albums.slice(0, 15), r);
+      r.querySelectorAll('.horiz-card').forEach((el, i) => el.addEventListener('click', () => AlbumPage.open(albums[i])));
+    } else s.style.display = 'none';
+  } catch { s.style.display = 'none'; }
+}
+
+async function _loadRecommendedVideos(queries) {
+  const s = $('home-videos-section'), r = $('home-videos-row');
+  if (!s || !r) return;
+  try {
+    const vids = await searchTidalVideos(queries[1] || queries[0] || 'music videos');
+    if (vids.length) {
+      s.style.display = '';
+      UI.renderHorizCards(vids.slice(0, 15), r, 'video');
+      r.querySelectorAll('.horiz-card').forEach((el, i) => el.addEventListener('click', () => VideoPage.open(vids[i])));
+    } else s.style.display = 'none';
+  } catch { s.style.display = 'none'; }
 }
 
 async function _loadForYou(recTracks) {
   const s = $('home-foryou-section'), r = $('home-foryou-row');
   if (!s || !r) return;
 
-  s.style.display = ''; // Ensure the section is visible
+  s.style.display = '';
 
   let tracksToRender = recTracks.slice(6, 20);
   if (!tracksToRender.length) {
     try {
       const rs = await Promise.allSettled(['indie hits', 'viral songs'].map(q => searchTracks(q).catch(() => [])));
       tracksToRender = rs.flatMap(x => x.status === 'fulfilled' ? x.value : []);
-    } catch (e) { /* console.error("Failed to load fallback 'for you' tracks:", e); */ }
+    } catch {}
   }
 
   if (tracksToRender.length) { UI.renderHorizCards(tracksToRender, r); attachHorizEvents(r); }
-  else { r.innerHTML = UI.emptyState('bi-music-note-beamed', 'No recommendations for you right now'); }
+  else { r.innerHTML = UI.emptyState('music', 'No recommendations for you right now'); }
 }
 
 async function _loadArtists(recTracks) {
   const s = $('home-artists-section'), r = $('home-artists-row'); if (!s || !r) return;
   const seen = new Set(), arts = [];
   
-  // Get unique artist names from recommended tracks
+  // Extraction
   for (const t of recTracks) {
     if (!t.artist) continue;
     const names = t.artist.split(',').map(n => n.trim());
@@ -100,23 +178,29 @@ async function _loadArtists(recTracks) {
     if (arts.length >= 10) break;
   }
   if (!arts.length) {
-    s.style.display = ''; // Ensure the section is visible even if empty
-    r.innerHTML = UI.emptyState('bi-person-fill', 'No artists found');
+    s.style.display = 'none'; 
+    r.innerHTML = UI.emptyState('person', 'No artists found');
     return;
   }
 
-  // Fetch actual artist profile data to get real profile images instead of song covers
+  // Fetch profiles
   const artistProfiles = await Promise.all(arts.map(async (name) => {
+    const cacheKey = `artist_profile:${name.toLowerCase()}`;
+    const cached = Cache.get(cacheKey);
+    if (cached) return cached;
+
     try {
       const results = await searchArtists(name);
-      return results.find(a => a.name.toLowerCase() === name.toLowerCase()) || results[0] || { name, cover: '' };
+      const profile = results.find(a => a.name.toLowerCase() === name.toLowerCase()) || results[0] || { name, cover: '' };
+      Cache.set(cacheKey, profile, ARTIST_CACHE_TTL);
+      return profile;
     } catch { return { name, cover: '' }; }
-  })).then(profiles => profiles.filter(Boolean)); // Filter out any null/undefined profiles from failed searches
+  })).then(profiles => profiles.filter(Boolean));
 
   s.style.display = '';
   r.innerHTML = artistProfiles.filter(Boolean).map((a, i) => `
     <div class="horiz-card artist-pill" data-index="${i}">
-      <div class="artist-pill-img"><img src="${a.cover || ''}" alt="" onerror="this.style.display='none'"/><div class="artist-pill-fallback"><i class="bi bi-person-fill"></i></div></div>
+      <div class="artist-pill-img"><img src="${a.cover || ''}" alt="" onerror="this.style.display='none'"/><div class="artist-pill-fallback">${UI.getIcon('person')}</div></div>
       <div class="horiz-title">${escHtml(a.name)}</div>
     </div>`).join('');
 
@@ -130,10 +214,14 @@ async function _loadFeaturedPlaylists() {
   const r = $('home-playlists-row'); if (!r) return;
   const rs = await Promise.allSettled(PLAYLIST_QUERIES.map(q => searchPlaylists(q, 1)));
   const resolved = rs.map(x => (x.status === 'fulfilled' && x.value?.[0]) || null).filter(Boolean);
-  if (!resolved.length) return r.innerHTML = '<div class="empty"><i class="bi bi-collection"></i><p>No playlists found</p></div>';
+  if (!resolved.length) return r.innerHTML = `<div class="empty">${UI.getIcon('collection')}<p>No playlists found</p></div>`;
   r.innerHTML = resolved.map((pl, i) => `
     <div class="horiz-card playlist-card" data-pl-index="${i}">
-      <img class="horiz-art" src="${pl.cover || ''}" onerror="this.style.background='var(--surface-2)'" alt=""/>
+      <div class="horiz-art-wrap">
+        <div class="horiz-art" style="${pl.cover ? `background-image:url('${escHtml(pl.cover)}');background-size:cover;background-position:center` : 'background:linear-gradient(135deg,#5b21b6,#7c3aed);display:flex;align-items:center;justify-content:center'}">
+          ${pl.cover ? '' : UI.getIcon('queue')}
+        </div>
+      </div>
       <div class="horiz-title">${escHtml(pl.title)}</div>
       <div class="horiz-sub">${pl.trackCount ? pl.trackCount + ' tracks' : pl.description || ''}</div>
     </div>`).join('');
@@ -142,15 +230,28 @@ async function _loadFeaturedPlaylists() {
 }
 
 export function attachTrackEvents(c) {
-  c.querySelectorAll('[data-index]').forEach(w => {
-    const card = w.querySelector('.track-card'); if (!card) return;
-    card.addEventListener('click', () => playTrack(c._tracks, +w.dataset.index));
-    w.querySelector('.track-like-btn')?.addEventListener('click', e => { e.stopPropagation(); import('../app/likes.js').then(m => m.onLike(c._tracks[+w.dataset.index])); });
+  c.addEventListener('click', e => {
+    const wrap = e.target.closest('[data-index]');
+    const likeBtn = e.target.closest('.track-like-btn');
+    if (!wrap || !c._tracks) return;
+    const idx = +wrap.dataset.index;
+    if (likeBtn) {
+      e.stopPropagation();
+      import('../app/likes.js').then(m => m.onLike(c._tracks[idx]));
+    } else {
+      playTrack(c._tracks, idx);
+    }
   });
 }
 
 export function attachHorizEvents(c) {
-  c.querySelectorAll('.horiz-card').forEach(card => card.addEventListener('click', () => { const t = c._tracks?.[+card.dataset.index]; if (t) { playTrack([t], 0); _recs(t.id); } }));
+  c.addEventListener('click', e => {
+    const card = e.target.closest('.horiz-card');
+    if (card && c._tracks) {
+      const t = c._tracks[+card.dataset.index];
+      if (t) { playTrack([t], 0); _recs(t.id); }
+    }
+  });
 }
 
 export function attachAlbumEvents(c) {
