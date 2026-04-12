@@ -1,10 +1,12 @@
 // Proxy Server
 const express = require('express')
 const axios = require('axios')
-const dns = require('dns').promises
+const dns = require('dns')
 const net = require('net')
 const cors = require('cors')
 const path = require('path')
+const http = require('http')
+const https = require('https')
 
 const app = express()
 
@@ -84,10 +86,27 @@ function isPrivateIP(ip) {
 
 async function isSafeHost(hostname) {
     try {
-        const addresses = await dns.lookup(hostname, { all: true });
+        const addresses = await dns.promises.lookup(hostname, { all: true });
         return !addresses.some((addr) => isPrivateIP(addr.address));
     } catch { return false; }
 }
+
+// Custom lookup for SSRF protection to prevent TOCTOU race conditions.
+// This validates the IP address at the moment of connection.
+const ssrSafeLookup = (hostname, options, callback) => {
+  dns.lookup(hostname, options, (err, address, family) => {
+    if (err) return callback(err);
+    
+    const addresses = Array.isArray(address) ? address : [{ address }];
+    if (addresses.some(addr => isPrivateIP(addr.address))) {
+      return callback(new Error('SSRF Detected: Access to private IP addresses is prohibited'));
+    }
+    callback(null, address, family);
+  });
+};
+
+const httpAgent = new http.Agent({ lookup: ssrSafeLookup });
+const httpsAgent = new https.Agent({ lookup: ssrSafeLookup });
 
 // Proxy route
 app.get('/proxy', async (req, res) => {
@@ -117,6 +136,8 @@ app.get('/proxy', async (req, res) => {
     const response = await axios.get(urlObj.toString(), {
       responseType: 'arraybuffer',
       timeout: 10000,
+      httpAgent,
+      httpsAgent,
       validateStatus: () => true, // Don't throw on 4xx/5xx
       headers: {
         'User-Agent': 'TuneTopiaProxy/1.0',
