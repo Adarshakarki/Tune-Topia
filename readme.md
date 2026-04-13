@@ -1,4 +1,4 @@
-# Tune Topia - High-Fidelity Music Streaming Platform
+# Tune Topia
 
 Tune Topia is a high-fidelity, privacy-focused music streaming web application. Built with a no-framework philosophy, it leverages Vanilla JavaScript and modern Web APIs to deliver a premium experience using Tidal and YouTube as backends without subscriptions, advertisements, or tracking.
 
