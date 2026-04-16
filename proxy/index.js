@@ -72,6 +72,11 @@ const mediaHosts = [
   'i.ytimg.com',
   'googlevideo.com',
   'wsrv.nl',
+  'apple.com',
+  'mzstatic.com',
+  'itunes.apple.com',
+  'is1-ssl.mzstatic.com',
+  'video-ssl.itunes.apple.com',
 ]
 
 // API
@@ -83,6 +88,7 @@ const apiHosts = [
   'samidy.com',
   'squid.wtf',
   'kinoplus.online',
+  'm8tec.top',
 ]
 
 // Check
