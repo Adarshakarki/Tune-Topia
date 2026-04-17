@@ -174,7 +174,8 @@ app.get('/proxy', async (req, res) => {
     if (response.headers['content-type']) {
       res.set('Content-Type', response.headers['content-type'])
     }
-
+    
+    res.status(response.status);
     res.send(response.data)
   } catch (err) {
     console.error('Proxy error:', err.message)
