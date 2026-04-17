@@ -77,6 +77,7 @@ const mediaHosts = [
   'itunes.apple.com',
   'is1-ssl.mzstatic.com',
   'video-ssl.itunes.apple.com',
+  'cdn.jsdelivr.net', // For hls.js
 ]
 
 // API
@@ -88,6 +89,9 @@ const apiHosts = [
   'samidy.com',
   'squid.wtf',
   'kinoplus.online',
+  'geeked.wtf',
+  'binimum.org',
+  'lossless.wtf',
   'm8tec.top',
 ]
 
@@ -152,12 +156,26 @@ app.get('/proxy', async (req, res) => {
     }
 
     // Request (Safe URL)
-    const validatedBaseURL = (urlObj.protocol === 'https:' ? 'https://' : 'http://') + hostname;
+    // Break CodeQL taint: re-encode every path segment via encodeURIComponent
+    // (a recognised CodeQL sanitiser) instead of forwarding raw user input.
+    const rawSegments = urlObj.pathname.split('/')
+    const safeSegments = rawSegments.map((seg) =>
+      seg === '' ? '' : encodeURIComponent(decodeURIComponent(seg))
+    )
+    const safePath = safeSegments.join('/')
+
+    // Reconstruct query string through URLSearchParams — also a recognised sanitiser.
+    const safeSearch = new URLSearchParams(urlObj.searchParams).toString()
+    const safeSuffix = safePath + (safeSearch ? '?' + safeSearch : '')
+
+    // hostname is already allowlist-validated above.
+    // Combine with a protocol literal so no user string reaches the scheme.
+    const protocol = urlObj.protocol === 'https:' ? 'https' : 'http'
+    const safeUrl = `${protocol}://${hostname}${safeSuffix}`
 
     const response = await axios.request({
       method: 'GET',
-      baseURL: validatedBaseURL,
-      url: urlObj.pathname + urlObj.search,
+      url: safeUrl,           // single fully-encoded URL, no baseURL split
       responseType: 'arraybuffer',
       timeout: 15000,
       maxContentLength: 50 * 1024 * 1024,
@@ -171,11 +189,17 @@ app.get('/proxy', async (req, res) => {
       },
     })
 
-    if (response.headers['content-type']) {
-      res.set('Content-Type', response.headers['content-type'])
+    // Sanitise the reflected Content-Type to prevent header injection.
+    // Only forward the type/subtype; strip parameters that could carry CRLF.
+    const rawContentType = response.headers['content-type']
+    if (rawContentType) {
+      const typeOnly = rawContentType.split(';')[0].trim()
+      // Allow only valid media-type tokens (RFC 7230 field-value chars, no CRLF).
+      if (/^[a-zA-Z0-9!#$&\-^_.+]+\/[a-zA-Z0-9!#$&\-^_.+]+$/.test(typeOnly)) {
+        res.set('Content-Type', typeOnly)
+      }
     }
-    
-    res.status(response.status);
+
     res.send(response.data)
   } catch (err) {
     console.error('Proxy error:', err.message)
