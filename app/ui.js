@@ -649,10 +649,15 @@ export function showPage(name) {
   document
     .querySelector(`.sb-item[data-page="${name}"]`)
     ?.classList.add('active')
+  window.scrollTo(0, 0);
 }
 
 export function openPlayer() {
-  $('now-playing')?.classList.add('open')
+  const np = $('now-playing');
+  if (np) {
+    np.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
 }
 
 export function revertThemeColor() {
@@ -689,6 +694,7 @@ export function closePlayer() {
     .querySelectorAll('.np-overlay')
     .forEach((p) => p.classList.remove('open'))
   $('now-playing')?.classList.remove('open')
+  document.body.style.overflow = '';
   revertThemeColor()
 }
 
@@ -704,6 +710,7 @@ export function closePanel(id) {
 
 export function closeAllOverlays() {
   $('now-playing')?.classList.remove('open');
+  document.body.style.overflow = '';
   document.querySelectorAll('.np-overlay').forEach(p => p.classList.remove('open'));
   const subpages = ['page-album', 'page-artist', 'page-playlist', 'page-mix', 'page-genre', 'page-user-playlist', 'page-liked-videos'];
   subpages.forEach(id => $(id)?.classList.remove('open', 'stacked'));

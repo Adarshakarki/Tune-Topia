@@ -103,6 +103,7 @@ export async function open(track) {
   _current = track
   const video = $('vp-video')
   if (!video) return
+  document.body.style.overflow = 'hidden'; // Lock background scroll
   History.push(track, 'video');
 
   _destroyHls()
@@ -160,6 +161,7 @@ export async function open(track) {
 
 export function close() {
   if ($(PAGE_ID)) $(PAGE_ID).style.display = 'none'
+  document.body.style.overflow = ''; // Restore native scroll
   const video = $('vp-video')
   if (video) {
     video.pause()

@@ -1,7 +1,8 @@
 #shell {
   display: flex;
-  height: 100dvh;
-  overflow: hidden;
+  min-height: 100dvh;
+  flex-direction: column;
+  overflow: visible;
 }
 
 #sidebar {
@@ -139,19 +140,17 @@
 #main-wrap {
   flex: 1;
   position: relative;
-  height: 100%;
+  height: auto;
   width: 100%;
-  overflow: hidden;
+  overflow: visible;
   background: var(--bg);
   display: flex;
   flex-direction: column;
 }
 #main-content {
-  height: 100%;
+  height: auto;
   width: 100%;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
+  overflow: visible;
   flex: 1;
   background: var(--bg);
   padding-bottom: calc(var(--bar-h-mobile, 64px) + var(--nav-h, 60px) + var(--s10));
@@ -441,10 +440,15 @@
     border-radius: var(--r-xl);
     border: 0.5px solid var(--border);
     overflow: hidden;
+    height: 100%;
     padding-bottom: 0;
     box-shadow: 0 2px 16px oklch(0 0 0 / 0.04);
   }
-  #main-content { padding-bottom: var(--s10); }
+  #main-content {
+    padding-bottom: var(--s10);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 
   .page-header { position: relative; padding: var(--s4) 28px; min-height: 64px; align-items: center; justify-content: space-between; }
   .page-header-search { padding: var(--s3) 28px; }
