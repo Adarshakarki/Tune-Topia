@@ -1,0 +1,154 @@
+/* History Styling */
+.history-group {
+  margin-bottom: var(--s8);
+}
+
+.history-date-header {
+  padding: var(--s4) var(--s5);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 10;
+  border-bottom: 1px solid var(--border);
+}
+
+.history-group-tracks {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Collections Grid */
+.history-collections-section {
+  padding: var(--s6) var(--s5) var(--s2);
+}
+
+.history-section-label {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--s3);
+}
+
+.history-collections-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--s2);
+}
+
+.hist-col-item {
+  cursor: pointer;
+  min-width: 0;
+  transition: transform 0.2s var(--spring);
+}
+
+.hist-col-item img {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--r-sm);
+  object-fit: cover;
+  background: var(--surface-3);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease;
+}
+
+.hist-col-item:hover {
+  transform: translateY(-2px);
+}
+
+.hist-col-item:hover img {
+  box-shadow: var(--shadow-md);
+}
+
+/* Track Row Refinement */
+.history-group-tracks .alb-track {
+  display: flex;
+  align-items: center;
+  padding: 10px var(--s5);
+  gap: var(--s4);
+  cursor: pointer;
+  transition: background 0.2s var(--spring);
+  position: relative;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.history-group-tracks .alb-track:last-child {
+  border-bottom: none;
+}
+
+.history-group-tracks .alb-track:active {
+  background: var(--surface-2);
+  transform: scale(0.99);
+}
+
+.history-group-tracks .alb-track.playing {
+  background: var(--accent-soft);
+}
+
+.history-group-tracks .art-track-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-sm);
+  object-fit: cover;
+  background: var(--surface-3);
+  flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
+}
+
+.history-group-tracks .alb-track-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.history-group-tracks .alb-track-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-group-tracks .alb-track.playing .alb-track-title {
+  color: var(--accent);
+}
+
+.history-group-tracks .alb-track-artist {
+  font-size: 13px;
+  color: var(--text-2);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-group-tracks .alb-track-dur {
+  font-size: 12px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+  padding-left: var(--s2);
+}
+
+.explicit-tag svg {
+  width: 14px;
+  height: 14px;
+  vertical-align: middle;
+  opacity: 0.6;
+  margin-left: 4px;
+}
+
+/* Clear Button specific adjustment */
+#history-clear-btn {
+  color: var(--text-2);
+  transition: color 0.2s;
+}
+
+#history-clear-btn:hover {
+  color: var(--accent);
+}

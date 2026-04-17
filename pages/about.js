@@ -2,7 +2,6 @@
 const $ = (id) => document.getElementById(id)
 let _rendered = false
 
-// Build-time version fallback (inject via Vite/Webpack: define: { APP_VERSION: '"1.2.3"' })
 const FALLBACK_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : null
 
 export function render() {
@@ -66,72 +65,43 @@ function _render() {
   fetchSWVersion()
 }
 
-async function fetchSWVersion(timeoutMs = 3000) {
+async function fetchSWVersion() {
   const versionEl = $('app-version')
   if (!versionEl) return
 
-  const setLoading = (text, loaded = false) => {
-    versionEl.textContent = text
-    versionEl.classList.toggle('loaded', loaded)
+  const _setVersion = (v, ok = false) => {
+    versionEl.textContent = v
+    versionEl.classList.toggle('loaded', ok)
+  }
+
+  if (!navigator.serviceWorker) {
+    return _setVersion(FALLBACK_VERSION || 'v?', !!FALLBACK_VERSION)
   }
 
   try {
-    if (!navigator.serviceWorker) {
-      throw new Error('Service Worker not supported')
-    }
-
-    // Wait for registration to be ready
     const registration = await navigator.serviceWorker.ready
-    
-    // Get the best available worker: controlling → waiting → active
     const worker = navigator.serviceWorker.controller 
       || registration.waiting 
       || registration.active
 
-    if (!worker) {
-      throw new Error('No active Service Worker found')
-    }
+    if (!worker) throw new Error()
 
     const channel = new MessageChannel()
-    
-    // Promise that resolves on valid response or rejects on timeout/error
     const versionPromise = new Promise((resolve, reject) => {
-      const timeoutId = setTimeout(() => {
-        cleanup()
-        reject(new Error('Version request timed out'))
-      }, timeoutMs)
-
-      const cleanup = () => {
-        clearTimeout(timeoutId)
-        channel.port1.onmessage = null
-        channel.port1.onerror = null
-      }
-
+      const t = setTimeout(() => reject(), 1000)
       channel.port1.onmessage = (event) => {
-        cleanup()
-        if (event.data?.version) {
-          resolve(event.data.version)
-        } else {
-          reject(new Error('Invalid version payload'))
-        }
-      }
-      
-      channel.port1.onerror = (err) => {
-        cleanup()
-        reject(err)
+        clearTimeout(t)
+        if (event.data?.version) resolve(event.data.version)
+        else reject()
       }
     })
 
-    // Send message with port transfer
     worker.postMessage({ type: 'GET_VERSION' }, [channel.port2])
 
     const version = await versionPromise
-    setLoading(version, true)
-    
+    _setVersion(version, true)
   } catch (error) {
-    console.warn('⚠️ SW version fetch failed:', error.message)
-    // Graceful fallback to build-time version or placeholder
-    setLoading(FALLBACK_VERSION || 'v?', !!FALLBACK_VERSION)
+    _setVersion(FALLBACK_VERSION || 'v?', !!FALLBACK_VERSION)
   }
 }
 

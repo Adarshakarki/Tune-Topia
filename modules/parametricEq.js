@@ -1,11 +1,11 @@
 const PARAMETRIC_PRESETS = {
   "Flat": [0, 0, 0, 0, 0, 0, 0],
-  "Bass Boost": [7, 5, 2, 0, 0, 0, 0],
-  "Treble Boost": [0, 0, 0, 0, 2, 5, 8],
-  "Pop": [-2, -1, 1, 3, 2, 0, -1],
-  "Rock": [4, 3, 1, -1, 0, 2, 3],
-  "Electronic": [6, 4, 1, -2, 2, 4, 5],
-  "Vocal": [-2, -3, 0, 4, 3, 1, -2]
+  "Bass Boost": [8, 6, 2, 0, 0, 0, 0],
+  "Treble Boost": [0, 0, 0, 0, 2, 5, 9],
+  "Pop": [2, 3, 1, 0, 1, 2, 3],
+  "Rock": [4, 3, 1, -1, 1, 2, 4],
+  "Electronic": [7, 5, 1, -1, 2, 4, 6],
+  "Vocal": [-4, -2, 0, 3, 4, 2, -1]
 };
 
 export class ParametricEq {
@@ -389,6 +389,7 @@ export class ParametricEq {
   renderUI(container) {
     // Cleanup previous instances/listeners before re-rendering
     this._resizeObserver?.disconnect();
+    this.enabled = localStorage.getItem('tt_eq_enabled') === 'true';
     if (this._onMouseMove) window.removeEventListener('mousemove', this._onMouseMove);
     if (this._onMouseUp) window.removeEventListener('mouseup', this._onMouseUp);
 

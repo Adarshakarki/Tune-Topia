@@ -3,7 +3,9 @@ export const COLD_START_ARTISTS = [
   'Ariana Grande',
   'Billie Eilish',
   'Charli XCX',
+  'Chappell Roan',
   'Dua Lipa',
+  'Gracie Abrams',
   'Harry Styles',
   'Olivia Rodrigo',
   'Sabrina Carpenter',
@@ -27,6 +29,8 @@ export const COLD_START_ARTISTS = [
   'Brent Faiyaz',
   'Daniel Caesar',
   'Frank Ocean',
+  'Giveon',
+  'Kali Uchis',
   'H.E.R.',
   'SZA',
   'Summer Walker',
@@ -36,10 +40,12 @@ export const COLD_START_ARTISTS = [
   'Arcade Fire',
   'Arctic Monkeys',
   'Florence and the Machine',
+  'Foo Fighters',
   'Hozier',
   'Lana Del Rey',
   'Radiohead',
   'Tame Impala',
+  'The Killers',
   'The 1975',
   'The Strokes',
 
@@ -49,7 +55,9 @@ export const COLD_START_ARTISTS = [
   'Daft Punk',
   'David Guetta',
   'Disclosure',
+  'Fisher',
   'Four Tet',
+  'Kaytranada',
   'Fred again..',
   'Skrillex',
 
@@ -66,6 +74,13 @@ export const COLD_START_ARTISTS = [
   'NewJeans',
   'Stray Kids',
 
+  // Jazz, Blues & Classical (Audiophile Favorites)
+  'Miles Davis',
+  'John Coltrane',
+  'Hans Zimmer',
+  'Ludovico Einaudi',
+  'Kamasi Washington',
+
   // Bands & Iconic Groups
   'ABBA',
   'Coldplay',
@@ -75,6 +90,8 @@ export const COLD_START_ARTISTS = [
   'Linkin Park',
   'Maroon 5',
   'Paramore',
+  'Queen',
+  'Nirvana',
   'Red Hot Chili Peppers',
   'The Beatles',
   'Twenty One Pilots',
@@ -92,7 +109,7 @@ export const COLD_START_ARTISTS = [
   'Rihanna',
 ];
 
-export const COLD_START_YT_FALLBACK = 'top hits 2025'
+export const COLD_START_YT_FALLBACK = `top hits ${new Date().getFullYear()}`;
 
 export const GENRE_SEEDS = {
   pop: 'pop hits',
@@ -105,6 +122,6 @@ export const GENRE_SEEDS = {
   kpop: 'kpop hits',
 }
 
-export const COLD_START_PICK_COUNT = 6
+export const COLD_START_PICK_COUNT = 8
 export const MAX_PERSONALISED_QUERIES = 6
-export const DISCOVERY_QUERY_COUNT = 1
+export const DISCOVERY_QUERY_COUNT = 2

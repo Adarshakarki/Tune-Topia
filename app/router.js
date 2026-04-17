@@ -21,9 +21,17 @@ export function showPage(name, push = true, params = {}) {
   });
   const url = `?${urlParams.toString()}`;
 
-  if (push && !_isPop) history.pushState({ page: name, params }, '', url);
+  const isCurrentlyActive = document.querySelector(`.sub-page.open#page-${name}, .page.active#page-${name}`);
 
-  if (isSub && _handlers[name] && !push) {
+  if (push && !_isPop) {
+    if (isCurrentlyActive) {
+      history.replaceState({ page: name, params }, '', url);
+    } else {
+      history.pushState({ page: name, params }, '', url);
+    }
+  }
+
+  if (isSub && _handlers[name]) {
     _handlers[name](params);
   } else if (!isSub) {
     UI.closeAllOverlays();
@@ -42,7 +50,8 @@ export function updateURL(name, params = {}) {
   Object.entries(params).forEach(([k, v]) => {
     if (v && typeof v !== 'object') urlParams.set(k, v);
   });
-  history.pushState({ page: name, params }, '', `?${urlParams.toString()}`);
+  // Use replaceState to update metadata/slugs without bloating the history stack
+  history.replaceState({ page: name, params }, '', `?${urlParams.toString()}`);
 }
 
 export function goBack(fb = 'home') { history.length > 1 ? history.back() : showPage(_prev || fb); }

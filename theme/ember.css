@@ -1,0 +1,32 @@
+:root[data-skin='ember'] {
+  --bg: #0f0d0e;
+  --bg-shell: #050505;
+  --surface: #1a1718;
+  --surface-2: #262223;
+  --surface-3: #332e30;
+  --accent: #f97316;
+  --accent-dim: rgba(249, 115, 22, 0.15);
+  --text: #fafaf9;
+  --text-2: #fb923c;
+  --text-3: #7c2d12;
+  --border: rgba(249, 115, 22, 0.1);
+  --sidebar-bg: #050505;
+  --player-bg: rgba(26, 23, 24, 0.95);
+  --r-lg: 14px;
+}
+
+:root[data-skin='ember'][data-theme='light'] {
+  --bg: #fffaf0;
+  --bg-shell: #ffedd5;
+  --surface: #ffffff;
+  --surface-2: #fed7aa;
+  --surface-3: #fdba74;
+  --accent: #ea580c;
+  --accent-dim: rgba(234, 88, 12, 0.1);
+  --text: #431407;
+  --text-2: #ea580c;
+  --text-3: #f97316;
+  --sidebar-bg: #fffcf5;
+  --player-bg: #ffffff;
+  --glass: #ffffff;
+}

@@ -15,7 +15,7 @@ export const MOODS = [
   { label: 'Metal', genreId: 'metal', c1: '#374151', c2: '#0d0d0d', img: 'assets/moods/rock.jpg' },
   { label: 'K-Pop', genreId: 'kpop', c1: '#ec4899', c2: '#9d174d', img: 'assets/moods/kpop.jpg' },
   { label: 'Gospel / Christian', genreId: 'gospel', c1: '#d97706', c2: '#92400e', img: 'assets/moods/gospel.jpg' },
-  { label: 'Folk / Americana', genreId: 'americana', c1: '#92400e', c2: '#451a03', img: 'assets/moods/country.jpg' },
+  { label: 'Folk / Americana', genreId: 'americana', c1: '#92400e', c2: '#451a03', img: 'assets/moods/folk.jpg' },
   { label: 'Global', genreId: 'world', c1: '#059669', c2: '#064e3b', img: 'assets/moods/global.jpg' },
   { label: 'Soundtrack', genreId: 'film_tv', c1: '#7c3aed', c2: '#3b0764', img: 'assets/moods/soundtrack.jpg' },
   { label: 'Kids', genreId: 'kids', c1: '#f59e0b', c2: '#b45309', img: 'assets/moods/kids.jpg' },

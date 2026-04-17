@@ -17,6 +17,8 @@ const HARDCODED_BASES = [
   'https://hifi.p1nkhamster.xyz',
   'https://lossless.wtf',
   'https://tidal-api.binimum.org',
+  'https://hifi.geeked.wtf',
+  'https://hifi-two.spotisaver.net',
 ]
 
 const P_PLAYLIST = 'https://eu-central.monochrome.tf', P_ALBUM = 'https://lossless.wtf';

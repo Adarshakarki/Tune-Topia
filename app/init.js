@@ -52,7 +52,6 @@ function _stripBackButtonText() {
 
 async function init() {
   State.init();
-  _fixViewportHeight();
 
   if (Player.audioA && Player.audioB) {
     processor.init([Player.audioA, Player.audioB]);
@@ -74,6 +73,8 @@ async function init() {
   State.subscribe('player.isRepeat', _refreshQueue);
   State.subscribe('library.followedArtists', Library.render);
   State.subscribe('ui.theme', UI.revertThemeColor);
+  State.subscribe('library.likedPlaylists', Library.render);
+  State.subscribe('library.likedMixes', Library.render);
   State.subscribe('ui.themeMode', UI.revertThemeColor);
   State.subscribe('library.savedAlbums', () => {
     Library.render();
@@ -119,7 +120,8 @@ async function init() {
     'account': AccountPage.render, 'settings': Settings.render, 'albums': Library.loadAlbums,
     'artists': Library.loadArtists, 'history': Library.loadHistory, 'recent': Library.loadRecent,
     'new': Library.loadNew, 'playlists': PlaylistsUI.renderPage, 'liked-videos': LikedVideosPage.onEnter,
-    'about': AboutPage.render, 'login': LoginPage.render
+    'about': AboutPage.render, 'login': LoginPage.render,
+    'tidal-playlists': Library.loadTidalPlaylists
   };
   Object.entries(routes).forEach(([k, v]) => Router.registerLoader(k, v));
 
@@ -141,11 +143,7 @@ async function init() {
 
   _bindNavigationListeners();
   _bindPlayerUIListeners();
-}
-
-function _fixViewportHeight() {
-  const vh = window.innerHeight * 0.01;
-  document.documentElement.style.setProperty('--vh', `${vh}px`);
+  _bindGlobalScrollListeners();
 }
 
 function _bindNavigationListeners() {
@@ -260,11 +258,35 @@ function _bindPlayerUIListeners() {
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
-      _fixViewportHeight();
       UI.updatePlayerPosition();
       NowPlaying.syncMoreSheetPosition();
     }, 150);
   });
+}
+
+function _bindGlobalScrollListeners() {
+  window.addEventListener('wheel', (e) => {
+    // Target the actual wrapper that handles the overflow-x
+    const container = e.target.closest('.horiz-scroll');
+    if (!container) return;
+
+    const maxScroll = container.scrollWidth - container.clientWidth;
+    if (maxScroll <= 0) return;
+
+    // If vertical scroll intent is stronger than horizontal, convert it
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      const isAtStart = container.scrollLeft <= 1;
+      const isAtEnd = container.scrollLeft >= maxScroll - 1;
+
+      // Directional guard: If at boundaries, allow vertical page scroll to take over
+      if (e.deltaY > 0 && isAtEnd) return;
+      if (e.deltaY < 0 && isAtStart) return;
+
+      // Direct addition for discrete wheel steps
+      container.scrollLeft += e.deltaY;
+      e.preventDefault();
+    }
+  }, { passive: false });
 }
 
 document.addEventListener('DOMContentLoaded', init)

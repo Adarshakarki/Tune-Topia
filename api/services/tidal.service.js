@@ -12,6 +12,7 @@ import { get as cacheGet, set as cacheSet } from '../../modules/cache.js'
 const TTL_SEARCH = 300000
 const TTL_ALBUM = 900000
 const TTL_RECS = 600000
+const TTL_PLAYLISTS = 300000;
 
 const Q_MAP = { // Quality mapping
   atmos: 'DOLBY_ATMOS',
@@ -40,7 +41,6 @@ export async function searchAlbums(query) {
   const key = `search:albums:${query}`
   const cached = cacheGet(key)
   if (cached) return cached
-
   const { data } = await get(`/search?s=${encodeURIComponent(query)}`)
   const items = data?.data?.items || data?.items || []
 
@@ -70,6 +70,10 @@ export const searchArtists = async (query) => {
 }
 
 export async function searchPlaylists(query, limit = 6) {
+  const key = `search:playlists:${query}:${limit}`;
+  const cached = cacheGet(key);
+  if (cached) return cached;
+
   const bases = await getBases()
 
   const paths = [
@@ -90,7 +94,11 @@ export async function searchPlaylists(query, limit = 6) {
 
       const playlists = items.filter((p) => p.uuid || p.numberOfTracks != null)
 
-      if (playlists.length) return playlists.map(_normPl)
+      if (playlists.length) {
+        const res = playlists.map(_normPl);
+        cacheSet(key, res, TTL_PLAYLISTS);
+        return res;
+      }
     } catch {}
   }
 
@@ -272,12 +280,20 @@ export async function getHomeTrending() {
   return res
 }
 
+// --- Recommendations ---
 export async function getTrackRecommendations(id) {
+  const key = `recs:tracks:${id}`;
+  const cached = cacheGet(key);
+  if (cached) return cached;
+
   try {
-    const { data } = await get(`/recommendations/?id=${id}`)
-    return (data?.items || data?.data?.items || [])
-      .map((i) => normalizeTrack(i.track || i))
-      .filter((t) => t.id)
+    const { data } = await get(`/recommendations/?id=${id}`);
+    const tracks = (data?.items || data?.data?.items || [])
+      .map((i) => normalizeTrack(i.track || i, 'tidal'))
+      .filter((t) => t.id);
+
+    if (tracks.length > 0) cacheSet(key, tracks, TTL_RECS);
+    return tracks;
   } catch {
     return []
   }

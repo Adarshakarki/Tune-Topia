@@ -9,7 +9,8 @@ const THEME = {
 };
 
 export function render() {
-  _renderAll(_getHistory())
+  const { current, previous, fullPrev } = _getHistory()
+  _renderAll(current, previous, fullPrev)
 }
 
 export function initEvents() {
@@ -19,39 +20,77 @@ export function initEvents() {
       btn.classList.add('active'); _period = btn.dataset.period; render();
     })
   })
+
+  // Heatmap click delegation
+  $('capsule-heatmap')?.addEventListener('click', (e) => {
+    const cell = e.target.closest('.capsule-heat-cell');
+    if (cell && cell.dataset.date) {
+      _showHeatmapDetail(cell.dataset.date, _getHistory().current);
+    }
+  });
 }
 
 function _getHistory() {
   try {
     const all = JSON.parse(localStorage.getItem('tt_play_history') || '[]')
-    const now = Date.now(), ms = 86400000; let filtered = all;
-    if (_period === '7d') filtered = all.filter(e => e.playedAt && now - e.playedAt < 7 * ms);
-    if (_period === '30d') filtered = all.filter(e => e.playedAt && now - e.playedAt < 30 * ms);
-    return filtered.sort((a, b) => b.playedAt - a.playedAt)
+    const now = Date.now(), ms = 86400000;
+    let current = [], previous = [], fullPrev = [];
+
+    let periodMs = 0;
+    if (_period === '1d') periodMs = ms;
+    else if (_period === '7d') periodMs = 7 * ms;
+    else if (_period === '1m') periodMs = 30 * ms;
+    
+    if (periodMs > 0) {
+      current = all.filter(e => e.playedAt && (now - e.playedAt) < periodMs);
+      previous = all.filter(e => e.playedAt && (now - e.playedAt) >= periodMs && (now - e.playedAt) < 2 * periodMs);
+      fullPrev = all.filter(e => e.playedAt && (now - e.playedAt) >= periodMs);
+    } else {
+      current = all;
+    }
+
+    return {
+      current: current.sort((a, b) => b.playedAt - a.playedAt),
+      previous: previous.sort((a, b) => b.playedAt - a.playedAt),
+      fullPrev
+    }
   } catch {
-    return []
+    return { current: [], previous: [], fullPrev: [] }
   }
 }
 
-function _renderAll(h) {
-  _renderListeningTime(h)
+function _renderAll(h, prevH, fullPrev) {
+  _renderSummary(h, prevH)
+  _renderListeningTime(h, prevH)
+  _renderInsights(h, prevH)
   _renderTopTracks(h)
   _renderPeakHours(h)
   _renderTopArtist(h)
+  _renderHighlights(h)
+  _renderBehavior(h)
   _renderTopAlbum(h)
   _renderHeatmap(h)
-  _renderDiscovery(h)
+  _renderDiscovery(h, fullPrev)
 }
 
 function _renderListeningTime(history) {
   const totalSecs = history.reduce((s, e) => s + (Number(e.listenedMs || 0) / 1000), 0);
 
-  const hrs = Math.floor(totalSecs / 3600), mins = Math.floor((totalSecs % 3600) / 60);
+  const hrsFloat = totalSecs / 3600;
+  const hrs = Math.floor(hrsFloat), mins = Math.floor((totalSecs % 3600) / 60);
   const valEl = $('capsule-hours'), unitEl = $('capsule-ring-unit'), subEl = $('capsule-time-sub'), fill = $('capsule-ring-fill');
 
-  if (valEl) valEl.textContent = hrs || mins || '0';
-  if (unitEl) unitEl.textContent = hrs ? 'hrs' : 'min';
-  if (subEl) subEl.textContent = history.length ? (hrs ? `${hrs} hr${hrs !== 1 ? 's' : ''} ${mins} min` : `${mins} minutes`) : 'No listening data yet';
+  if (valEl) {
+    if (hrsFloat >= 1) {
+      valEl.textContent = hrsFloat.toFixed(1);
+      if (unitEl) unitEl.textContent = 'hrs';
+    } else {
+      valEl.textContent = mins || '0';
+      if (unitEl) unitEl.textContent = 'min';
+    }
+  }
+
+  if (subEl) subEl.textContent = ''; // Removed subtext to avoid confusion
   if (fill) { const circ = 239, progress = Math.min(totalSecs / 36000, 1); fill.style.stroke = THEME.text; fill.style.strokeDashoffset = String((circ - circ * progress).toFixed(2)); }
 }
 
@@ -123,6 +162,179 @@ function _renderPeakHours(history) {
       </div>`
     })
     .join('')}</div>`
+}
+
+function _renderSummary(h, prevH) {
+  const el = $('capsule-summary-text');
+  if (!el || !h.length) return;
+
+  const personality = _calculatePersonality(h);
+  const totalSecs = h.reduce((s, e) => s + (Number(e.listenedMs || 0) / 1000), 0);
+  const hrs = (totalSecs / 3600).toFixed(1);
+  const uniqueArtists = new Set(h.map(e => e.artist).filter(Boolean)).size;
+
+  const topArt = _getTopItem(h, 'artist');
+  
+  let story = `You've been <strong>${personality}</strong> lately. `;
+  story += `Spending ${hrs} hours with ${uniqueArtists} different artists. `;
+  if (topArt) story += `Your rotation was dominated by <strong>${topArt.name}</strong>.`;
+
+  el.innerHTML = story;
+}
+
+function _renderInsights(h, prevH) {
+  const el = $('capsule-insights');
+  if (!el) return;
+
+  const currentSecs = h.reduce((s, e) => s + (Number(e.listenedMs || 0) / 1000), 0);
+  const prevSecs = prevH.reduce((s, e) => s + (Number(e.listenedMs || 0) / 1000), 0);
+  
+  const timeDiff = prevSecs ? ((currentSecs - prevSecs) / prevSecs * 100).toFixed(0) : 0;
+  const uniqueArt = new Set(h.map(e => e.artist).filter(Boolean)).size;
+  const prevUniqueArt = new Set(prevH.map(e => e.artist).filter(Boolean)).size;
+  const artDiff = prevUniqueArt ? uniqueArt - prevUniqueArt : 0;
+
+  el.innerHTML = `
+    <div class="capsule-insight-card">
+      <div class="insight-val">${timeDiff > 0 ? '↑' : '↓'} ${Math.abs(timeDiff)}%</div>
+      <div class="insight-label">Listening Time</div>
+    </div>
+    <div class="capsule-insight-card">
+      <div class="insight-val">${artDiff >= 0 ? '+' : ''}${artDiff}</div>
+      <div class="insight-label">New Artists</div>
+    </div>
+    <div class="capsule-insight-card">
+      <div class="insight-val">${_calculatePersonality(h, true)}</div>
+      <div class="insight-label">Personality</div>
+    </div>
+  `;
+}
+
+function _renderBehavior(history) {
+  const el = $('capsule-behavior-stats');
+  if (!el) return;
+
+  const finishedThreshold = 30000; // 30s considered a "finish" in this context
+  const finished = history.filter(e => e.listenedMs > finishedThreshold).length;
+  const skips = history.filter(e => e.listenedMs > 0 && e.listenedMs < 10000).length;
+  const total = finished + skips || 1;
+  const completionRate = Math.round((finished / total) * 100);
+
+  // Find most skipped artist
+  const skipCounts = {};
+  history.filter(e => e.listenedMs > 0 && e.listenedMs < 10000).forEach(e => {
+    if (e.artist) skipCounts[e.artist] = (skipCounts[e.artist] || 0) + 1;
+  });
+  const mostSkipped = Object.entries(skipCounts).sort((a,b) => b[1]-a[1])[0];
+
+  el.innerHTML = `
+    <div class="behavior-row">
+      <span>Completion Rate</span>
+      <div class="behavior-bar"><div class="behavior-fill" style="width:${completionRate}%"></div></div>
+      <span>${completionRate}%</span>
+    </div>
+    <div class="behavior-summary"> 
+      ${mostSkipped ? `You've been avoiding <strong>${mostSkipped[0]}</strong> lately. ` : ''}
+      You finished <strong>${finished}</strong> tracks and skipped <strong>${skips}</strong>.
+    </div>
+  `;
+}
+
+function _calculatePersonality(h, short = false) {
+  if (!h.length) return "Quiet Listener";
+  
+  const counts = {};
+  const hours = new Array(24).fill(0);
+  h.forEach(e => {
+    if (e.artist) counts[e.artist] = (counts[e.artist] || 0) + 1;
+    if (e.playedAt) hours[new Date(e.playedAt).getHours()]++;
+  });
+
+  const uniqueCount = Object.keys(counts).length;
+  const totalPlays = h.length;
+  const explorerScore = uniqueCount / totalPlays;
+  
+  // Time of day
+  const nightPlays = hours.slice(22, 24).reduce((a,b)=>a+b,0) + hours.slice(0, 4).reduce((a,b)=>a+b,0);
+  const morningPlays = hours.slice(5, 10).reduce((a,b)=>a+b,0);
+
+  if (nightPlays > totalPlays * 0.4) return short ? "Night Owl" : "The Night Owl";
+  if (morningPlays > totalPlays * 0.4) return short ? "Early Bird" : "The Early Bird";
+  if (explorerScore > 0.6) return short ? "Explorer" : "The Explorer";
+  if (explorerScore < 0.2) return short ? "Loyalist" : "The Loyalist";
+  
+  return short ? "Vibe Curator" : "The Vibe Curator";
+}
+
+function _renderHighlights(history) {
+  const el = $('capsule-highlights');
+  if (!el) return;
+  if (!history.length) { el.innerHTML = ''; return; }
+
+  // Calculate Streak
+  const playedDates = new Set(history.map(e => new Date(e.playedAt).toDateString()));
+  let streak = 0;
+  let check = new Date();
+  while (playedDates.has(check.toDateString())) {
+    streak++;
+    check.setDate(check.getDate() - 1);
+  }
+
+  // Calculate longest session (songs within 15 mins of each other)
+  let maxSession = 0, currentSession = 0;
+  const sorted = [...history].sort((a, b) => a.playedAt - b.playedAt);
+  for (let i = 0; i < sorted.length; i++) {
+    if (i > 0 && (sorted[i].playedAt - (sorted[i-1].playedAt + Number(sorted[i-1].listenedMs || 0))) < 900000) {
+      currentSession += Number(sorted[i].listenedMs || 0);
+    } else {
+      currentSession = Number(sorted[i].listenedMs || 0);
+    }
+    maxSession = Math.max(maxSession, currentSession);
+  }
+  const sessionMins = Math.round(maxSession / 60000);
+
+  el.innerHTML = `
+    <div class="capsule-highlight-item">
+      <div class="highlight-icon"><i class="bi bi-fire"></i></div>
+      <div class="highlight-text">
+        <div class="highlight-val">${streak} Day Streak</div>
+        <div class="highlight-label">Active Listener</div>
+      </div>
+    </div>
+    <div class="capsule-highlight-item">
+      <div class="highlight-icon"><i class="bi bi-clock-history"></i></div>
+      <div class="highlight-text">
+        <div class="highlight-val">${sessionMins}m Session</div>
+        <div class="highlight-label">Deepest Dive</div>
+      </div>
+    </div>
+  `;
+}
+
+function _renderDiscovery(history, fullPrev) {
+  const el = $('capsule-discovery-card');
+  if (!el) return;
+
+  const oldArtists = new Set((fullPrev || []).map(e => e.artist));
+  const newArtistsInHistory = history.filter(e => e.artist && !oldArtists.has(e.artist));
+  const uniqueCount = new Set(newArtistsInHistory.map(e => e.artist)).size;
+  const topNew = _getTopItem(newArtistsInHistory, 'artist');
+
+  el.innerHTML = `
+    <div class="capsule-card-title">New Discovery</div>
+    <div class="capsule-stat-number">${uniqueCount}</div>
+    <div class="capsule-stat-sub">${topNew ? `Top: <strong>${topNew.name}</strong>` : 'No new artists found'}</div>
+  `;
+}
+
+function _getTopItem(h, type) {
+  const counts = {};
+  h.forEach(e => {
+    const val = e[type];
+    if (val) counts[val] = (counts[val] || 0) + 1;
+  });
+  const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]);
+  return sorted.length ? { name: sorted[0][0], count: sorted[0][1] } : null;
 }
 
 function _renderTopArtist(history) {
@@ -197,19 +409,43 @@ function _renderHeatmap(history) {
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     const c = days[key] || 0
     const opacity = c === 0 ? 0.05 : Math.max(0.15, (c / max).toFixed(2))
+    const readableDate = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
     cells.push(`<div class="capsule-heat-cell"
       style="background:${THEME.text}; opacity:${opacity}"
-      title="${key}: ${c} plays"></div>`)
+      data-date="${key}"
+      title="${readableDate}: ${c} plays"></div>`)
   }
 
   el.innerHTML = `<div class="capsule-heatmap-grid">${cells.join('')}</div>`
 }
 
-function _renderDiscovery(history) {
-  const el = $('capsule-discovery')
-  if (!el) return
-  // Unskipped
-  const uniqueArtists = new Set(history.filter(e => e.listenedMs > 0).map(e => e.artist).filter(Boolean));
-  el.textContent = uniqueArtists.size;
-  el.style.color = THEME.text
+function _showHeatmapDetail(dateStr, history) {
+  const el = $('capsule-heatmap-details');
+  if (!el) return;
+
+  const dayHistory = history.filter(e => {
+    if (!e.playedAt) return false;
+    const d = new Date(e.playedAt);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    return key === dateStr;
+  });
+
+  if (!dayHistory.length) {
+    el.innerHTML = `<div class="heatmap-detail-empty">No music played on ${dateStr}</div>`;
+    return;
+  }
+
+  const topTrack = _getTopItem(dayHistory, 'title');
+  const d = new Date(dateStr + 'T12:00:00'); // Midday to avoid TZ shifts
+  const dateTitle = d.toLocaleDateString(undefined, { month: 'long', day: 'numeric' });
+
+  el.innerHTML = `
+    <div class="heatmap-detail-card">
+      <div class="heatmap-detail-header">
+        <strong>${dateTitle}</strong>
+        <span>${dayHistory.length} plays</span>
+      </div>
+      ${topTrack ? `<div class="heatmap-detail-top">Most played: <span>${topTrack.name}</span></div>` : ''}
+    </div>
+  `;
 }

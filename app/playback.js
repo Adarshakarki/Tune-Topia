@@ -1,5 +1,6 @@
 // Playback
 import * as Player from '../modules/player.js'
+import History from '../modules/history.js'
 
 export let currentId = null
 let _cur = null, _start = null
@@ -13,6 +14,7 @@ export function playTrack(tracks, index) {
   _start = Date.now();
   _cur = t;
   Player.play(t, tracks, index);
+  History.push(t);
   _record(t);
   refreshActiveTracks()
 }
@@ -23,11 +25,11 @@ export function refreshActiveTracks() {
     const act = el.dataset.tid === currentId;
     if (el.classList.contains('track-card') || el.classList.contains('alb-track')) {
       el.classList.toggle('playing', act);
-      el.querySelector('.alb-track-title, .track-name')?.classList.toggle('playing', act);
+      el.querySelector('.alb-track-title, .track-name, .vc-title')?.classList.toggle('playing', act);
     } else {
       const c = el.querySelector('.track-card');
       c?.classList.toggle('playing', act);
-      c?.querySelector('.track-name')?.classList.toggle('playing', act);
+      c?.querySelector('.track-name, .alb-track-title')?.classList.toggle('playing', act);
     }
   });
 }
@@ -39,7 +41,7 @@ function _record(t) {
   if (!t?.id) return;
   try {
     const h = JSON.parse(localStorage.getItem('tt_play_history') || '[]');
-    h.unshift({ ...t, listenedMs: 0, playedAt: Date.now() });
+    h.unshift({ ...t, type: t.type || 'track', listenedMs: 0, playedAt: Date.now() });
     localStorage.setItem('tt_play_history', JSON.stringify(h.slice(0, 2000)));
   } catch {}
   _notify();

@@ -99,13 +99,15 @@ export function renderHero(track) {
   const el = $('hero-card')
   if (!el || !track) return
   el.innerHTML = `
-    <div class="hero-inner" style="background-image:url('${escHtml(track.cover)}')">
-      <div class="hero-info">
+    <div class="hero-inner" style="position: relative; overflow: hidden; display: flex; align-items: flex-end; padding: var(--s6);">
+      <img src="${escHtml(track.cover)}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0;" fetchpriority="high" loading="eager" alt="" />
+      <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 50%, transparent 100%); z-index: 1;"></div>
+      <div class="hero-info" style="position: relative; z-index: 2; flex: 1;">
         <span class="hero-label">Featured</span>
-        <div class="hero-title">${escHtml(track.title)}</div>
+        <div class="hero-title">${escHtml(track.title)}${track.explicit ? ` <span class="explicit-tag" style="font-size:14px; opacity:0.8">${getIcon('explicit')}</span>` : ''}</div>
         <div class="hero-artist">${escHtml(track.artist || '')}</div>
       </div>
-      <button class="hero-play" data-hero-play>${getIcon('play')}</button>
+      <button class="hero-play" data-hero-play style="position: absolute; right: var(--s6); bottom: var(--s6); z-index: 3;">${getIcon('play')}</button>
     </div>`
   el._track = track
 }
@@ -120,7 +122,7 @@ export function renderHorizCards(tracks, container, type = 'standard') {
         ${isVideo && t.dur ? `<span class="horiz-dur">${escHtml(t.dur)}</span>` : ''}
         ${isVideo ? `<div class="horiz-video-play">${getIcon('play')}</div>` : ''}
       </div>
-      <div class="horiz-title">${escHtml(t.title || t.name || '')}</div>
+      <div class="horiz-title">${escHtml(t.title || t.name || '')}${t.explicit ? ` <span class="explicit-tag-mini" style="font-size:10px; opacity:0.7">${getIcon('explicit')}</span>` : ''}</div>
       <div class="horiz-artist">${escHtml(t.channel || t.artist || '')}</div>
     </div>`).join('');
   container._tracks = tracks
@@ -135,7 +137,7 @@ export function renderTopResult(track, container) {
       <img src="${escHtml(track.cover || '')}" onerror="this.src=''" alt=""/>
       <div class="top-result-info">
         <span class="top-result-label">Top Result</span>
-        <div class="top-result-title">${escHtml(track.title)}</div>
+        <div class="top-result-title">${escHtml(track.title)}${track.explicit ? ` <span class="explicit-tag" style="margin-left:6px; opacity:0.8">${getIcon('explicit')}</span>` : ''}</div>
         <div class="top-result-meta">${escHtml(track.artist || '')}</div>
         <div class="top-result-badges" style="display:flex; gap:4px; align-items:center; margin-top:4px">
           ${b ? `<span class="quality-badge ${b.cls}">${b.label}</span>` : ''}
@@ -160,7 +162,7 @@ export function renderTrackItemHTML(t, i, currentId) {
         <div class="track-info">
           <div class="track-name-row">
             <div class="track-name${active ? ' playing' : ''}">${escHtml(t.title)}</div>
-            ${t.explicit ? `<span class="explicit-tag">E</span>` : ''}
+            ${t.explicit ? `<span class="explicit-tag">${getIcon('explicit')}</span>` : ''}
             ${isAtmos ? `<span class="atmos-badge" title="Dolby Atmos" style="opacity:0.8; font-size:12px; margin-left:2px">${getIcon('atmos')}</span>` : ''}
             ${badge ? `<span class="quality-badge ${badge.cls}">${badge.label}</span>` : ''}
           </div>
@@ -194,7 +196,7 @@ export function renderTrackList(tracks, container, currentId) {
           <div class="list-track-title-wrap">
             <img class="list-track-art" src="${escHtml(t.coverSmall || t.cover || '')}" onerror="this.src=''" alt="" loading="lazy"/>
             <div class="list-track-info">
-              <div class="list-track-title${active ? ' playing' : ''}">${escHtml(t.title)}${t.explicit ? ' <span class="explicit-tag">E</span>' : ''}${isAtmos ? ` <span class="atmos-icon-mini" style="opacity:0.7;margin-left:4px">${getIcon('atmos')}</span>` : ''}</div>
+              <div class="list-track-title${active ? ' playing' : ''}">${escHtml(t.title)}${t.explicit ? ` <span class="explicit-tag">${getIcon('explicit')}</span>` : ''}${isAtmos ? ` <span class="atmos-icon-mini" style="opacity:0.7;margin-left:4px">${getIcon('atmos')}</span>` : ''}</div>
               <div class="list-track-artist">${escHtml(t.artist || '')}</div>
             </div>
           </div>
@@ -329,7 +331,7 @@ function _queueItem(t, index, isActive) {
     <div class="npq-item${isActive ? ' active' : ''}" data-index="${index}">
       <img class="npq-art" src="${escHtml(t.coverSmall || t.cover || '')}" onerror="this.src=''" alt=""/>
       <div class="npq-info">
-        <div class="npq-title${isActive ? ' active' : ''}">${escHtml(t.title)}${isAtmos ? ` <span class="atmos-badge-q" style="opacity:0.7;font-size:10px;margin-left:4px">${getIcon('atmos')}</span>` : ''}</div>
+        <div class="npq-title${isActive ? ' active' : ''}">${escHtml(t.title)}${t.explicit ? ` <span class="explicit-tag-mini" style="opacity:0.7;font-size:10px;margin-left:4px;display:inline-flex">${getIcon('explicit')}</span>` : ''}${isAtmos ? ` <span class="atmos-badge-q" style="opacity:0.7;font-size:10px;margin-left:4px">${getIcon('atmos')}</span>` : ''}</div>
         <div class="npq-artist">${escHtml(t.artist || '')}</div>
       </div>
       ${
@@ -403,18 +405,25 @@ export function updateActiveLyric(syncedLyrics, currentTime) {
 
 export function updatePlayerPosition() {
   const container = document.querySelector('.bottom-nav-container');
-  const main = $('main-content') || $('app-content') || document.querySelector('main');
   const active = document.querySelector('.sub-page.open') || document.querySelector('.page.active');
-  const scroll = active?.querySelector('[id$="-scroll"]') || active;
-
-  if (!container || !main) return;
+  if (!container || !active) return;
 
   requestAnimationFrame(() => {
     const h = container.offsetHeight;
     const pad = h > 0 ? `${h}px` : '';
 
+    // Clear all existing paddings first
+    document.querySelectorAll('.sub-page, .page, #main-content, [id$="-scroll"]').forEach(el => el.style.paddingBottom = '');
+
+    // The specific scroll container inside the subpage OR the page itself
+    const scroll = active.querySelector('[id$="-scroll"]') || active;
     if (scroll) scroll.style.paddingBottom = pad;
-    if (main !== scroll) main.style.paddingBottom = pad;
+
+    // If it's a main page (like Home), the padding needs to push content within the main scroller
+    if (active.classList.contains('page') && !active.querySelector('[id$="-scroll"]')) {
+      const main = $('main-content');
+      if (main) main.style.paddingBottom = pad;
+    }
   });
 }
 
@@ -435,12 +444,13 @@ export function setTrackInfo(track) {
   if (barTitle) {
     barTitle.style.display = 'flex';
     barTitle.style.alignItems = 'center';
-    barTitle.style.gap = '4px';
+    barTitle.style.gap = '6px';
+    barTitle.style.minWidth = '0';
     barTitle.innerHTML =
       (track.title || '—') +
-      (track.explicit ? ` <span style="font-size:9px;font-weight:900;color:${expColor} !important;border:1.5px solid ${expColor} !important;border-radius:2px;padding:0 2px;line-height:12px;flex-shrink:0;">E</span>`
+      (track.explicit ? ` <span class="explicit-tag-mini" style="color:${expColor}; opacity:0.8; font-size:13px; display:inline-flex; flex-shrink:0">${getIcon('explicit')}</span>`
         : '') +
-      (_isAtmos(track) ? ` <span class="atmos-badge-mini" style="margin-left:4px;opacity:0.8;font-size:11px">${getIcon('atmos')}</span>` : '')
+      (_isAtmos(track) ? ` <span class="atmos-badge-mini" style="margin-left:4px;opacity:0.8;font-size:13px; flex-shrink:0">${getIcon('atmos')}</span>` : '')
   }
 
   ;['np-bg-art', 'np-artwork-img', 'np-desktop-art'].forEach((id) =>
@@ -462,16 +472,9 @@ export function setTrackInfo(track) {
 
   const npExplicitTag = $('np-explicit-tag');
   if (npExplicitTag && track.explicit) {
+    npExplicitTag.innerHTML = getIcon('explicit');
     npExplicitTag.style.cssText = `
-      display:inline-flex !important;
-      font-size:9px;
-      font-weight:900;
-      color:#ffffff !important;
-      border:1.5px solid rgba(255,255,255,0.7) !important;
-      border-radius:2px;
-      padding:0 3px;
-      line-height:14px;
-      flex-shrink:0;
+      display:inline-flex !important; color:#fff; opacity:0.8; font-size:16px; flex-shrink:0;
     `;
   } else if (npExplicitTag) {
     npExplicitTag.style.cssText = '';
@@ -624,7 +627,7 @@ export function syncLikeButtons(trackId) {
     btn.classList.toggle('liked', liked);
     btn.innerHTML = svg;
   });
-  [$('bar-like-btn'), $('np-love-btn')].forEach(btn => {
+  [$('bar-like-btn'), $('np-love-btn'), $('tsheet-preview-like'), $('np-sheet-preview-like')].forEach(btn => {
     if (btn) { btn.classList.toggle('liked', liked); btn.innerHTML = svg; }
   });
 }
@@ -664,12 +667,17 @@ export function revertThemeColor() {
   const mode = document.documentElement.getAttribute('data-theme') || 'light';
 
   const themeShades = {
+    'default':    { light: '#F5F0E8', dark: '#0E0C0A' },
     'monochrome': { light: '#F5F0E8', dark: '#1A1A1A' },
     'midnight':   { light: '#E8F0F8', dark: '#0E0C0A' },
     'purple':     { light: '#F3E8FF', dark: '#2D1B4E' },
     'emerald':    { light: '#D1FAE5', dark: '#064E3B' },
     'pink':       { light: '#FCE7F3', dark: '#831843' },
-    'default':    { light: '#F5F0E8', dark: '#0E0C0A' }
+    'lavender':   { light: '#EDE9F7', dark: '#373052' },
+    'nordic':     { light: '#E5E9F0', dark: '#242933' },
+    'ember':      { light: '#FFEDD5', dark: '#050505' },
+    'cyberpunk':  { light: '#FCE7F3', dark: '#050112' },
+    'rose-pine':  { light: '#FFFAF3', dark: '#1F1D2E' },
   };
 
   const shades = themeShades[skin] || themeShades['default'];
@@ -709,14 +717,17 @@ export function closeAllOverlays() {
 export function openMoreSheet(track) {
   const sheet = $('np-more-sheet')
   const preview = $('sheet-track-preview')
+  if (sheet) sheet.style.zIndex = '2500';
   if (!sheet) return
   if (preview && track) {
+    const liked = isLiked(track.id);
     preview.innerHTML = `
       <img src="${escHtml(track.coverSmall || track.cover || '')}" onerror="this.src=''" alt=""/>
-      <div>
-        <div class="bs-title">${escHtml(track.title)}</div>
+      <div class="bs-info" style="flex: 1">
+        <div class="bs-title">${escHtml(track.title)}${track.explicit ? ` <span class="explicit-tag-mini" style="font-size:12px; opacity:0.7; margin-left:4px">${getIcon('explicit')}</span>` : ''}</div>
         <div class="bs-artist">${escHtml(track.artist || '')}</div>
-      </div>`;
+      </div>
+      <button class="bs-preview-like" id="np-sheet-preview-like">${getIcon(liked ? 'heartFill' : 'heart')}</button>`;
     
     const actions = sheet.querySelector('.sheet-actions');
     if (actions) {

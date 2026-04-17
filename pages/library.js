@@ -4,6 +4,7 @@ import State from '../app/state.js'
 import History from '../modules/history.js'
 import * as Playlists from '../modules/playlists.js'
 import { playTrack } from '../app/playback.js'
+import { escHtml } from '../api/utils.js'
 import { updateLikedCount } from '../app/likes.js'
 import { searchTracks, getPlaylist } from '../api/index.js'
 import { searchVideos } from '../api/index.js'
@@ -14,6 +15,9 @@ import {
   attachHorizEvents,
 } from './home.js'
 import * as AlbumPage from './album.js'
+import * as PlaylistPage from './playlist.js'
+import * as MixPage from './mix.js'
+import * as VideoPage from './video.js'
 
 const $ = (id) => document.getElementById(id)
 const NEW_RELEASES_PLAYLIST_ID = '1b418bb8-90a7-4f87-901d-707993838346'
@@ -48,6 +52,11 @@ export function render() {
   const plLabel = $('playlists-count-label')
   if (plLabel)
     plLabel.textContent = `${plCount} playlist${plCount !== 1 ? 's' : ''}`
+
+  const likedPl = State.get('library.likedPlaylists') || []
+  const likedMx = State.get('library.likedMixes') || []
+  const tidalPlLabel = $('tidal-playlists-count-label')
+  if (tidalPlLabel) tidalPlLabel.textContent = `${likedPl.length + likedMx.length} item${(likedPl.length + likedMx.length) !== 1 ? 's' : ''}`
 }
 
 export async function loadNew() {
@@ -118,7 +127,12 @@ export function loadAlbums() {
   _updateSortChips('albums-sort-chips', _albumSort)
   UI.renderAlbums(albums, el)
   el._albums = albums
-  attachAlbumEvents(el)
+  el.querySelectorAll('.card-item').forEach(card => {
+    card.addEventListener('click', () => {
+      const a = el._albums[+card.dataset.index];
+      if (a) AlbumPage.open(a);
+    });
+  });
 
   // Wire sort chips
   document.querySelectorAll('#albums-sort-chips .sort-chip').forEach((btn) => {
@@ -187,16 +201,87 @@ export async function loadSongs() {
 export function loadHistory() {
   const el = $('history-list')
   if (!el) return
-  const hist = History.getAll()
-  if (!hist.length) {
+
+  // Setup clear button event listener once
+  const clearBtn = $('history-clear-btn');
+  if (clearBtn && !clearBtn._bound) {
+    clearBtn.addEventListener('click', () => {
+      if (confirm('Are you sure you want to clear your playback history?')) {
+        History.clear();
+        loadHistory();
+      }
+    });
+    clearBtn._bound = true;
+  }
+
+  const groups = History.getGrouped()
+  if (!groups.length) {
     el.innerHTML = UI.emptyState('history',
       'No history yet',
       'Play some music to see it here'
     )
     return
   }
-  UI.renderTrackList(hist, el, null)
-  attachTrackEvents(el)
+
+  el.innerHTML = ''
+  groups.forEach(g => {
+    const groupWrap = document.createElement('div')
+    groupWrap.className = 'history-group'
+    groupWrap.innerHTML = `
+      <div class="history-date-header">${escHtml(g.date)}</div>
+      ${g.tracks.length ? `
+        <div class="history-group-tracks">
+          ${g.tracks.map((t, i) => `
+            <div class="alb-track" data-index="${i}" data-tid="${escHtml(t.id)}">
+              <div class="art-track-thumb-wrap" style="position:relative; width:40px; height:40px; flex-shrink:0">
+                <img class="art-track-thumb" src="${escHtml(t.coverSmall || t.cover || '')}" onerror="this.style.display='none'" alt="" style="width:100%; height:100%; object-fit:cover; border-radius:4px"/>
+                ${t.type === 'video' ? `<div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.3); color:#fff; font-size:14px; border-radius:4px">${UI.getIcon('play')}</div>` : ''}
+              </div>
+              <div class="alb-track-info">
+                <div class="alb-track-title">${escHtml(t.title)}${t.explicit ? ` <span class="explicit-tag">${UI.getIcon('explicit')}</span>` : ''}</div>
+                <div class="alb-track-artist">${escHtml(t.artist || '')}</div>
+              </div>
+              <span class="alb-track-dur">${t.dur || ''}</span>
+            </div>`).join('')}
+        </div>` : ''}
+      ${g.collections.length ? `
+        <div class="history-collections-section">
+          <div class="history-section-label">Albums & Playlists</div>
+          <div class="history-collections-grid">
+            ${g.collections.map((c, i) => `
+              <div class="hist-col-item" data-type="${c.type}" data-idx="${i}">
+                <img src="${escHtml(c.coverSmall || c.cover || '')}" onerror="this.src=''" alt=""/>
+              </div>`).join('')}
+          </div>
+        </div>` : ''}
+    `;
+
+    const trackList = groupWrap.querySelector('.history-group-tracks');
+    if (trackList) {
+      trackList._tracks = g.tracks;
+      trackList.addEventListener('click', e => {
+        const row = e.target.closest('.alb-track');
+        if (!row) return;
+        const item = g.tracks[+row.dataset.index];
+        if (item.type === 'video') VideoPage.open(item);
+        else playTrack(g.tracks, +row.dataset.index);
+      });
+    }
+
+    groupWrap.querySelectorAll('.hist-col-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const col = g.collections[+item.dataset.idx];
+        if (col.type === 'album') AlbumPage.open(col);
+        else if (col.type === 'mix') MixPage.open(col);
+        else if (col.type === 'user-playlist') UserPlaylistPage.open(col.id);
+        else PlaylistPage.open(col);
+      });
+    });
+
+    el.appendChild(groupWrap);
+  })
+
+  import('../app/playback.js').then(m => m.refreshActiveTracks())
 }
 
 export function loadRecent() {
@@ -213,6 +298,38 @@ export function loadRecent() {
   )
   el._albums = hist
   attachAlbumAsTrackEvents(el, hist)
+}
+
+export function loadTidalPlaylists() {
+  const el = $('tidal-playlists-grid')
+  if (!el) return
+
+  const playlists = State.get('library.likedPlaylists') || []
+  const mixes = State.get('library.likedMixes') || []
+  
+  // Combine and sort by most recently liked
+  const all = [...playlists, ...mixes].sort((a, b) => {
+    return new Date(b.likedAt || 0) - new Date(a.likedAt || 0)
+  })
+
+  if (!all.length) {
+    el.innerHTML = UI.emptyState('music', 'No liked playlists or mixes', 'Heart a playlist or mix to see it here')
+    return
+  }
+
+  UI.renderAlbums(all.map(item => ({
+    cover: item.cover,
+    title: item.title,
+    artist: item.type === 'mix' ? 'Mix' : (item.description || 'Playlist')
+  })), el)
+
+  el.querySelectorAll('.card-item').forEach((card, i) => {
+    card.addEventListener('click', () => {
+      const item = all[i]
+      if (item.type === 'mix') MixPage.open(item)
+      else PlaylistPage.open(item)
+    })
+  })
 }
 
 function _updateSortChips(rowId, activeSort) {

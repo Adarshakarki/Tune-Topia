@@ -1,29 +1,24 @@
-import fs from "fs";
-import path from "path";
-import { DB_PATH, DEFAULT_DB, MAX_RECENTLY_PLAYED } from "./config.js";
+import { DEFAULT_DB, MAX_RECENTLY_PLAYED } from "./config.js";
 
 // Core 
+const STORAGE_KEY = "tune_topia_db";
 
 export function readDB() {
-  if (!fs.existsSync(DB_PATH)) {
-    fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+  const data = localStorage.getItem(STORAGE_KEY);
+  if (!data) {
     writeDB(DEFAULT_DB);
     return structuredClone(DEFAULT_DB);
   }
   try {
-    return JSON.parse(fs.readFileSync(DB_PATH, "utf-8"));
+    return JSON.parse(data);
   } catch (err) {
-    console.error("Database file corrupted. Initializing with defaults.");
+    console.error("Database corrupted in localStorage. Initializing with defaults.");
     return structuredClone(DEFAULT_DB);
   }
 }
 
 export function writeDB(data) {
-  fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
-  // Atomic write: write to temp file then rename to prevent corruption
-  const tempPath = `${DB_PATH}.tmp`;
-  fs.writeFileSync(tempPath, JSON.stringify(data, null, 2));
-  fs.renameSync(tempPath, DB_PATH);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
 /**
@@ -295,6 +290,54 @@ export function getLikedSongs() {
   const db = readDB();
   const ids = db.likedSongs.map(l => l.songId);
   return db.songs.filter(s => ids.includes(s.id));
+}
+
+// Liked Playlists (API/External)
+
+export function likePlaylist(playlist) {
+  const db = readDB();
+  if (!db.likedPlaylists) db.likedPlaylists = [];
+  const id = playlist.id || playlist.uuid;
+  if (!db.likedPlaylists.find(p => (p.id || p.uuid) === id)) {
+    db.likedPlaylists.push({ ...playlist, likedAt: new Date().toISOString() });
+    writeDB(db);
+  }
+}
+
+export function unlikePlaylist(playlistId) {
+  const db = readDB();
+  if (!db.likedPlaylists) return;
+  db.likedPlaylists = db.likedPlaylists.filter(p => (p.id || p.uuid) !== playlistId);
+  writeDB(db);
+}
+
+export function isPlaylistLiked(playlistId) {
+  const db = readDB();
+  return (db.likedPlaylists || []).some(p => (p.id || p.uuid) === playlistId);
+}
+
+// Liked Mixes
+
+export function likeMix(mix) {
+  const db = readDB();
+  if (!db.likedMixes) db.likedMixes = [];
+  const id = mix.id || mix.uuid;
+  if (!db.likedMixes.find(m => (m.id || m.uuid) === id)) {
+    db.likedMixes.push({ ...mix, likedAt: new Date().toISOString() });
+    writeDB(db);
+  }
+}
+
+export function unlikeMix(mixId) {
+  const db = readDB();
+  if (!db.likedMixes) return;
+  db.likedMixes = db.likedMixes.filter(m => (m.id || m.uuid) !== mixId);
+  writeDB(db);
+}
+
+export function isMixLiked(mixId) {
+  const db = readDB();
+  return (db.likedMixes || []).some(m => (m.id || m.uuid) === mixId);
 }
 
 // Recently Played

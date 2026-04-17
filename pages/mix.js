@@ -30,7 +30,7 @@ export function init(playTrackFn) {
     if (!_tracks.length) return;
     const randomIndex = Math.floor(Math.random() * _tracks.length);
     _playFn(_tracks, randomIndex);
-    Player.setShuffle(true);
+    if (!State.get('player.isShuffle')) Player.toggleShuffle();
     close();
   });
 
@@ -39,6 +39,25 @@ export function init(playTrackFn) {
       BulkDownloader.downloadTracks(_tracks, _mix?.title || 'Mix');
     } else {
       UI.toast('Wait for tracks to load...');
+    }
+  });
+
+  $('mix-hero-like')?.addEventListener('click', _toggleCollectionLike);
+  
+  $('mix-hero-share')?.addEventListener('click', () => {
+    if (!_mix) return;
+    const id = _mix.id || _mix.uuid;
+    const url = `https://tidal.com/mix/${id}`;
+    
+    if (navigator.share) {
+      navigator.share({
+        title: `${_mix.title} — Tune-Topia`,
+        text: _mix.description || `Check out this mix on Tune-Topia`,
+        url: url,
+      }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url);
+      UI.toast('Link copied to clipboard');
     }
   });
 }
@@ -55,11 +74,12 @@ export async function open(trackOrId) {
   _mix = null;
   _tracks = [];
 
+  _applyColor(30, 28, 38); // Apply default opaque background immediately
   UI.applyTheme(State.get('ui.themeMode'));
   $('mix-tracklist').innerHTML = UI.skeletons(10);
   page.classList.add('open');
-  document.body.style.overflow = 'hidden';
   UI.updatePlayerPosition();
+  _syncCollectionLike();
 
   try {
     let finalMixId = null;
@@ -102,6 +122,7 @@ export async function open(trackOrId) {
 
     _mix = data.mix;
     _tracks = data.tracks || [];
+    import('../modules/history.js').then(m => m.default.push(_mix, 'mix'));
 
     if (_mix?.cover) {
       UI.extractColor(_mix.cover, (r, g, b) => _applyColor(r, g, b));
@@ -124,9 +145,36 @@ export async function open(trackOrId) {
 export function close() {
   _loadingId = null;
   $('page-mix')?.classList.remove('open');
-  document.body.style.overflow = '';
   UI.revertThemeColor();
   UI.updatePlayerPosition();
+}
+
+function _toggleCollectionLike() {
+  if (!_mix) return;
+  const id = _mix.id || _mix.uuid;
+  const key = 'library.likedMixes';
+  const list = [...(State.get(key) || [])];
+
+  const idx = list.findIndex(m => (m.id || m.uuid) === id);
+  if (idx > -1) {
+    list.splice(idx, 1);
+    UI.toast('Removed from Mixes');
+  } else {
+    list.push({ ..._mix, likedAt: new Date().toISOString() });
+    UI.toast('Added to Mixes');
+  }
+  
+  State.set(key, list);
+  _syncCollectionLike();
+}
+
+function _syncCollectionLike() {
+  if (!_mix) return;
+  const id = _mix.id || _mix.uuid;
+  const list = State.get('library.likedMixes') || [];
+  const liked = list.some(m => (m.id || m.uuid) === id);
+  const btn = $('mix-hero-like');
+  if (btn) btn.innerHTML = liked ? UI.getIcon('heartFill') : UI.getIcon('heart');
 }
 
 function _applyColor(r, g, b) {

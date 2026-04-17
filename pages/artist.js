@@ -1,11 +1,13 @@
 // Artist
-import { searchArtists, searchTracks, searchAlbums, getArtistTopTracks, getArtistAlbums } from '../api/index.js'
+import { searchArtists, searchTracks, searchAlbums, getArtistTopTracks, getArtistAlbums, searchTidalVideos, searchPlaylists } from '../api/index.js'
 import { escHtml } from '../api/utils.js'
 import * as UI from '../app/ui.js'
 import { toggle, has } from '../modules/likedSongs.js'
 import { toggleArtist, hasArtist } from '../modules/library.js'
 import Queue from '../modules/queue.js'
 import * as Player from '../modules/player.js'
+import * as VideoPage from './video.js'
+import * as PlaylistPage from './playlist.js'
 
 const $ = (id) => document.getElementById(id)
 
@@ -13,20 +15,23 @@ let _artist = null, _tracks = [], _albums = [], _playFn = null, _openAlbum = nul
 
 export function init(playFn, openAlb) {
   _playFn = playFn; _openAlbum = openAlb;
-  $('artist-back-btn')?.addEventListener('click', close);
   $('artist-follow-btn')?.addEventListener('click', () => { if (_artist) { toggleArtist(_artist); _syncFollow(); } });
   $('artist-play-btn')?.addEventListener('click', () => _tracks.length && (_playFn(_tracks, 0), close()));
+  $('artist-share-btn')?.addEventListener('click', () => {
+    if (!_artist) return;
+    const slug = (_artist.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    const url = `https://tidal.com/artist/${_artist.id || ''}`;
 
-  $('artist-track-sheet-overlay')?.addEventListener('click', _closeSheet);
-  $('artist-sheet-play-next')?.addEventListener('click', () => { if (_sheetTrack) { Queue.addNext(_sheetTrack); _closeSheet(); } });
-  $('artist-sheet-add-queue')?.addEventListener('click', () => { if (_sheetTrack) { Queue.add(_sheetTrack); _closeSheet(); } });
-  $('artist-sheet-like')?.addEventListener('click', () => { if (_sheetTrack) { toggle(_sheetTrack); _syncSheetLike(); _closeSheet(); } });
-  $('artist-sheet-share')?.addEventListener('click', () => {
-    if (!_sheetTrack) return;
-    const u = _sheetTrack.source === 'youtube' ? `https://youtu.be/${_sheetTrack.id}` : `https://tidal.com/track/${_sheetTrack.id}`;
-    if (navigator.share) navigator.share({ title: `${_sheetTrack.title} — ${_sheetTrack.artist}`, url: u });
-    else navigator.clipboard.writeText(u);
-    _closeSheet();
+    if (navigator.share) {
+      navigator.share({
+        title: `${_artist.name} — Tune-Topia`,
+        text: `Check out ${_artist.name} on Tune-Topia`,
+        url: url,
+      }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url);
+      UI.toast('Link copied to clipboard');
+    }
   });
 }
 
@@ -38,6 +43,10 @@ export async function open(input) {
   _setHeader(input);
   $('artist-tracklist').innerHTML = _skelTs();
   $('artist-discography').innerHTML = _skelAbs();
+  $('artist-videos-section').style.display = 'none';
+  $('artist-mixes-section').style.display = 'none';
+  $('artist-videos-row').innerHTML = UI.skeletons(6, 'video');
+  $('artist-mixes-row').innerHTML = UI.skeletons(6, 'horiz');
   $('artist-wiki-section').style.display = 'none';
   page.classList.add('open');
 
@@ -60,7 +69,13 @@ export async function open(input) {
   }
   _syncFollow();
 
-  await Promise.allSettled([_loadTs(_artist), _loadAbs(_artist), _loadWiki(_artist.name)]);
+  await Promise.allSettled([
+    _loadTs(_artist), 
+    _loadAbs(_artist), 
+    _loadWiki(_artist.name),
+    _loadVideos(_artist.name),
+    _loadMixes(_artist.name)
+  ]);
 }
 
 export function close() {
@@ -117,6 +132,34 @@ async function _loadAbs(a) {
   }
 }
 
+async function _loadVideos(name) {
+  const s = $('artist-videos-section'), r = $('artist-videos-row');
+  if (!s || !r) return;
+  try {
+    const vids = await searchTidalVideos(name).catch(() => []);
+    if (vids.length) {
+      s.style.display = 'block';
+      UI.renderHorizCards(vids.slice(0, 15), r, 'video');
+      r.querySelectorAll('.horiz-card').forEach((el, i) => {
+        el.addEventListener('click', () => VideoPage.open(vids[i]));
+      });
+    } else s.style.display = 'none';
+  } catch { s.style.display = 'none'; }
+}
+
+async function _loadMixes(name) {
+  const s = $('artist-mixes-section'), r = $('artist-mixes-row');
+  if (!s || !r) return;
+  try {
+    const mixes = await searchPlaylists(`${name} Mix`, 10).catch(() => []);
+    if (mixes.length) {
+      s.style.display = 'block';
+      UI.renderHorizCards(mixes.slice(0, 12), r);
+      r.querySelectorAll('.horiz-card').forEach((el, i) => el.addEventListener('click', () => PlaylistPage.open(mixes[i])));
+    } else s.style.display = 'none';
+  } catch { s.style.display = 'none'; }
+}
+
 async function _loadWiki(n) {
   try {
     const r = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(n)}`);
@@ -138,18 +181,16 @@ function _renderTs(ts) {
       <span class="alb-track-num">${i + 1}</span>
       <img class="art-track-thumb" src="${escHtml(t.coverSmall || t.cover || '')}" onerror="this.style.display='none'" alt=""/>
       <div class="alb-track-info">
-        <div class="alb-track-title">${escHtml(t.title)}${t.explicit ? ' <span class="explicit-tag">E</span>' : ''}</div>
+        <div class="alb-track-title">${escHtml(t.title)}${t.explicit ? ` <span class="explicit-tag">${UI.getIcon('explicit')}</span>` : ''}</div>
         <div class="alb-track-artist">${escHtml(t.album || '')}</div>
       </div>
       <span class="alb-track-dur">${t.dur || ''}</span>
       <button class="alb-track-more" data-index="${i}">${UI.getIcon('more')}</button>
     </div>`).join('');
 
+  el._tracks = ts;
   el.querySelectorAll('.alb-track').forEach(row => {
-    row.addEventListener('click', e => !e.target.closest('.alb-track-more') && _playFn(_tracks, +row.dataset.index));
-  });
-  el.querySelectorAll('.alb-track-more').forEach(btn => {
-    btn.addEventListener('click', e => { e.stopPropagation(); _openSheet(_tracks[+btn.dataset.index]); });
+    row.addEventListener('click', e => !e.target.closest('.alb-track-more') && _playFn(ts, +row.dataset.index));
   });
 }
 
@@ -168,22 +209,6 @@ function _renderAbs(abs) {
   el.querySelectorAll('.art-album-card').forEach(card => card.addEventListener('click', () => {
     const alb = _albums.find(a => a.id === card.dataset.id); if (alb && _openAlbum) _openAlbum(alb);
   }));
-}
-
-function _openSheet(t) {
-  _sheetTrack = t;
-  const p = $('artist-sheet-preview');
-  if (p && t) p.innerHTML = `<img src="${escHtml(t.coverSmall || t.cover || '')}" onerror="this.src=''" alt=""/><div><div class="bs-title">${escHtml(t.title)}</div><div class="bs-artist">${escHtml(t.artist || '')}</div></div>`;
-  _syncSheetLike();
-  $('artist-track-sheet')?.classList.add('open');
-}
-
-const _closeSheet = () => { $('artist-track-sheet')?.classList.remove('open'); _sheetTrack = null; };
-
-function _syncSheetLike() {
-  if (!$('artist-sheet-like') || !_sheetTrack) return;
-  const l = has(_sheetTrack.id);
-  $('artist-sheet-like').innerHTML = `<i class="bi ${l ? 'bi-heart-fill' : 'bi-heart'}"></i> ${l ? 'Unlike' : 'Like'}`;
 }
 
 const _skelTs = () => Array(5).fill(0).map((_, i) => `

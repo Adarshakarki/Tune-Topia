@@ -15,11 +15,27 @@ let _album = null, _tracks = [], _sheetTrack = null, _playFn = null;
 // Init
 export function init(playTrackFn) {
   _playFn = playTrackFn;
-  $('album-back-btn')?.addEventListener('click', close);
 
   const _toggle = () => { if (_album) { toggleAlbum(_album); _syncLike(); } };
   $('album-save-btn')?.addEventListener('click', _toggle);
   $('album-hero-like')?.addEventListener('click', _toggle);
+
+  $('album-hero-share')?.addEventListener('click', () => {
+    if (!_album) return;
+    const id = _album.id;
+    const url = `https://tidal.com/album/${id}`;
+
+    if (navigator.share) {
+      navigator.share({
+        title: `${_album.title} — ${_album.artist}`,
+        text: `Check out this album on Tune-Topia`,
+        url: url,
+      }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url);
+      UI.toast('Link copied to clipboard');
+    }
+  });
 
   $('album-play-all')?.addEventListener('click', () => _tracks.length && (_playFn(_tracks, 0), close()));
   $('album-shuffle')?.addEventListener('click', () => {
@@ -37,18 +53,36 @@ export function init(playTrackFn) {
   $('album-track-sheet-overlay')?.addEventListener('click', _closeSheet);
   $('album-sheet-play-next')?.addEventListener('click', () => { if (_sheetTrack) { Queue.addNext(_sheetTrack); _closeSheet(); } });
   $('album-sheet-add-queue')?.addEventListener('click', () => { if (_sheetTrack) { Queue.add(_sheetTrack); _closeSheet(); } });
-  $('album-sheet-like')?.addEventListener('click', () => { if (_sheetTrack) { toggle(_sheetTrack); _syncSheetLike(); _closeSheet(); } });
+  
+  $('album-track-sheet')?.addEventListener('click', (e) => {
+    const likeBtn = e.target.closest('#album-preview-like');
+    if (likeBtn && _sheetTrack) {
+      e.stopPropagation();
+      toggle(_sheetTrack);
+      _syncSheetLike();
+    }
+  });
+
   $('album-sheet-share')?.addEventListener('click', () => {
     if (!_sheetTrack) return;
     const u = _sheetTrack.source === 'youtube' ? `https://youtu.be/${_sheetTrack.id}` : `https://tidal.com/track/${_sheetTrack.id}`;
-    if (navigator.share) navigator.share({ title: `${_sheetTrack.title} — ${_sheetTrack.artist}`, url: u });
-    else navigator.clipboard.writeText(u);
+    if (navigator.share) {
+      navigator.share({ 
+        title: `${_sheetTrack.title} — ${_sheetTrack.artist}`,
+        text: `Listen to "${_sheetTrack.title}" by ${_sheetTrack.artist}`,
+        url: u 
+      }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(u);
+      UI.toast('Link copied to clipboard');
+    }
     _closeSheet();
   });
 }
 
 export async function open(album) {
   _album = album; _tracks = [];
+  import('../modules/history.js').then(m => m.default.push(album, 'album'));
   const page = $('page-album'); if (!page) return;
 
   _applyColor(30, 28, 38);
@@ -141,35 +175,17 @@ function _renderTracklist(ts) {
     <div class="alb-track" data-index="${i}" data-tid="${escHtml(t.id)}">
       <span class="alb-track-num">${i + 1}</span>
       <div class="alb-track-info">
-        <div class="alb-track-title">${escHtml(t.title)}${t.explicit ? ' <span class="explicit-tag">E</span>' : ''}</div>
+        <div class="alb-track-title">${escHtml(t.title)}${t.explicit ? ` <span class="explicit-tag">${UI.getIcon('explicit')}</span>` : ''}</div>
         <div class="alb-track-artist">${escHtml(t.artist || '')}</div>
       </div>
       <span class="alb-track-dur">${t.dur || ''}</span>
       <button class="alb-track-more" data-index="${i}">${UI.getIcon('more')}</button>
     </div>`).join('');
 
+  el._tracks = ts;
   el.querySelectorAll('.alb-track').forEach(row => {
-    row.addEventListener('click', e => !e.target.closest('.alb-track-more') && _playFn(_tracks, +row.dataset.index));
+    row.addEventListener('click', e => !e.target.closest('.alb-track-more') && _playFn(ts, +row.dataset.index));
   });
-  el.querySelectorAll('.alb-track-more').forEach(btn => {
-    btn.addEventListener('click', e => { e.stopPropagation(); _openSheet(_tracks[+btn.dataset.index]); });
-  });
-}
-
-function _openSheet(t) {
-  _sheetTrack = t;
-  const p = $('album-sheet-preview');
-  if (p && t) p.innerHTML = `<img src="${escHtml(t.coverSmall || t.cover || '')}" onerror="this.src=''" alt=""/><div><div class="bs-title">${escHtml(t.title)}</div><div class="bs-artist">${escHtml(t.artist || '')}</div></div>`;
-  _syncSheetLike();
-  $('album-track-sheet')?.classList.add('open');
-}
-
-const _closeSheet = () => { $('album-track-sheet')?.classList.remove('open'); _sheetTrack = null; };
-
-function _syncSheetLike() {
-  if (!$('album-sheet-like') || !_sheetTrack) return;
-  const l = has(_sheetTrack.id);
-  $('album-sheet-like').innerHTML = `<i class="bi ${l ? 'bi-heart-fill' : 'bi-heart'}"></i> ${l ? 'Unlike' : 'Like'}`;
 }
 
 const _skeleton = () => Array(10).fill(0).map((_, i) => `

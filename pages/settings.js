@@ -14,8 +14,8 @@ const $ = (id) => document.getElementById(id)
 let _stopStatus = null
 
 function _renderCacheSize() {
-  const n = Cache.size(), el = $('cache-size-label');
-  if (el) el.textContent = n > 0 ? `${n} item${n !== 1 ? 's' : ''} cached` : 'Cache is empty';
+  const stats = Cache.getStats(), el = $('cache-size-label');
+  if (el) el.textContent = stats.usage > 0 ? `${stats.text} items cached` : 'Cache is empty';
 }
 
 // Update
@@ -158,6 +158,14 @@ async function _initEqualizers() {
   masterToggle.onclick = () => {
     const isNowEnabled = masterToggle.getAttribute('aria-checked') !== 'true';
     localStorage.setItem('tt_eq_enabled', String(isNowEnabled));
+
+    // If disabling, explicitly reset the audio processor to a flat response
+    if (!isNowEnabled) {
+      processor.resetEQ();
+      processor.resetParaEQ();
+      processor.setNormalizationGain(1.0);
+    }
+
     refreshUI();
   };
 

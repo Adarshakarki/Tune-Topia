@@ -31,25 +31,16 @@ async function _handleDownload(t) {
 export function openTrackSheet(t, opts = {}) {
   _tsTrack = t; _tsOpts = opts;
   const p = $('track-sheet-preview');
-  if (p) {
-    p.innerHTML = ''; // Clear existing
-    const img = document.createElement('img');
-    img.src = t.coverSmall || t.cover || '';
-    img.onerror = () => { img.src = ''; };
-    
-    const info = document.createElement('div');
-    const title = document.createElement('div');
-    title.className = 'bs-title'; title.textContent = t.title;
-    const artist = document.createElement('div');
-    artist.className = 'bs-artist'; artist.textContent = t.artist || '';
-    info.append(title, artist);
-    p.append(img, info);
+  if (p && t) {
+    const liked = isLiked(t.id);
+    p.innerHTML = `
+      <img src="${escHtml(t.coverSmall || t.cover || '')}" onerror="this.src=''" alt=""/>
+      <div class="bs-info" style="flex: 1">
+        <div class="bs-title">${escHtml(t.title)}</div>
+        <div class="bs-artist">${escHtml(t.artist || '')}</div>
+      </div>
+      <button class="bs-preview-like" id="tsheet-preview-like">${UI.getIcon(liked ? 'heartFill' : 'heart')}</button>`;
   }
-
-  const l = isLiked(t.id), btn = $('tsheet-like'), lbl = $('tsheet-like-label');
-  if (btn) btn.classList.toggle('liked', l);
-  if (lbl) lbl.textContent = l ? 'Unlike' : 'Like';
-  if (btn) btn.innerHTML = l ? UI.getIcon('heartFill') : UI.getIcon('heart');
 
   const show = (id, v) => { const e = $(id); if (e) e.style.display = v ? '' : 'none'; };
   const visibility = {
@@ -90,23 +81,54 @@ function _setSleep(m) {
 const _closeQS = () => { $('np-queue-item-sheet')?.classList.remove('open'); _qIdx = -1; };
 const _refQ = () => UI.renderQueue(State.get('queue.tracks') || [], State.get('player.queuePosition') || 0);
 
+const _syncGlobalSheetLike = () => {
+  const btn = $('tsheet-preview-like');
+  if (!btn || !_tsTrack) return;
+  btn.innerHTML = UI.getIcon(isLiked(_tsTrack.id) ? 'heartFill' : 'heart');
+};
+
 export function initEvents() {
   document.addEventListener('click', e => {
-    const b = e.target.closest('.track-more-btn'); if (!b) return; e.stopPropagation();
-    const w = b.closest('[data-index]'), idx = parseInt(w?.dataset.index), t = w?.parentElement?._tracks?.[idx];
-    if (t) openTrackSheet(t);
+    const b = e.target.closest('.track-more-btn, .alb-track-more, .upl-track-more'); 
+    if (!b) return; 
+    e.stopPropagation();
+    
+    const row = b.closest('[data-index]');
+    if (!row) return;
+    let container = row.parentElement;
+    while (container && !container._tracks) {
+      container = container.parentElement;
+    }
+    
+    const track = container?._tracks?.[parseInt(row.dataset.index)];
+    if (track) openTrackSheet(track);
   }, true);
 
   $('track-sheet-overlay')?.addEventListener('click', _closeTS);
-  $('tsheet-like')?.addEventListener('click', () => {
-    if (!_tsTrack) return; onLike(_tsTrack);
-    const l = isLiked(_tsTrack.id), btn = $('tsheet-like'), lbl = $('tsheet-like-label');
-    if (btn) btn.classList.toggle('liked', l); if (lbl) lbl.textContent = l ? 'Unlike' : 'Like';
-    if (btn) btn.innerHTML = l ? UI.getIcon('heartFill') : UI.getIcon('heart');
+  
+  $('track-options-sheet')?.addEventListener('click', (e) => {
+    const likeBtn = e.target.closest('#tsheet-preview-like');
+    if (likeBtn && _tsTrack) {
+      e.stopPropagation();
+      onLike(_tsTrack);
+      _syncGlobalSheetLike();
+      UI.syncLikeButtons(_tsTrack.id);
+    }
   });
 
   $('tsheet-add-queue')?.addEventListener('click', () => { if (_tsTrack) { Queue.addNext(_tsTrack); UI.toast('Added to queue'); _closeTS(); } });
-  $('tsheet-add-playlist')?.addEventListener('click', () => { if (_tsTrack) { _closeTS(); setTimeout(() => openPicker(_tsTrack), 300); } });
+  $('tsheet-add-playlist')?.addEventListener('click', () => { 
+    if (_tsTrack) { 
+      const t = _tsTrack;
+      _closeTS(); 
+      setTimeout(() => {
+        openPicker(t);
+        // Ensure picker is above the player
+        const picker = $('playlist-picker-sheet');
+        if (picker) picker.style.zIndex = '3000';
+      }, 300); 
+    } 
+  });
 
   const _go = (path, fn) => {
     if (!_tsTrack) return; const t = _tsTrack; _closeTS();
@@ -120,6 +142,10 @@ export function initEvents() {
   $('tsheet-go-album')?.addEventListener('click', () => _go('../pages/album.js', (m, t) => t.albumId ? m.open({ id: t.albumId, title: t.album, cover: t.cover, artist: t.artist }) : UI.toast('Album info not available')));
 
   $('tsheet-download')?.addEventListener('click', () => { if (_tsTrack) { const t = _tsTrack; _closeTS(); _handleDownload(t); } });
+  
+  $('tsheet-share')?.addEventListener('click', () => {
+    if (_tsTrack) { const t = _tsTrack; _closeTS(); _share(t); }
+  });
 
   $('tsheet-move-up')?.addEventListener('click', () => { _tsOpts.onMoveUp?.(); _closeTS(); });
   $('tsheet-move-down')?.addEventListener('click', () => { _tsOpts.onMoveDown?.(); _closeTS(); });
@@ -141,6 +167,18 @@ export function initEvents() {
   }));
 
   $('np-more-sheet-overlay')?.addEventListener('click', UI.closeMoreSheet);
+  
+  $('np-more-sheet')?.addEventListener('click', (e) => {
+    const likeBtn = e.target.closest('#np-sheet-preview-like');
+    const track = $('np-more-sheet')._currentTrack;
+    if (likeBtn && track) {
+      e.stopPropagation();
+      onLike(track);
+      likeBtn.innerHTML = UI.getIcon(isLiked(track.id) ? 'heartFill' : 'heart');
+      UI.syncLikeButtons(track.id);
+    }
+  });
+
   $('sheet-add-queue')?.addEventListener('click', () => { const t = Player.getCurrentTrack(); if (t) { Queue.addNext(t); UI.toast('Added to queue'); UI.closeMoreSheet(); } });
 
   const _share = t => {

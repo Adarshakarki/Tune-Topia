@@ -19,11 +19,11 @@
 
   --z-player-bar-container: 200;
 
-  --z-sheet:      300;
-  --z-modal:      350;
-  --z-picker:     400;
-
   --z-fullscreen: 500;
+
+  --z-sheet:      600;
+  --z-modal:      700;
+  --z-picker:     800;
 
   --z-toast:      1000;
 }

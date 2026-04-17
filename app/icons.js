@@ -46,6 +46,8 @@ const ICON_MAP = {
   github: 'github',
   google: 'google',
   warning: 'cone-striped',
+  explicit: 'explicit-fill',
+  album:'vinyl',
 };
 
 export function getIcon(name) {

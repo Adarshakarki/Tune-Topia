@@ -20,6 +20,7 @@ const PRECACHE = [
   'style/library.css',
   'style/search.css',
   'style/settings.css',
+  'style/history.css',
   'style/account.css',
   'style/capsule.css',
   'style/modals.css',
@@ -36,6 +37,7 @@ const PRECACHE = [
   'app/playerEvents.js',
   'app/icons.js',
   'modules/theme.js',
+  'modules/animatedArtwork.js',
   'app/constants.js',
   'assets/logo.JPEG',
 ]

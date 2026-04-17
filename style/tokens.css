@@ -75,11 +75,13 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-html { height: 100%; }
+html { 
+  height: auto; }
 
 body {
-  height: 100%;
-  overflow: hidden;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-secondary);

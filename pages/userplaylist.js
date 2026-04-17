@@ -49,12 +49,29 @@ export function init(playFn, onRemove) {
   })
 
   $('upl-filter-input')?.addEventListener('input', _render)
+
+  $('upl-hero-share')?.addEventListener('click', () => {
+    if (!_currentPlaylist) return;
+    const url = `${window.location.origin}${window.location.pathname}?p=user-playlist&id=${_currentPlaylist.id}`;
+    
+    if (navigator.share) {
+      navigator.share({
+        title: `${_currentPlaylist.name} — Tune-Topia`,
+        text: _currentPlaylist.description || `Check out my playlist on Tune-Topia`,
+        url: url,
+      }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url);
+      UI.toast('Link copied to clipboard');
+    }
+  });
 }
 
 export function open(playlistId) {
   const pl = Playlists.get(playlistId)
   if (!pl) return
 
+  import('../modules/history.js').then(m => m.default.push(pl, 'user-playlist'));
   _currentPlaylist = pl
   _sortMode = 'default'
   
@@ -116,7 +133,7 @@ function _render() {
     <div class="track-card upl-track" data-index="${i}" data-tid="${escHtml(t.id)}">
       <img class="track-thumb" src="${escHtml(t.cover || '')}" alt="" onerror="this.style.display='none'"/>
       <div class="track-info">
-        <div class="track-name">${escHtml(t.title)}</div>
+        <div class="track-name">${escHtml(t.title)}${t.explicit ? ` <span class="explicit-tag">${UI.getIcon('explicit')}</span>` : ''}</div>
         <div class="track-meta">${escHtml(t.artist)}</div>
       </div>
       <button class="upl-track-more track-more-btn-local">

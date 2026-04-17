@@ -184,21 +184,23 @@
 #page-playlist[data-light='true'] #pl-play-all    { background: oklch(0.15 0 0 / 0.85); color: oklch(1 0 0); }
 #page-playlist[data-light='true'] #pl-shuffle-btn { background: oklch(0.15 0 0 / 0.1); color: oklch(0.15 0 0 / 0.8); }
 
-.horiz-scroll { overflow: hidden; width: 100%; }
+.horiz-scroll { overflow-x: auto; width: 100%; -webkit-overflow-scrolling: touch; }
 .horiz-inner {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
-  overflow-x: auto;
-  overflow-y: hidden;
   align-items: flex-start;
   gap: var(--s3);
   padding: 0 var(--s4) var(--s2);
-  scrollbar-width: none;
-  -ms-overflow-style: none;
 }
-.horiz-inner::-webkit-scrollbar { display: none; }
-.horiz-card { flex-shrink: 0; width: 130px; height: auto; align-self: flex-start; }
+
+/* Hide scrollbars on mobile but keep them thin on Desktop for usability */
+@media (max-width: 650px) {
+  .horiz-scroll { scrollbar-width: none; }
+  .horiz-scroll::-webkit-scrollbar { display: none; }
+}
+
+.horiz-card { flex-shrink: 0; width: 130px; height: auto; align-self: flex-start; scroll-snap-align: start; }
 .horiz-card .horiz-art    { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; height: auto; border-radius: var(--r-md); }
 .horiz-card .horiz-title  { font-size: 12px; font-weight: 600; margin-top: 6px; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .horiz-card .horiz-sub    { font-size: 11px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

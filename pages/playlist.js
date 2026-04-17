@@ -1,8 +1,9 @@
 // Playlist
 import { getPlaylist } from '../api/index.js'
 import { escHtml } from '../api/utils.js'
-import { extractColor } from '../app/ui.js'
+import * as UI from '../app/ui.js'
 import { toggle, has } from '../modules/likedSongs.js'
+import State from '../app/state.js'
 import Queue from '../modules/queue.js'
 import * as Player from '../modules/player.js'
 import * as BulkDownloader from '../modules/bulkdownloader.js'
@@ -15,8 +16,6 @@ let _sortMode = 'default' // Sorting
 
 export function init(playTrackFn) {
   _playFn = playTrackFn
-
-  $('pl-back-btn')?.addEventListener('click', close)
   $('pl-play-all')?.addEventListener('click', () => {
     if (_tracks.length) {
       _playFn(_tracks, 0);
@@ -49,30 +48,30 @@ export function init(playTrackFn) {
     else UI.toast('Wait for tracks to load...');
   })
 
-  const _share = (url) => {
-    if (navigator.share)
+  $('pl-hero-like')?.addEventListener('click', _toggleCollectionLike)
+  $('pl-hero-share')?.addEventListener('click', () => {
+    if (!_collection) return;
+    const type = _collection.type === 'mix' ? 'mix' : 'playlist';
+    const id = _collection.id || _collection.uuid;
+    const url = `https://tidal.com/${type}/${id}`;
+    
+    if (navigator.share) {
       navigator.share({
-        title: `${_sheetTrack.title} — ${_sheetTrack.artist}`,
-        url,
-      })
-    else navigator.clipboard.writeText(url)
-    _closeSheet()
-  }
-
-  $('pl-track-sheet-overlay')?.addEventListener('click', _closeSheet)
-  $('pl-sheet-play-next')?.addEventListener('click', () => { if (_sheetTrack) { Queue.addNext(_sheetTrack); _closeSheet(); } })
-  $('pl-sheet-add-queue')?.addEventListener('click', () => { if (_sheetTrack) { Queue.add(_sheetTrack); _closeSheet(); } })
-  $('pl-sheet-like')?.addEventListener('click', () => { if (_sheetTrack) { toggle(_sheetTrack); _syncSheetLike(); _closeSheet(); } })
-  $('pl-sheet-share')?.addEventListener('click', () => {
-    if (!_sheetTrack) return
-    const url = _sheetTrack.source === 'youtube' ? `https://youtu.be/${_sheetTrack.id}` : `https://tidal.com/track/${_sheetTrack.id}`
-    _share(url);
+        title: `${_collection.title} — Tune-Topia`,
+        text: _collection.description || `Check out this ${type} on Tune-Topia`,
+        url: url,
+      }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url);
+      UI.toast('Link copied to clipboard');
+    }
   })
 }
 
 export async function open(playlist) {
   // Normalize input: handle both ID strings and result objects
   _collection = typeof playlist === 'object' ? playlist : { id: playlist };
+  import('../modules/history.js').then(m => m.default.push(_collection, 'playlist'));
   const playlistId = _collection.id || _collection.uuid;
 
   _tracks = []
@@ -83,9 +82,10 @@ export async function open(playlist) {
   _setHeader(_collection)
   $('pl-tracklist').innerHTML = _skeleton()
   page.classList.add('open')
+  _syncCollectionLike()
 
   if (playlist.cover)
-    extractColor(playlist.cover, (r, g, b) => _applyColor(r, g, b))
+    UI.extractColor(playlist.cover, (r, g, b) => _applyColor(r, g, b))
 
   if (playlist.tracks?.length) {
     _tracks = playlist.tracks
@@ -107,6 +107,40 @@ export async function open(playlist) {
 
 export function close() {
   $('page-playlist')?.classList.remove('open')
+  UI.revertThemeColor();
+  UI.updatePlayerPosition();
+}
+
+function _toggleCollectionLike() {
+  if (!_collection) return;
+  const id = _collection.id || _collection.uuid;
+  const isMix = _collection.type === 'mix';
+  const key = isMix ? 'library.likedMixes' : 'library.likedPlaylists';
+  const list = [...(State.get(key) || [])];
+
+  const idx = list.findIndex(p => (p.id || p.uuid) === id);
+  if (idx > -1) {
+    list.splice(idx, 1);
+    UI.toast(`Removed from ${isMix ? 'Mixes' : 'Library'}`);
+  } else {
+    list.push({ ..._collection, likedAt: new Date().toISOString() });
+    UI.toast(`Added to ${isMix ? 'Mixes' : 'Library'}`);
+  }
+  
+  State.set(key, list);
+  _syncCollectionLike();
+}
+
+function _syncCollectionLike() {
+  if (!_collection) return;
+  const id = _collection.id || _collection.uuid;
+  const isMix = _collection.type === 'mix';
+  const key = isMix ? 'library.likedMixes' : 'library.likedPlaylists';
+  const list = State.get(key) || [];
+  
+  const liked = list.some(p => (p.id || p.uuid) === id);
+  const btn = $('pl-hero-like');
+  if (btn) btn.innerHTML = liked ? UI.getIcon('heartFill') : UI.getIcon('heart');
 }
 
 function _applyColor(r, g, b) {
@@ -187,19 +221,16 @@ function _renderTracklist(filteredTracks) {
       <span class="alb-track-num">${i + 1}</span>
       <img class="art-track-thumb" src="${escHtml(t.coverSmall || t.cover || '')}" onerror="this.style.display='none'" alt=""/>
       <div class="alb-track-info">
-        <div class="alb-track-title">${escHtml(t.title)}${t.explicit ? ' <span class="explicit-tag">E</span>' : ''}</div>
+        <div class="alb-track-title">${escHtml(t.title)}${t.explicit ? ` <span class="explicit-tag">${UI.getIcon('explicit')}</span>` : ''}</div>
         <div class="alb-track-artist">${escHtml(t.artist || '')}</div>
       </div>
       <span class="alb-track-dur">${t.dur || ''}</span>
-      <button class="alb-track-more" data-index="${i}"><i class="bi bi-three-dots"></i></button>
+      <button class="alb-track-more" data-index="${i}">${UI.getIcon('more')}</button>
     </div>`).join('')
 
+  el._tracks = tracks;
   el.querySelectorAll('.alb-track').forEach((row) => {
-    row.addEventListener('click', (e) => { if (!e.target.closest('.alb-track-more')) _playFn(_tracks, +row.dataset.index) })
-  })
-
-  el.querySelectorAll('.alb-track-more').forEach((btn) => {
-    btn.addEventListener('click', (e) => { e.stopPropagation(); _openSheet(_tracks[+btn.dataset.index]); })
+    row.addEventListener('click', (e) => { if (!e.target.closest('.alb-track-more')) _playFn(tracks, +row.dataset.index) })
   })
 }
 
@@ -210,24 +241,4 @@ function _openTrackOptions(track) {
   });
 }
 
-function _openSheet(track) {
-  _sheetTrack = track
-  const p = $('pl-sheet-preview')
-  if (p && track) {
-    p.innerHTML = `
-    <img src="${escHtml(track.coverSmall || track.cover || '')}" onerror="this.src=''" alt=""/>
-    <div><div class="bs-title">${escHtml(track.title)}</div><div class="bs-artist">${escHtml(track.artist || '')}</div></div>`
-  }
-  _syncSheetLike()
-  $('pl-track-sheet')?.classList.add('open')
-}
-
-const _closeSheet = () => { $('pl-track-sheet')?.classList.remove('open'); _sheetTrack = null; }
-
-const _syncSheetLike = () => {
-  const btn = $('pl-sheet-like')
-  if (!btn || !_sheetTrack) return
-  const liked = has(_sheetTrack.id)
-  btn.innerHTML = `<i class="bi ${liked ? 'bi-heart-fill' : 'bi-heart'}"></i> ${liked ? 'Unlike' : 'Like'}`
-}
 const _skeleton = () => Array(10).fill(0).map((_, i) => `<div class="alb-track alb-track-skel"><span class="alb-track-num">${i + 1}</span><div class="alb-track-info"><div class="skeleton" style="height:13px;width:${50 + Math.random() * 35}%;border-radius:6px;margin-bottom:6px"></div><div class="skeleton" style="height:11px;width:${25 + Math.random() * 20}%;border-radius:6px"></div></div></div>`).join('')

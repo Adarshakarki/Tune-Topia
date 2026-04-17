@@ -1,0 +1,32 @@
+:root[data-skin='cyberpunk'] {
+  --bg: #0d0221;
+  --bg-shell: #050112;
+  --surface: #1a0b2e;
+  --surface-2: #240b36;
+  --surface-3: #2f0b4a;
+  --accent: #ff00ff;
+  --accent-dim: rgba(255, 0, 255, 0.15);
+  --text: #00ffff;
+  --text-2: #ff00ff;
+  --text-3: #700070;
+  --border: rgba(0, 255, 255, 0.1);
+  --sidebar-bg: #050112;
+  --player-bg: rgba(13, 2, 33, 0.95);
+  --r-lg: 8px;
+}
+
+:root[data-skin='cyberpunk'][data-theme='light'] {
+  --bg: #fdf2f8;
+  --bg-shell: #fce7f3;
+  --surface: #ffffff;
+  --surface-2: #fbcfe8;
+  --surface-3: #f9a8d4;
+  --accent: #db2777;
+  --accent-dim: rgba(219, 39, 119, 0.1);
+  --text: #500724;
+  --text-2: #db2777;
+  --text-3: #f472b6;
+  --sidebar-bg: #fff1f2;
+  --player-bg: #ffffff;
+  --glass: #ffffff;
+}

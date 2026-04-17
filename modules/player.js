@@ -10,6 +10,7 @@ import {
   searchTracks,
 } from '../api/index.js'
 import { getAudioStream as ytStream, searchVideos } from '../api/index.js'
+import * as AnimatedArtwork from './animatedArtwork.js'
 
 // Audio
 export const audioA = document.getElementById('audio')
@@ -265,6 +266,11 @@ function _swapToPreloaded() {
   Queue.advance(1);
   State.set('player.currentTrack', track); _emit('trackChanged', track);
   _emit('queueUpdated', { tracks: State.get('queue.tracks'), position: State.get('player.queuePosition') });
+
+  AnimatedArtwork.getAnimatedUrl(track).then(url => {
+    _emit('animatedArtworkAvailable', { trackId: track.id, url });
+  });
+
   History.push(track); _updateMediaSession(track);
 
   _preloaded = null; _preloading = false; _swapping = false;
@@ -324,6 +330,19 @@ export async function play(track, tracks, startIndex = 0) {
   State.set('player.currentTrack', track);
   _emit('trackChanged', track);
 
+AnimatedArtwork.getAnimatedUrl(track)
+  .then((url) => {
+    console.log('[ARTWORK PROMISE RESULT]', url);
+
+    _emit('animatedArtworkAvailable', {
+      trackId: track.id,
+      url: url
+    });
+  })
+  .catch((err) => {
+    console.error('[ARTWORK PROMISE ERROR]', err);
+  });
+
   try {
     const stream = await _getStream(track)
     if (stream.type === 'dash') {
@@ -357,9 +376,25 @@ export async function startRadio(track = null) {
 }
 
 export async function toggle() {
-  if (!_active.src && !_dash) return
-  await processor.resume();
-  State.get('player.isPlaying') ? _active.pause() : await _active.play()
+  const hasSource = _active.src && _active.src !== window.location.href;
+  if (!hasSource && !_dash) return;
+
+  try {
+    await processor.resume();
+    if (State.get('player.isPlaying')) {
+      _active.pause();
+    } else {
+      const playPromise = _active.play();
+      if (playPromise !== undefined) {
+        await playPromise;
+      }
+    }
+  } catch (err) {
+    console.warn('[Player] Toggle playback failed:', err);
+    // Sync state if playback failed to start
+    State.set('player.isPlaying', false);
+    _emit('playStateChanged', false);
+  }
 }
 
 export async function next() {
@@ -442,6 +477,48 @@ function _pauseVideo() {
   const vp = document.getElementById('vp-video')
   if (vp && !vp.paused) vp.pause()
 }
+
+on('playStateChanged', (playing) => {
+  const videos = document.querySelectorAll('.aa-video');
+  videos.forEach(v => {
+    if (playing) {
+      v.play().catch(() => {});
+      v.style.transform = 'scale(1.05)';
+      v.style.filter = 'brightness(1)';
+    } else {
+      v.pause();
+      v.style.transform = 'scale(1)';
+      v.style.filter = 'brightness(0.8)';
+    }
+  });
+});
+
+on('animatedArtworkAvailable', ({ trackId, url }) => {
+  console.log('[ARTWORK EVENT]', { trackId, url });
+
+  const current = getCurrentTrack();
+  if (!current) return;
+
+  if (String(current.id) !== String(trackId)) return;
+
+  const img = document.getElementById('np-artwork-img');
+
+  const container =
+    img?.parentElement ||
+    document.querySelector('.now-playing-artwork');
+
+  if (!container) {
+    console.warn('[ARTWORK] No container found');
+    return;
+  }
+
+  console.log('[ARTWORK] Updating UI');
+  if (!url) {
+  console.log('[ARTWORK] No animated URL → keeping image');
+  return;
+}
+  AnimatedArtwork.updateDisplay(container, url, State.get('player.isPlaying'));
+});
 
 // UI
 const _npPanel = document.getElementById('now-playing');

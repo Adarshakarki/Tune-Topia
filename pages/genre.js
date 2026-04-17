@@ -84,7 +84,7 @@ function _render({ pls, albs, ts }) {
         <span class="alb-track-num">${i + 1}</span>
         <img class="art-track-thumb" src="${escHtml(t.coverSmall)}" onerror="this.style.display='none'"/>
         <div class="alb-track-info">
-          <div class="alb-track-title">${escHtml(t.title)}${t.explicit ? ' <span class="explicit-tag">E</span>' : ''}</div>
+          <div class="alb-track-title">${escHtml(t.title)}${t.explicit ? ` <span class="explicit-tag">${UI.getIcon('explicit')}</span>` : ''}</div>
           <div class="alb-track-artist">${escHtml(t.artist)}</div>
         </div>
         <span class="alb-track-dur">${t.dur}</span>

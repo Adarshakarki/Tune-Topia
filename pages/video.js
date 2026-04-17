@@ -3,6 +3,7 @@ import { getTidalVideoStream } from '../api/index.js'
 import * as UI from '../app/ui.js'
 import { getVideoStream as getYTVideoStream } from '../api/index.js'
 import * as Router from '../app/router.js'
+import History from '../modules/history.js'
 import { toggle as toggleLike, isLiked } from './likedVideos.js'
 
 const PAGE_ID = 'page-video'
@@ -102,6 +103,7 @@ export async function open(track) {
   _current = track
   const video = $('vp-video')
   if (!video) return
+  History.push(track, 'video');
 
   _destroyHls()
   video.src = ''
@@ -228,7 +230,11 @@ function _bindControls() {
   })
 
   $('vp-play-btn').addEventListener('click', () => {
-    video.paused ? video.play() : video.pause()
+    if (video.paused) {
+      video.play().catch(err => console.warn('[Video] Playback failed:', err));
+    } else {
+      video.pause();
+    }
   })
 
   $('vp-seek-back').addEventListener('click', () => {
@@ -283,7 +289,11 @@ function _bindControls() {
   $('vp-wrap')?.addEventListener('touchstart', _showCtrls, { passive: true })
   $('vp-video-wrap')?.addEventListener('click', () => {
     _showCtrls()
-    video.paused ? video.play() : video.pause()
+    if (video.paused) {
+      video.play().catch(err => console.warn('[Video] Playback failed:', err));
+    } else {
+      video.pause();
+    }
   })
 
   video.addEventListener('play', () => { _setPlayIcon(true); _showCtrls(); _pauseMusic() })

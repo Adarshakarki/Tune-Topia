@@ -4,6 +4,11 @@
     { "id": "midnight", "name": "Midnight Blue" },
     { "id": "purple", "name": "Purple Rain" },
     { "id": "emerald", "name": "Emerald Forest" },
-    { "id": "pink", "name": "Pink Blossom" }
+    { "id": "pink", "name": "Pink Blossom" },
+    { "id": "lavender", "name": "Lavender Fields" },
+    { "id": "nordic", "name": "Nordic" },
+    { "id": "cyberpunk", "name": "Cyberpunk" },
+    { "id": "ember", "name": "Ember" },
+    { "id": "rose-pine", "name": "Rose Pine" }
   ]
 }

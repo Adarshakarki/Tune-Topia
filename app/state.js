@@ -16,7 +16,7 @@ const State = (() => {
     },
     queue: { tracks: [], played: [], upcoming: [], priorityOffset: 0 },
     search: { query: '', activeTab: 'music', isLoading: false, topResult: null, results: [], mood: null },
-    library: { likedSongs: [], savedAlbums: [], followedArtists: [], playlists: [], likedVideos: [] },
+    library: { likedSongs: [], savedAlbums: [], followedArtists: [], playlists: [], likedVideos: [], likedPlaylists: [], likedMixes: [] },
     ui: { theme: 'default', themeMode: 'light', fontPrimaryLink: '', fontSecondaryLink: '', activePage: 'home', npOpen: false, queuePanelOpen: false, lyricsPanelOpen: false }
   }, _subs = {};
 
@@ -25,6 +25,8 @@ const State = (() => {
     'user.name': 'tt_username', 'user.pfp': 'tt_pfp',
     'user.cover': 'tt_cover', 'user.bio': 'tt_bio', 'user.socials': 'tt_socials',
     'library.likedSongs': 'tt_liked', 'library.savedAlbums': 'tt_albums',
+    'library.likedPlaylists': 'tt_liked_playlists',
+    'library.likedMixes': 'tt_liked_mixes',
     'library.followedArtists': 'tt_artists', 'library.playlists': 'tt_playlists',
     'library.likedVideos': 'tt_liked_videos', 'queue.tracks': 'tt_queue',
     'queue.priorityOffset': 'tt_priority_offset',
