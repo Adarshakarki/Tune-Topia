@@ -656,7 +656,7 @@ export function openPlayer() {
   const np = $('now-playing');
   if (np) {
     np.classList.add('open');
-    document.body.style.overflow = 'hidden';
+    document.body.classList.add('scroll-locked');
   }
 }
 
@@ -694,7 +694,7 @@ export function closePlayer() {
     .querySelectorAll('.np-overlay')
     .forEach((p) => p.classList.remove('open'))
   $('now-playing')?.classList.remove('open')
-  document.body.style.overflow = '';
+  document.body.classList.remove('scroll-locked');
   revertThemeColor()
 }
 
@@ -710,7 +710,7 @@ export function closePanel(id) {
 
 export function closeAllOverlays() {
   $('now-playing')?.classList.remove('open');
-  document.body.style.overflow = '';
+  document.body.classList.remove('scroll-locked');
   document.querySelectorAll('.np-overlay').forEach(p => p.classList.remove('open'));
   const subpages = ['page-album', 'page-artist', 'page-playlist', 'page-mix', 'page-genre', 'page-user-playlist', 'page-liked-videos'];
   subpages.forEach(id => $(id)?.classList.remove('open', 'stacked'));

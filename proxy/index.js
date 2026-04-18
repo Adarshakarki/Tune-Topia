@@ -197,7 +197,10 @@ app.get('/proxy', async (req, res) => {
       validateStatus: () => true,
       headers: {
         'User-Agent': 'TuneTopiaProxy/1.0',
-        Accept: '*/*',
+        'Accept': '*/*',
+        'origin': 'https://listen.tidal.com',
+        'Referer': 'https://listen.tidal.com/',
+        'Range': req.headers.range || 'bytes=0-',
       },
     })
 

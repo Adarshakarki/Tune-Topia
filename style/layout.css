@@ -3,6 +3,12 @@
   min-height: 100dvh;
   flex-direction: column;
   overflow: visible;
+  overscroll-behavior-y: contain;
+}
+
+body.scroll-locked {
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 #sidebar {

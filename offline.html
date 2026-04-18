@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>Tune Topia</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <style>
+    :root {
+      --bg: #0e0c0a;
+      --surface: #1a1a1a;
+      --surface-2: #242424;
+      --surface-3: oklch(1 0 0 / 0.1);
+      --text: #ffffff;
+      --text-2: oklch(1 0 0 / 0.72);
+      --text-3: oklch(1 0 0 / 0.55);
+      --accent: #ffffff;
+      --accent-dim: oklch(1 0 0 / 0.12);
+      --nav-h: 60px;
+      --r-lg: 16px;
+      --r-md: 10px;
+      --r-xl: 24px;
+      --r-full: 9999px;
+      --font-primary: 'Playfair Display', serif;
+      --snap: cubic-bezier(0.4, 0, 0.2, 1);
+      --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+      
+      --s1: 2px; --s2: 4px; --s3: 8px; --s4: 12px; --s5: 16px; --s6: 24px; --s10: 48px;
+
+      --glass: #161412;
+      --blur: blur(20px);
+      --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #F5F0E8;
+        --surface: #ffffff;
+        --text: #000;
+        --text-2: oklch(0 0 0 / 0.72);
+        --text-3: oklch(0 0 0 / 0.55);
+        --surface-2: #e8e0d5;
+        --glass: #F5F0E8;
+        --accent: #000000;
+        --accent-dim: oklch(0 0 0 / 0.12);
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    /* Mock App Shell */
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: max(env(safe-area-inset-top, 0px), var(--s5)) var(--s5) var(--s3);
+      background: var(--bg);
+    }
+
+    .greeting {
+      font-family: var(--font-primary);
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .page-header-right {
+      display: flex;
+      gap: var(--s2);
+    }
+
+    .icon-btn-mock {
+      width: 36px;
+      height: 36px;
+      background: var(--surface-2);
+      border-radius: 50%;
+    }
+
+    #main-content {
+      flex: 1;
+      padding: 0 0 var(--s6);
+      opacity: 0.2;
+    }
+
+    .hero-inner {
+      margin: 0 var(--s5);
+      height: 180px;
+      background: var(--surface-2);
+      border-radius: var(--r-xl);
+      margin-bottom: var(--s6);
+    }
+
+    .section-title {
+      font-family: var(--font-primary);
+      font-size: 20px;
+      margin: 0 var(--s5) var(--s4);
+      height: 20px;
+      width: 140px;
+      background: var(--surface-2);
+      border-radius: 4px;
+    }
+
+    .horiz-inner {
+      display: flex;
+      gap: var(--s4);
+      padding: 0 var(--s5);
+    }
+
+    .horiz-card {
+      width: 140px;
+      height: 140px;
+      background: var(--surface-2);
+      border-radius: var(--r-md);
+      flex-shrink: 0;
+    }
+
+    /* Shimmer Effect */
+    .shimmer {
+      position: relative;
+      overflow: hidden;
+      background: var(--surface-2) !important;
+    }
+    .shimmer::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      transform: translateX(-100%);
+      background: linear-gradient(90deg, transparent, var(--surface-3), transparent);
+      animation: shimmer 2s infinite;
+    }
+    @keyframes shimmer { 100% { transform: translateX(100%); } }
+
+    .bottom-nav-container {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-bottom: max(env(safe-area-inset-bottom, 0px), 14px);
+      gap: 10px;
+    }
+
+    #bottom-nav {
+      display: flex;
+      align-items: center;
+      width: calc(100% - 16px);
+      max-width: 540px;
+      background: color-mix(in oklch, var(--glass), transparent 8%);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      border-radius: var(--r-xl);
+      height: var(--nav-h);
+      box-shadow: var(--shadow-lg);
+      padding: 0 8px;
+    }
+
+    .nav-btn {
+      position: relative;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--s1);
+      color: var(--text-3);
+      height: var(--nav-h);
+    }
+    .nav-btn i { font-size: 20px; }
+    .nav-btn span { font-size: 10px; font-weight: 600; }
+    .nav-btn.active { color: var(--accent); }
+    .nav-btn.active::before {
+      content: '';
+      position: absolute;
+      inset: 8px 6px;
+      background: var(--accent-dim);
+      border-radius: var(--r-lg);
+      z-index: -1;
+    }
+
+    /* Error Overlay */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 40px;
+      text-align: center;
+    }
+
+    .error-icon-circle {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--accent-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      color: var(--accent);
+      font-size: 32px;
+      border: 1px solid color-mix(in oklch, var(--accent), transparent 80%);
+    }
+
+    .error-title { font-family: var(--font-primary); font-size: 32px; font-weight: 700; margin: 0 0 12px; }
+    .error-msg { color: var(--text-2); font-size: 15px; line-height: 1.5; margin: 0 0 var(--s6); max-width: 280px; }
+    .retry-btn {
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      padding: 12px 40px;
+      border-radius: var(--r-full);
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      transition: transform 0.2s var(--spring);
+      box-shadow: 0 4px 15px color-mix(in oklch, var(--accent), transparent 80%);
+    }
+    .retry-btn:active { transform: scale(0.95); }
+  </style>
+</head>
+<body>
+  <header class="page-header">
+    <div class="page-header-left"><div class="greeting">Good morning, Friend</div></div>
+    <div class="page-header-right">
+      <div class="icon-btn-mock shimmer"></div>
+      <div class="icon-btn-mock shimmer"></div>
+    </div>
+  </header>
+
+  <div id="main-content">
+    <div class="hero-inner shimmer"></div>
+    <div class="section-title shimmer"></div>
+    <div class="horiz-inner">
+      <div class="horiz-card shimmer"></div>
+      <div class="horiz-card shimmer"></div>
+      <div class="horiz-card shimmer"></div>
+    </div>
+  </div>
+
+  <footer class="bottom-nav-container">
+    <nav id="bottom-nav">
+      <div class="nav-btn active"><i class="bi bi-house-door-fill"></i><span>Home</span></div>
+      <div class="nav-btn"><i class="bi bi-search"></i><span>Search</span></div>
+      <div class="nav-btn"><i class="bi bi-music-note-list"></i><span>Library</span></div>
+    </nav>
+  </footer>
+
+  <div class="overlay">
+    <div class="error-icon-circle"><i class="bi bi-wifi-off"></i></div>
+    <h1 class="error-title">Connection Lost</h1>
+    <p class="error-msg">Check your network connection to continue exploring Tune Topia.</p>
+    <button class="retry-btn" onclick="window.location.reload()">Try Again</button>
+  </div>
+
+  <script>
+    window.addEventListener('online', () => window.location.reload());
+  </script>
+</body>
+</html>

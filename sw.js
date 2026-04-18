@@ -1,11 +1,12 @@
 // SW
-const CACHE = 'tunetopia-v2.2'
+const CACHE = 'tunetopia-v2.4'
 const VERSION = CACHE.split('-v')[1] || '1.0.0'
 
 // Cache
 const PRECACHE = [
   './',
   'index.html',
+  'offline.html',
   'style.css',
   'style/z-index.css',
   'style/tokens.css',
@@ -123,8 +124,8 @@ self.addEventListener('fetch', (e) => {
           }
           return res;
         })
-        .catch(() => caches.match(request).then((c) => c || caches.match('./index.html')))
-        .then((res) => res || new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } }))
+        .catch(() => caches.match(request).then((c) => c || caches.match('./offline.html')))
+        .then((res) => res || new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/html' } }))
     );
     return;
   }
