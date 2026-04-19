@@ -5,10 +5,10 @@ import { getVideoStream as getYTVideoStream } from '../api/index.js'
 import * as Router from '../app/router.js'
 import History from '../modules/history.js'
 import { toggle as toggleLike, isLiked } from './likedVideos.js'
+import { _proxify } from '../modules/player.js'
 
 const PAGE_ID = 'page-video'
 const HLS_CDN = 'https://cdn.jsdelivr.net/npm/hls.js@latest'
-const _proxify = (url) => (url && !url.startsWith('blob:') && !url.startsWith('data:')) ? `/proxy?url=${encodeURIComponent(url)}` : url
 
 let _hls = null
 let _hideTimer = null

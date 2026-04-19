@@ -1,9 +1,8 @@
 // Animated Artwork (ROBUST FIXED VERSION)
 import * as Cache from './cache.js';
+import { _proxify } from './player.js';
 
 const BASE_URL = 'https://artwork.m8tec.top/api/v1/artwork';
-
-const _proxify = (url) => (url && !url.startsWith('blob:') && !url.startsWith('data:')) ? `/proxy?url=${encodeURIComponent(url)}` : url
 // -------------------- Utils --------------------
 
 function cleanMetadata(s) {

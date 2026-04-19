@@ -36,7 +36,14 @@ const _listeners = {}
 let _preloaded = null
 let _preloading = false
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
-const _proxify = (url) => (url && !url.startsWith('blob:') && !url.startsWith('data:')) ? `/proxy?url=${encodeURIComponent(url)}` : url
+
+export const _proxify = (url) => {
+  if (!url || url.startsWith('blob:') || url.startsWith('data:')) return url;
+  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  // Replace the URL below with the address of your hosted Node.js proxy server
+  const proxyBase = isLocal ? '' : 'https://tune-topia.onrender.com';
+  return `${proxyBase}/proxy?url=${encodeURIComponent(url)}`;
+};
 
 // Events
 export function on(event, cb) {

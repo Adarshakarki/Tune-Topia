@@ -4,6 +4,7 @@ import { injectFlacMeta } from './metadata-flac.js'
 import * as UI from '../app/ui.js'
 import { ffmpeg, FfmpegError } from './ffmpeg.js'
 import { fetchDash } from './dash.js'
+import { _proxify } from './player.js'
 
 const MIME = {
   mp3: 'audio/mpeg',
@@ -113,7 +114,7 @@ export async function downloadTrack(track, stream) {
   if (stream.type === 'dash') {
     audioBytes = await fetchDash(stream, (p) => UI.toast(p.message))
   } else {
-    const res = await fetch(`/proxy?url=${encodeURIComponent(stream.url)}`)
+    const res = await fetch(_proxify(stream.url))
     audioBytes = new Uint8Array(await res.arrayBuffer())
   }
 

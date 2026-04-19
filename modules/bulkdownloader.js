@@ -4,6 +4,7 @@ import { getStream } from '../api/index.js';
 import { fetchCover, buildID3, injectM4aMeta, injectOggMeta, concat } from './metadata.js';
 import { injectFlacMeta } from './metadata-flac.js';
 import { fetchDash } from './dash.js';
+import { _proxify } from './player.js';
 
 /**
  * Batch download a list of tracks.
@@ -38,7 +39,7 @@ export async function downloadTracks(tracks, collectionName = 'Collection') {
       if (stream.type === 'dash') {
         audioBytes = await fetchDash(stream);
       } else {
-        const resp = await fetch(`/proxy?url=${encodeURIComponent(stream.url)}`);
+        const resp = await fetch(_proxify(stream.url));
         if (!resp.ok) throw new Error(`Fetch failed: ${resp.status}`);
         audioBytes = new Uint8Array(await resp.arrayBuffer());
       }
