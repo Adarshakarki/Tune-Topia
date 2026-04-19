@@ -185,6 +185,16 @@ app.get('/proxy', async (req, res) => {
     const protocol = urlObj.protocol === 'https:' ? 'https' : 'http'
     const safeUrl = `${protocol}://${safeHostname}${safeSuffix}`
 
+    const proxyHeaders = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
+      'Accept': '*/*',
+      'origin': 'https://listen.tidal.com',
+      'Referer': 'https://listen.tidal.com/',
+    }
+
+    if (req.headers.range) proxyHeaders['Range'] = req.headers.range
+    if (req.headers.authorization) proxyHeaders['Authorization'] = req.headers.authorization
+
     const response = await axios.request({
       method: 'GET',
       url: safeUrl,
@@ -195,13 +205,7 @@ app.get('/proxy', async (req, res) => {
       httpAgent,
       httpsAgent,
       validateStatus: () => true,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
-        'Accept': '*/*',
-        'origin': 'https://listen.tidal.com',
-        'Referer': 'https://listen.tidal.com/',
-        'Range': req.headers.range
-      },
+      headers: proxyHeaders,
     })
     res.status(response.status)
     if (response.headers['content-range']) {
