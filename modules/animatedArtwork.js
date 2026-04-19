@@ -3,6 +3,7 @@ import * as Cache from './cache.js';
 
 const BASE_URL = 'https://artwork.m8tec.top/api/v1/artwork';
 
+const _proxify = (url) => (url && !url.startsWith('blob:') && !url.startsWith('data:')) ? `/proxy?url=${encodeURIComponent(url)}` : url
 // -------------------- Utils --------------------
 
 function cleanMetadata(s) {
@@ -213,6 +214,9 @@ export async function updateDisplay(container, videoUrl, isPlaying = true) {
         xhrSetup(xhr, url) {
           xhr.open('GET', url, true);
         },
+        pLoader: function(config) {
+          this.load = (context, config, callbacks) => { context.url = _proxify(context.url); return Hls.DefaultConfig.pLoader.call(this, context, config, callbacks); }
+        },
         // Recover from buffer stalls faster
         nudgeMaxRetry: 10,
         nudgeOffset: 0.2,
@@ -222,7 +226,7 @@ export async function updateDisplay(container, videoUrl, isPlaying = true) {
 
       video._hls = hls;
 
-      hls.loadSource(videoUrl);
+      hls.loadSource(_proxify(videoUrl));
       hls.attachMedia(video);
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
@@ -264,7 +268,7 @@ export async function updateDisplay(container, videoUrl, isPlaying = true) {
       // m3u8 but no HLS.js — only Safari can handle this natively
       const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
       if (isSafari) {
-        video.src = videoUrl;
+        video.src = _proxify(videoUrl);
         if (isPlaying) {
           video.play().catch(err => console.warn('[AnimatedArtwork] Safari play() failed:', err.name));
         } else {
@@ -278,7 +282,7 @@ export async function updateDisplay(container, videoUrl, isPlaying = true) {
 
     } else if (isPlaying) {
       // Non-HLS URL
-      video.src = videoUrl;
+      video.src = _proxify(videoUrl);
       const playPromise = video.play();
       if (playPromise !== undefined) {
         playPromise.catch(err => {
@@ -287,7 +291,7 @@ export async function updateDisplay(container, videoUrl, isPlaying = true) {
       }
     } else {
       // Non-HLS but paused
-      video.src = videoUrl;
+      video.src = _proxify(videoUrl);
       video.pause();
     }
   } catch (e) {

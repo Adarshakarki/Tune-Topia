@@ -8,6 +8,7 @@ import { toggle as toggleLike, isLiked } from './likedVideos.js'
 
 const PAGE_ID = 'page-video'
 const HLS_CDN = 'https://cdn.jsdelivr.net/npm/hls.js@latest'
+const _proxify = (url) => (url && !url.startsWith('blob:') && !url.startsWith('data:')) ? `/proxy?url=${encodeURIComponent(url)}` : url
 
 let _hls = null
 let _hideTimer = null
@@ -147,7 +148,7 @@ export async function open(track) {
 
     if (stream.type === 'hls') await _playHls(video, stream)
     else {
-      video.src = stream.url
+      video.src = _proxify(stream.url)
       video.addEventListener('canplaythrough', () => video.play(), { once: true })
     }
   } catch (e) {
@@ -179,8 +180,13 @@ async function _playHls(video, stream) {
       lowLatencyMode: false,
       maxBufferLength: 60,
       maxMaxBufferLength: 120,
+      xhrSetup: (xhr, url) => {
+        // Ensure internal segment requests are also proxied
+        const proxied = _proxify(url);
+        if (proxied !== url) xhr.open('GET', proxied, true);
+      }
     })
-    _hls.loadSource(stream.url)
+    _hls.loadSource(_proxify(stream.url))
     _hls.attachMedia(video)
     video.addEventListener('canplay', () => video.play(), { once: true })
     _hls.on(Hls.Events.ERROR, (_, data) => {
@@ -190,7 +196,7 @@ async function _playHls(video, stream) {
       }
     })
   } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-    video.src = stream.url
+    video.src = _proxify(stream.url)
     video.addEventListener('canplaythrough', () => video.play(), { once: true })
   } else {
     throw new Error('HLS not supported in this browser')

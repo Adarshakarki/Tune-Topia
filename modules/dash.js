@@ -17,13 +17,13 @@ export async function fetchDash(stream, onProgress) {
 
   const segments = [];
   const initUrl = baseUrl + template.getAttribute('initialization').replace('$RepresentationID$', '1');
-  const initRes = await fetch(initUrl);
+  const initRes = await fetch(`/proxy?url=${encodeURIComponent(initUrl)}`);
   segments.push(new Uint8Array(await initRes.arrayBuffer()));
 
   for (let i = 1; i <= totalSegments; i++) {
     onProgress?.({ progress: (i / totalSegments) * 100, message: `Downloading: ${i}/${totalSegments}` });
     const segUrl = baseUrl + template.getAttribute('media').replace('$RepresentationID$', '1').replace('$Number$', i);
-    const res = await fetch(segUrl);
+    const res = await fetch(`/proxy?url=${encodeURIComponent(segUrl)}`);
     if (res.ok) segments.push(new Uint8Array(await res.arrayBuffer()));
   }
   return concat(...segments);

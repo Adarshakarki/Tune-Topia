@@ -36,6 +36,7 @@ const _listeners = {}
 let _preloaded = null
 let _preloading = false
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+const _proxify = (url) => (url && !url.startsWith('blob:') && !url.startsWith('data:')) ? `/proxy?url=${encodeURIComponent(url)}` : url
 
 // Events
 export function on(event, cb) {
@@ -243,7 +244,7 @@ async function _preloadNext() {
     const stream = await _getStream(nextTrack);
     if (stream.type === 'dash') { _preloading = false; return; }
 
-    _inactive.src = stream.url
+    _inactive.src = _proxify(stream.url)
     _inactive.volume = 0
     _inactive.load()
     _preloaded = { track: nextTrack }
@@ -348,7 +349,10 @@ AnimatedArtwork.getAnimatedUrl(track)
     if (stream.type === 'dash') {
       await _playDash(stream.manifest)
     } else {
-      _active.src = stream.url
+      if (!stream.url) {
+        throw new Error('Stream URL is missing');
+      }
+      _active.src = _proxify(stream.url)
       await _active.play()
       _ensureMediaSessionHandlers()
     } History.push(track);
@@ -376,7 +380,11 @@ export async function startRadio(track = null) {
 }
 
 export async function toggle() {
-  const hasSource = _active.src && _active.src !== window.location.href;
+  // Check if the current active element has a valid source.
+  // We also check networkState to avoid calling play() when the browser has already determined
+  // that the source is unsupported or missing (NETWORK_NO_SOURCE = 3).
+  const hasSource = _active.src && _active.src !== window.location.href && _active.networkState !== 3;
+  
   if (!hasSource && !_dash) return;
 
   try {

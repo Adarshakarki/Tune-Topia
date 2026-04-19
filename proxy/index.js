@@ -196,14 +196,19 @@ app.get('/proxy', async (req, res) => {
       httpsAgent,
       validateStatus: () => true,
       headers: {
-        'User-Agent': 'TuneTopiaProxy/1.0',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
         'Accept': '*/*',
         'origin': 'https://listen.tidal.com',
         'Referer': 'https://listen.tidal.com/',
-        'Range': req.headers.range || 'bytes=0-',
+        'Range': req.headers.range
       },
     })
-
+    res.status(response.status)
+    if (response.headers['content-range']) {
+      res.set('Content-Range', response.headers['content-range'])
+    }
+    res.set('Accept-Ranges', 'bytes')
+    
     // Sanitise the reflected Content-Type to prevent header injection.
     // Only forward type/subtype; strip parameters that could carry CRLF.
     const rawContentType = response.headers['content-type']

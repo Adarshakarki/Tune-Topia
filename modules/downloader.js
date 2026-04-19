@@ -113,7 +113,7 @@ export async function downloadTrack(track, stream) {
   if (stream.type === 'dash') {
     audioBytes = await fetchDash(stream, (p) => UI.toast(p.message))
   } else {
-    const res = await fetch(stream.url)
+    const res = await fetch(`/proxy?url=${encodeURIComponent(stream.url)}`)
     audioBytes = new Uint8Array(await res.arrayBuffer())
   }
 

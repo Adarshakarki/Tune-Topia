@@ -38,7 +38,7 @@ export async function downloadTracks(tracks, collectionName = 'Collection') {
       if (stream.type === 'dash') {
         audioBytes = await fetchDash(stream);
       } else {
-        const resp = await fetch(stream.url);
+        const resp = await fetch(`/proxy?url=${encodeURIComponent(stream.url)}`);
         if (!resp.ok) throw new Error(`Fetch failed: ${resp.status}`);
         audioBytes = new Uint8Array(await resp.arrayBuffer());
       }
