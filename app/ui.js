@@ -1,4 +1,3 @@
-// UI
 import State from './state.js'
 import { has as isLiked } from '../modules/likedSongs.js'
 import { escHtml, fmtTime, qualityBadge } from '../api/utils.js'
@@ -10,12 +9,11 @@ import { isArtistBlocked } from '../modules/library.js';
 const $ = (id) => document.getElementById(id)
 let _npColor = null
 const _colorCache = new Map();
-let _activeOverlayCount = 0; // Track active overlays for blur/scroll lock
+let _activeOverlayCount = 0;
 const _fanartCache = new Map();
 
 export { getIcon, replaceHtmlIcons };
 
-// Toast
 export function toast(msg) {
   const el = $('toast')
   if (!el) return
@@ -120,9 +118,7 @@ export function renderHero(track) {
 
 function _shouldFilterBlocked(container) {
   if (!container) return false;
-  // Exempt Artist Page lists
   if (['artist-tracklist', 'artist-discography', 'artist-videos-row', 'artist-mixes-row'].includes(container.id)) return false;
-  // Exempt Search Artist tab
   if (container.id === 'search-results-list' && State.get('search.activeTab') === 'artists') return false;
   return true;
 }
@@ -242,7 +238,7 @@ export async function virtualizeTracks(tracks, container, currentId) {
   return new Virtualizer({
     container,
     items: tracks,
-    itemHeight: 64, // Standard height for track-card rows
+    itemHeight: 64,
     renderItem: (t, i) => renderTrackItemHTML(t, i, currentId)
   });
 }
@@ -379,7 +375,6 @@ export function renderLyrics(synced, plain) {
           ).join('')
           return `<div class="np-lyrics-line enhanced" data-index="${i}">${wordsHtml}</div>`
         }
-        // Fallback to standard line
         return `<div class="np-lyrics-line" data-index="${i}">${escHtml(line.text)}</div>`
       })
       .join('')
@@ -436,14 +431,11 @@ export function updatePlayerPosition() {
     const h = container.offsetHeight;
     const pad = h > 0 ? `${h}px` : '';
 
-    // Clear all existing paddings first
     document.querySelectorAll('.sub-page, .page, #main-content, [id$="-scroll"]').forEach(el => el.style.paddingBottom = '');
 
-    // The specific scroll container inside the subpage OR the page itself
     const scroll = active.querySelector('[id$="-scroll"]') || active;
     if (scroll) scroll.style.paddingBottom = pad;
 
-    // If it's a main page (like Home), the padding needs to push content within the main scroller
     if (active.classList.contains('page') && !active.querySelector('[id$="-scroll"]')) {
       const main = $('main-content');
       if (main) main.style.paddingBottom = pad;
@@ -539,7 +531,6 @@ export function setTrackInfo(track) {
       })
   }
 
-  // Background
   if (art) {
     extractColor(art, (r, g, b) => {
       const dr = Math.round(r * 0.8), dg = Math.round(g * 0.8), db = Math.round(b * 0.8)
@@ -659,21 +650,22 @@ export function syncLikeButtons(trackId) {
 export function showPage(name) {
   document
     .querySelectorAll('.page')
-    .forEach((p) => p.classList.remove('active'))
-  $(`page-${name}`)?.classList.add('active')
+    .forEach((p) => p.classList.remove('active'));
+  $(`page-${name}`)?.classList.add('active');
   document
     .querySelectorAll('.nav-btn')
-    .forEach((b) => b.classList.remove('active'))
+    .forEach((b) => b.classList.remove('active'));
   document
     .querySelector(`.nav-btn[data-page="${name}"]`)
-    ?.classList.add('active')
+    ?.classList.add('active');
   document
     .querySelectorAll('.sb-item')
-    .forEach((b) => b.classList.remove('active'))
+    .forEach((b) => b.classList.remove('active'));
   document
     .querySelector(`.sb-item[data-page="${name}"]`)
-    ?.classList.add('active')
-  ($('main-content') || document.querySelector('.main-wrap'))?.scrollTo(0, 0);
+    ?.classList.add('active');
+  const scroller = $('main-content');
+  if (scroller) scroller.scrollTop = 0;
 }
 
 export function openPlayer() {
@@ -722,24 +714,14 @@ export function closePlayer() {
   revertThemeColor()
 }
 
-/**
- * Manages the blur and scroll-lock state of the main content area.
- * Increments/decrements a counter and applies/removes classes based on the count.
- * @param {boolean} active - true to activate (add blur/lock), false to deactivate (remove).
- */
 export function setMainContentOverlayState(active) {
   const scroller = $('main-content') || document.querySelector('.main-wrap');
   if (!scroller) return;
 
-  // Refined counter logic: Background is locked if at least one overlay is active.
-  _activeOverlayCount = active ? (_activeOverlayCount + 1) : Math.max(0, _activeOverlayCount - 1);
-
-  if (_activeOverlayCount > 0) {
-    scroller.classList.add('blur-active');
-    scroller.style.overflowY = 'hidden'; // Lock background scroll
+  if (active) {
+    document.body.classList.add('scroll-locked'); 
   } else {
-    scroller.classList.remove('blur-active');
-    scroller.style.overflowY = 'auto'; // Restore background scroll
+    document.body.classList.remove('scroll-locked');
   }
 }
 
@@ -762,11 +744,11 @@ export function closeAllOverlays() {
     .forEach(el => el.classList.remove('open'));
   if ($('playlist-modal-overlay')) $('playlist-modal-overlay').style.display = 'none';
   
-  // Force unlock the main area
   _activeOverlayCount = 0;
   const scroller = $('main-content') || document.querySelector('.main-wrap');
   if (scroller) {
     scroller.classList.remove('blur-active');
+    scroller.removeAttribute('data-scroll-locked');
     scroller.style.overflowY = 'auto';
   }
 

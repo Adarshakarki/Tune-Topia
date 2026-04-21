@@ -1,5 +1,5 @@
 // SW
-const CACHE = 'tunetopia-v2.3.1'
+const CACHE = 'tunetopia-v2.3.2'
 const VERSION = CACHE.split('-v')[1] || '1.0.0'
 
 // Cache
@@ -40,7 +40,7 @@ const PRECACHE = [
   'modules/theme.js',
   'modules/animatedArtwork.js',
   'app/constants.js',
-  'assets/logo.JPEG',
+  'assets/circularlogo.png',
 ]
 
 // Install
@@ -124,7 +124,7 @@ self.addEventListener('fetch', (e) => {
           }
           return res;
         })
-        .catch(() => caches.match(request).then((c) => c || caches.match('./offline.html')))
+        .catch(() => caches.match('offline.html')) // Always fallback to offline.html if network fails for navigation
         .then((res) => res || new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/html' } }))
     );
     return;
@@ -140,7 +140,7 @@ self.addEventListener('fetch', (e) => {
           caches.open(CACHE).then((c) => c.put(request, clone));
         }
         return res;
-      }).catch(() => caches.match('./index.html'));
+        })
     })
   );
 });

@@ -1,4 +1,3 @@
-// Player Events
 import * as Player from '../modules/player.js'
 import * as UI from './ui.js'
 import State from './state.js'
@@ -30,13 +29,11 @@ const _tick = () => {
 };
 
 
-// Global observer for theme changes
 const _themeObs = new MutationObserver(() => {
   if (_amEl) _amEl.highlightColor = _getHi();
 });
 _themeObs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
-// Event bindings
 export function bind() {
   Player.on('trackChanged', t => {
     UI.setTrackInfo(t); setCurrentId(t.id); refreshActiveTracks(); _loadLyrics(t);
@@ -119,7 +116,6 @@ async function _loadLyrics(track) {
   const title = _clean(track.title ?? ''), artist = _primary(track);
   const dur = track.duration > 5000 ? Math.round(track.duration / 1000) : Math.round(track.duration ?? 0);
 
-  // Reset component state
   el.lyrics = [];
   Object.assign(el, { 
     songTitle: title, 
@@ -127,7 +123,6 @@ async function _loadLyrics(track) {
     highlightColor: _getHi() 
   });
 
-  // Load lyrics from LRCLIB
   fetchLyrics(title, artist, track.album, track.duration).then(res => {
     if (res.synced && res.synced.length > 0) {
       el.lyrics = res.synced;

@@ -83,6 +83,10 @@ let _waitingWorker = null
 function _hookSW() {
   if (!('serviceWorker' in navigator)) return
   navigator.serviceWorker.ready.then(reg => {
+    if (localStorage.getItem('tt_auto_update') !== 'false') {
+      reg.update().catch(() => {});
+    }
+
     if (reg.waiting) {
       _waitingWorker = reg.waiting
       _setUpdateAvailable()
@@ -131,7 +135,7 @@ async function _checkForUpdate() {
     if (_waitingWorker) {
       _setUpdateAvailable()
     } else {
-      if (lbl) lbl.textContent = "You're up to date ✓"
+      if (lbl) lbl.textContent = "You're using the latest version ✓"
     }
   } catch (err) {
     if (lbl) { lbl.textContent = 'Could not check — try again'; }
@@ -174,6 +178,7 @@ export function render() {
   renderQuality()
   renderSpeed()
   renderGapless()
+  renderAutoUpdate()
   renderThemes()
   Theme.loadFonts();
   renderFonts();
@@ -283,6 +288,25 @@ export function renderSpeed() {
 export function renderGapless() {
   const on = localStorage.getItem('tt_gapless') === 'true'
   $('gapless-toggle')?.setAttribute('aria-checked', String(on))
+}
+
+export function renderAutoUpdate() {
+  const on = localStorage.getItem('tt_auto_update') !== 'false';
+  $('auto-update-toggle')?.setAttribute('aria-checked', String(on));
+  
+  const checkBtn = $('check-update-btn');
+  const statusLabel = $('update-status-label');
+
+  if (checkBtn) {
+    const row = checkBtn.closest('.settings-row');
+    if (row) row.style.display = on ? 'none' : '';
+    else checkBtn.style.display = on ? 'none' : '';
+  }
+
+  if (statusLabel) {
+    statusLabel.style.display = on ? 'none' : '';
+    if (!on && !statusLabel.textContent) statusLabel.textContent = "You're using the latest version ✓";
+  }
 }
 
 // Themes
@@ -401,6 +425,12 @@ export function initEvents() {
   $('speed-options')?.addEventListener('click', e => { const btn = e.target.closest('.speed-btn'); if (!btn) return; const speed = parseFloat(btn.dataset.speed); localStorage.setItem('tt_speed', speed); renderSpeed(); UI.toast(`Playback speed: ${speed}×`); });
   $('gapless-toggle')?.addEventListener('click', function () { const on = this.getAttribute('aria-checked') === 'true'; localStorage.setItem('tt_gapless', String(!on)); renderGapless(); UI.toast(on ? 'Gapless playback off' : 'Gapless playback on'); });
 
+  $('auto-update-toggle')?.addEventListener('click', function () {
+    const on = this.getAttribute('aria-checked') === 'true';
+    localStorage.setItem('tt_auto_update', String(!on));
+    renderAutoUpdate();
+    if (!on) _checkForUpdate();
+  });
 
   $('appearance-toggle')?.addEventListener('click', function() {
     const isDark = this.getAttribute('aria-checked') === 'true';

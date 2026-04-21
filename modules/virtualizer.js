@@ -21,7 +21,7 @@ export class Virtualizer {
    */
   _findScroller(el) {
     let p = el.parentElement;
-    while (p && p !== document.body) {
+    while (p && p !== document.documentElement) {
       const overflow = window.getComputedStyle(p).overflowY;
       if (overflow === 'auto' || overflow === 'scroll') return p;
       p = p.parentElement;

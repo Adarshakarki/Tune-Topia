@@ -1,4 +1,3 @@
-// Router
 import * as UI from './ui.js'
 
 const $ = id => document.getElementById(id);
@@ -11,6 +10,13 @@ export function registerHandler(name, fn) { _handlers[name] = fn; }
 export function registerLoader(name, fn) { _loaders[name] = fn; }
 
 export function showPage(name, push = true, params = {}) {
+  document.querySelectorAll('.page').forEach(page => {
+    page.classList.remove('active');
+  });
+
+  const targetPage = $(`page-${name}`);
+  if (targetPage) targetPage.classList.add('active');
+
   const isSub = ['artist', 'album', 'playlist', 'mix', 'user-playlist', 'genre'].includes(name);
   _prev = document.querySelector('.page.active')?.id?.replace('page-', '') || 'home';
 
@@ -34,14 +40,21 @@ export function showPage(name, push = true, params = {}) {
   if (isSub && _handlers[name]) {
     _handlers[name](params);
     UI.setMainContentOverlayState(true);
-    // Ensure the sub-page overlay itself is scrollable since the background is locked
     const subPage = document.getElementById(`page-${name}`);
-    if (subPage) Object.assign(subPage.style, { overflowY: 'auto', height: '100%' });
+    if (subPage) Object.assign(subPage.style, { 
+      overflowY: 'auto', 
+      height: '100%', 
+      webkitOverflowScrolling: 'touch',
+      touchAction: 'pan-y'
+    });
   } else if (!isSub) {
     UI.closeAllOverlays();
     UI.showPage(name);
     closeSidebar();
-    window.scrollTo(0, 0);
+
+    const mainContent = $('main-content');
+    if (mainContent) mainContent.scrollTop = 0;
+
     if (_loaders[name] && !(CACHE.has(name) && _loaded.has(name))) { _loaders[name](); _loaded.add(name); }
     if (name === 'search') setTimeout(() => $('search-input')?.focus(), 100);
   }
@@ -54,16 +67,19 @@ export function updateURL(name, params = {}) {
   Object.entries(params).forEach(([k, v]) => {
     if (v && typeof v !== 'object') urlParams.set(k, v);
   });
-  // Use replaceState to update metadata/slugs without bloating the history stack
   history.replaceState({ page: name, params }, '', `?${urlParams.toString()}`);
 }
 
 export function goBack(fb = 'home') { history.length > 1 ? history.back() : showPage(_prev || fb); }
 
 export function openSidebar() { 
-  $('sidebar')?.classList.add('open'); 
+  const sb = $('sidebar');
+  if (sb) {
+    sb.classList.add('open');
+    sb.style.overflowY = 'auto';
+    sb.style.webkitOverflowScrolling = 'touch';
+  }
   $('sidebar-overlay')?.classList.add('visible'); 
-  UI.setMainContentOverlayState(true);
 }
 
 export function closeSidebar() { 
@@ -72,7 +88,6 @@ export function closeSidebar() {
   UI.setMainContentOverlayState(false);
 }
 
-// History
 window.addEventListener('popstate', e => { 
   _isPop = true; 
   const name = e.state?.page || 'home';
