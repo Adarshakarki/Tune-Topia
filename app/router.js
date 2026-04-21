@@ -41,8 +41,7 @@ export function showPage(name, push = true, params = {}) {
     UI.closeAllOverlays();
     UI.showPage(name);
     closeSidebar();
-    const scroller = $('main-content') || document.querySelector('.main-wrap');
-    if (scroller) scroller.scrollTo(0, 0);
+    window.scrollTo(0, 0);
     if (_loaders[name] && !(CACHE.has(name) && _loaded.has(name))) { _loaders[name](); _loaded.add(name); }
     if (name === 'search') setTimeout(() => $('search-input')?.focus(), 100);
   }
