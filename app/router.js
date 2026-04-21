@@ -33,11 +33,16 @@ export function showPage(name, push = true, params = {}) {
 
   if (isSub && _handlers[name]) {
     _handlers[name](params);
+    UI.setMainContentOverlayState(true);
+    // Ensure the sub-page overlay itself is scrollable since the background is locked
+    const subPage = document.getElementById(`page-${name}`);
+    if (subPage) Object.assign(subPage.style, { overflowY: 'auto', height: '100%' });
   } else if (!isSub) {
     UI.closeAllOverlays();
     UI.showPage(name);
     closeSidebar();
-    $('main-content')?.scrollTo(0, 0);
+    const scroller = $('main-content') || document.querySelector('.main-wrap');
+    if (scroller) scroller.scrollTo(0, 0);
     if (_loaders[name] && !(CACHE.has(name) && _loaded.has(name))) { _loaders[name](); _loaded.add(name); }
     if (name === 'search') setTimeout(() => $('search-input')?.focus(), 100);
   }
@@ -56,9 +61,17 @@ export function updateURL(name, params = {}) {
 
 export function goBack(fb = 'home') { history.length > 1 ? history.back() : showPage(_prev || fb); }
 
-export function openSidebar() { $('sidebar')?.classList.add('open'); $('sidebar-overlay')?.classList.add('visible'); }
+export function openSidebar() { 
+  $('sidebar')?.classList.add('open'); 
+  $('sidebar-overlay')?.classList.add('visible'); 
+  UI.setMainContentOverlayState(true);
+}
 
-export function closeSidebar() { $('sidebar')?.classList.remove('open'); $('sidebar-overlay')?.classList.remove('visible'); }
+export function closeSidebar() { 
+  $('sidebar')?.classList.remove('open'); 
+  $('sidebar-overlay')?.classList.remove('visible'); 
+  UI.setMainContentOverlayState(false);
+}
 
 // History
 window.addEventListener('popstate', e => { 

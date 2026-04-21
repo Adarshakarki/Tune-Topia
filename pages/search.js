@@ -19,6 +19,7 @@ import {
   attachAlbumEvents,
   attachArtistEvents,
 } from './home.js'
+import { isArtistBlocked } from '../modules/library.js';
 const $ = (id) => document.getElementById(id)
 let _searchTimer
 
@@ -94,8 +95,8 @@ function _renderResults() {
 
   if (topEl) {
     if (tab === 'music' && top) {
-      UI.renderTopResult(top, topEl)
-      topEl.style.display = ''
+      const rendered = UI.renderTopResult(top, topEl);
+      topEl.style.display = rendered ? '' : 'none';
       topEl
         .querySelector('.top-result-card')
         ?.addEventListener('click', () => playTrack([top], 0))

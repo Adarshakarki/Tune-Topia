@@ -53,6 +53,31 @@ function _stripBackButtonText() {
 async function init() {
   State.init();
 
+  document.documentElement.style.overflow = 'hidden';
+  document.documentElement.style.height = '100vh';
+  
+  Object.assign(document.body.style, {
+    position: 'fixed',
+    inset: '0',
+    overflow: 'hidden',
+    margin: '0'
+  });
+
+  // Constraint the layout shell to match the fixed body height
+  if ($('shell')) $('shell').style.height = '100%';
+
+  // Establish the main content area as the primary scrollable container.
+  const scroller = $('main-content') || document.querySelector('.main-wrap');
+  if (scroller) {
+    Object.assign(scroller.style, {
+      height: '100%',
+      overflowY: 'auto',
+      overflowX: 'hidden',
+      webkitOverflowScrolling: 'touch',
+      position: 'relative'
+    });
+  }
+
   if (Player.audioA && Player.audioB) {
     processor.init([Player.audioA, Player.audioB]);
     EQ.init();

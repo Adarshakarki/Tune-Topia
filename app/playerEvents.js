@@ -62,21 +62,36 @@ const _primary = t => _clean(Array.isArray(t.artists) ? (t.artists[0]?.name ?? t
 const _getHi = () => getComputedStyle(document.documentElement).colorScheme === 'light' ? '#000' : '#fff';
 
 function _bindKeyboard() {
+  const DEFAULT_MAP = { toggle: 'Space', next: 'KeyN', prev: 'KeyP', seekFwd: 'ArrowRight', seekBack: 'ArrowLeft', volUp: 'ArrowUp', volDown: 'ArrowDown', mute: 'KeyM', shuffle: 'KeyS', repeat: 'KeyR', home: 'KeyH', search: 'Slash', settings: 'KeyI' };
+
   document.addEventListener('keydown', e => {
     if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName) || document.activeElement?.isContentEditable) return;
+    
+    const mods = [];
+    if (e.ctrlKey) mods.push('Control');
+    if (e.altKey) mods.push('Alt');
+    if (e.shiftKey) mods.push('Shift');
+    if (e.metaKey) mods.push('Meta');
+
+    const saved = JSON.parse(localStorage.getItem('tt_shortcuts') || '{}');
+    const map = { ...DEFAULT_MAP, ...saved };
+    const code = (mods.length ? mods.join('+') + '+' : '') + e.code;
+    const baseCode = e.code;
     const vol = () => State.get('player.volume') ?? 0.8;
-    switch (e.code) {
-      case 'Space': e.preventDefault(); Player.toggle(); break;
-      case 'ArrowRight': e.preventDefault(); (e.shiftKey || e.metaKey) ? Player.next() : Player.seekSeconds(10); break;
-      case 'ArrowLeft': e.preventDefault(); (e.shiftKey || e.metaKey) ? Player.prev() : Player.seekSeconds(-10); break;
-      case 'ArrowUp': e.preventDefault(); Player.setVolume(Math.min(1, vol() + 0.1)); break;
-      case 'ArrowDown': e.preventDefault(); Player.setVolume(Math.max(0, vol() - 0.1)); break;
-      case 'KeyM': Player.toggleMute(); break;
-      case 'KeyN': Player.next(); break;
-      case 'KeyP': Player.prev(); break;
-      case 'KeyS': Player.toggleShuffle(); break;
-      case 'KeyR': Player.toggleRepeat(); break;
-    }
+
+    if (code === map.toggle) { e.preventDefault(); Player.toggle(); }
+    else if (code === map.next) { Player.next(); }
+    else if (code === map.prev) { Player.prev(); }
+    else if (baseCode === map.seekFwd) { e.preventDefault(); (e.shiftKey || e.metaKey) ? Player.next() : Player.seekSeconds(10); }
+    else if (baseCode === map.seekBack) { e.preventDefault(); (e.shiftKey || e.metaKey) ? Player.prev() : Player.seekSeconds(-10); }
+    else if (code === map.volUp) { e.preventDefault(); Player.setVolume(Math.min(1, vol() + 0.1)); }
+    else if (code === map.volDown) { e.preventDefault(); Player.setVolume(Math.max(0, vol() - 0.1)); }
+    else if (code === map.mute) { Player.toggleMute(); }
+    else if (code === map.shuffle) { Player.toggleShuffle(); }
+    else if (code === map.repeat) { Player.toggleRepeat(); }
+    else if (code === map.home) { import('./router.js').then(R => R.showPage('home')); }
+    else if (code === map.search) { e.preventDefault(); import('./router.js').then(R => { R.showPage('search'); setTimeout(() => document.getElementById('search-input')?.focus(), 100); }); }
+    else if (code === map.settings) { import('./router.js').then(R => R.showPage('settings')); }
   });
 }
 

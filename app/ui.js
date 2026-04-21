@@ -5,10 +5,12 @@ import { escHtml, fmtTime, qualityBadge } from '../api/utils.js'
 import Queue from '../modules/queue.js'
 import { getActiveLine, getActiveWord } from '../modules/lyrics.js';
 import { getIcon, replaceHtmlIcons, _isAtmos } from './icons.js';
+import { isArtistBlocked } from '../modules/library.js';
 
 const $ = (id) => document.getElementById(id)
 let _npColor = null
 const _colorCache = new Map();
+let _activeOverlayCount = 0; // Track active overlays for blur/scroll lock
 const _fanartCache = new Map();
 
 export { getIcon, replaceHtmlIcons };
@@ -97,7 +99,10 @@ function _pickColor(data, cb) {
 
 export function renderHero(track) {
   const el = $('hero-card')
-  if (!el || !track) return
+  if (!el || !track || isArtistBlocked(track.artist)) {
+    if (el) el.innerHTML = '';
+    return false;
+  }
   el.innerHTML = `
     <div class="hero-inner" style="position: relative; overflow: hidden; display: flex; align-items: flex-end; padding: var(--s6);">
       <img src="${escHtml(track.cover)}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0;" fetchpriority="high" loading="eager" alt="" />
@@ -110,12 +115,23 @@ export function renderHero(track) {
       <button class="hero-play" data-hero-play style="position: absolute; right: var(--s6); bottom: var(--s6); z-index: 3;">${getIcon('play')}</button>
     </div>`
   el._track = track
+  return true;
+}
+
+function _shouldFilterBlocked(container) {
+  if (!container) return false;
+  // Exempt Artist Page lists
+  if (['artist-tracklist', 'artist-discography', 'artist-videos-row', 'artist-mixes-row'].includes(container.id)) return false;
+  // Exempt Search Artist tab
+  if (container.id === 'search-results-list' && State.get('search.activeTab') === 'artists') return false;
+  return true;
 }
 
 export function renderHorizCards(tracks, container, type = 'standard') {
   if (!container) return
+  const data = (tracks && _shouldFilterBlocked(container)) ? tracks.filter(t => !isArtistBlocked(t.channel || t.artist || t.name)) : tracks;
   const isVideo = type === 'video';
-  container.innerHTML = tracks.slice(0, 15).map((t, i) => `
+  container.innerHTML = data.slice(0, 15).map((t, i) => `
     <div class="horiz-card${isVideo ? ' video-card' : ''}" data-index="${i}">
       <div class="${isVideo ? 'horiz-video-wrap' : 'horiz-art-wrap'}">
         <img class="horiz-art" src="${escHtml(t.thumbnail || t.cover || t.coverSmall || '')}" onerror="this.src=''" alt="" loading="lazy"/>
@@ -125,11 +141,14 @@ export function renderHorizCards(tracks, container, type = 'standard') {
       <div class="horiz-title">${escHtml(t.title || t.name || '')}${t.explicit ? ` <span class="explicit-tag-mini" style="font-size:10px; opacity:0.7">${getIcon('explicit')}</span>` : ''}</div>
       <div class="horiz-artist">${escHtml(t.channel || t.artist || '')}</div>
     </div>`).join('');
-  container._tracks = tracks
+  container._tracks = data
 }
 
 export function renderTopResult(track, container) {
-  if (!container || !track) return
+  if (!container || !track || isArtistBlocked(track.artist)) {
+    if (container) { container.innerHTML = ''; container.style.display = 'none'; }
+    return false;
+  }
   const b = qualityBadge(track)
   const isAtmos = _isAtmos(track)
   container.innerHTML = `
@@ -146,6 +165,7 @@ export function renderTopResult(track, container) {
       </div>
       <button class="top-result-play">${getIcon('play')}</button>
     </div>`
+  return true;
 }
 
 export function renderTrackItemHTML(t, i, currentId) {
@@ -177,9 +197,11 @@ export function renderTrackItemHTML(t, i, currentId) {
 }
 
 export function renderTracks(tracks, container, currentId) {
-  if (!tracks || !tracks.length) return container.innerHTML = emptyState('music', 'No results found', 'Try a different search');
-  container.innerHTML = tracks.map((t, i) => renderTrackItemHTML(t, i, currentId)).join('')
-  container._tracks = tracks
+  if (!tracks || !tracks.length) return container.innerHTML = emptyState('music', 'No tracks');
+  const data = _shouldFilterBlocked(container) ? tracks.filter(t => !isArtistBlocked(t.artist)) : tracks;
+  if (tracks.length > 0 && !data.length) return container.innerHTML = emptyState('warning', 'Content from blocked artist hidden');
+  container.innerHTML = data.map((t, i) => renderTrackItemHTML(t, i, currentId)).join('')
+  container._tracks = data
 }
 
 export function renderTrackList(tracks, container, currentId) {
@@ -230,8 +252,10 @@ export function renderAlbums(albums, container) {
     container.innerHTML = _emptyState('No albums found');
     return;
   }
+  const data = _shouldFilterBlocked(container) ? albums.filter(a => !isArtistBlocked(a.artist)) : albums;
+  if (albums.length > 0 && !data.length) return container.innerHTML = emptyState('warning', 'Content from blocked artist hidden');
   container.className = 'card-grid'
-  container.innerHTML = albums
+  container.innerHTML = data
     .map(
       (a, i) => `
     <div class="card-item" data-index="${i}">
@@ -241,7 +265,7 @@ export function renderAlbums(albums, container) {
     </div>`
     )
     .join('')
-  container._albums = albums
+  container._albums = data
 }
 
 export function renderArtists(artists, container) {
@@ -649,14 +673,14 @@ export function showPage(name) {
   document
     .querySelector(`.sb-item[data-page="${name}"]`)
     ?.classList.add('active')
-  window.scrollTo(0, 0);
+  ($('main-content') || document.querySelector('.main-wrap'))?.scrollTo(0, 0);
 }
 
 export function openPlayer() {
   const np = $('now-playing');
   if (np) {
     np.classList.add('open');
-    document.body.classList.add('scroll-locked');
+    setMainContentOverlayState(true);
   }
 }
 
@@ -667,7 +691,7 @@ export function revertThemeColor() {
     meta.setAttribute('content', _npColor)
     return
   }
-  
+
   const skin = document.documentElement.getAttribute('data-skin') || 'default';
   const mode = document.documentElement.getAttribute('data-theme') || 'light';
 
@@ -688,14 +712,35 @@ export function revertThemeColor() {
   const shades = themeShades[skin] || themeShades['default'];
   meta.setAttribute('content', shades[mode] || shades.light);
 }
- 
+
 export function closePlayer() {
   document
     .querySelectorAll('.np-overlay')
     .forEach((p) => p.classList.remove('open'))
   $('now-playing')?.classList.remove('open')
-  document.body.classList.remove('scroll-locked');
+  setMainContentOverlayState(false);
   revertThemeColor()
+}
+
+/**
+ * Manages the blur and scroll-lock state of the main content area.
+ * Increments/decrements a counter and applies/removes classes based on the count.
+ * @param {boolean} active - true to activate (add blur/lock), false to deactivate (remove).
+ */
+export function setMainContentOverlayState(active) {
+  const scroller = $('main-content') || document.querySelector('.main-wrap');
+  if (!scroller) return;
+
+  // Refined counter logic: Background is locked if at least one overlay is active.
+  _activeOverlayCount = active ? (_activeOverlayCount + 1) : Math.max(0, _activeOverlayCount - 1);
+
+  if (_activeOverlayCount > 0) {
+    scroller.classList.add('blur-active');
+    scroller.style.overflowY = 'hidden'; // Lock background scroll
+  } else {
+    scroller.classList.remove('blur-active');
+    scroller.style.overflowY = 'auto'; // Restore background scroll
+  }
 }
 
 export function openPanel(id) {
@@ -710,13 +755,21 @@ export function closePanel(id) {
 
 export function closeAllOverlays() {
   $('now-playing')?.classList.remove('open');
-  document.body.classList.remove('scroll-locked');
   document.querySelectorAll('.np-overlay').forEach(p => p.classList.remove('open'));
   const subpages = ['page-album', 'page-artist', 'page-playlist', 'page-mix', 'page-genre', 'page-user-playlist', 'page-liked-videos'];
   subpages.forEach(id => $(id)?.classList.remove('open', 'stacked'));
   document.querySelectorAll('.bottom-sheet, .bottom-sheet-global, #track-options-sheet, #playlist-picker-sheet, #np-more-sheet, #profile-popup-sheet, #sleep-timer-popup, #np-queue-item-sheet')
     .forEach(el => el.classList.remove('open'));
   if ($('playlist-modal-overlay')) $('playlist-modal-overlay').style.display = 'none';
+  
+  // Force unlock the main area
+  _activeOverlayCount = 0;
+  const scroller = $('main-content') || document.querySelector('.main-wrap');
+  if (scroller) {
+    scroller.classList.remove('blur-active');
+    scroller.style.overflowY = 'auto';
+  }
+
   revertThemeColor();
   updatePlayerPosition();
 }

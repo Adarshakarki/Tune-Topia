@@ -617,6 +617,12 @@
                 </div>
               </div>
               <div class="settings-section">
+                <div class="settings-section-title">Keyboard Shortcuts</div>
+                <div class="settings-card" id="shortcuts-container">
+                  <div class="status-loading"><i data-icon="refresh" class="spinning"></i> Loading shortcuts…</div>
+                </div>
+              </div>
+              <div class="settings-section">
                 <div class="settings-section-title">API Instances</div>
                 <div class="settings-card" id="status-api-list">
                   <div class="status-loading"><i data-icon="refresh" class="spinning"></i> Checking…</div>
@@ -933,6 +939,12 @@
               </div>
               <a id="artist-wiki-link" href="#" target="_blank" rel="noopener">Read on Wikipedia <i data-icon="external"></i></a>
             </div>
+            <div id="artist-block-section" style="margin: 24px var(--s5) 0; padding-top: 24px; border-top: 1px solid var(--border);">
+              <button id="artist-block-btn" class="settings-save-btn settings-cancel-btn" style="width: 100%; justify-content: center; display: flex; align-items: center; gap: 8px;">
+                <i data-icon="close"></i>
+                <span id="artist-block-text">Block Artist</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1132,6 +1144,21 @@
         <button class="sheet-action" id="tsheet-move-up" style="display: none"><i data-icon="chevron-up"></i> Move Up</button>
         <button class="sheet-action" id="tsheet-move-down" style="display: none"><i data-icon="chevron-down"></i> Move Down</button>
         <button class="sheet-action sheet-action-danger" id="tsheet-remove" style="display: none"><i data-icon="trash"></i> Remove from Playlist</button>
+      </div>
+    </div>
+
+    <!-- Shortcuts List Sheet -->
+    <div id="shortcuts-sheet" class="bottom-sheet">
+      <div class="bottom-sheet-overlay" id="shortcuts-sheet-overlay"></div>
+      <div class="bottom-sheet-card">
+        <div class="bottom-sheet-handle"></div>
+        <div class="pl-picker-header">
+          <span class="pl-picker-title">Keyboard Shortcuts</span>
+        </div>
+        <div id="shortcuts-list-container" class="shortcuts-sheet-body"></div>
+        <div class="settings-row no-border">
+          <button class="settings-save-btn settings-cancel-btn" id="shortcuts-sheet-reset" style="width:100%">Reset All to Default</button>
+        </div>
       </div>
     </div>
 

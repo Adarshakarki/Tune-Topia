@@ -162,6 +162,16 @@ body.scroll-locked {
   padding-bottom: calc(var(--bar-h-mobile, 64px) + var(--nav-h, 60px) + var(--s10));
 }
 
+#main-content.blur-active {
+  filter: blur(20px); /* Adjust blur amount as needed */
+  pointer-events: none; /* Prevent interaction with blurred content */
+  transition: filter 0.3s ease-in-out; /* Smooth transition for blur */
+}
+
+#main-content.scroll-locked-content {
+  overflow-y: hidden; /* Prevent scrolling of main content */
+}
+
 .page { display: none; }
 .page.active { display: block; }
 

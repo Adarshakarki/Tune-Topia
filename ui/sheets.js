@@ -52,9 +52,14 @@ export function openTrackSheet(t, opts = {}) {
   Object.entries(visibility).forEach(([k, v]) => show(`tsheet-${k}`, v));
   show('tsheet-go-album', !!(t.album || t.albumId));
   $('track-options-sheet')?.classList.add('open');
+  UI.setMainContentOverlayState(true);
 }
 
-const _closeTS = () => { $('track-options-sheet')?.classList.remove('open'); _tsTrack = null; _tsOpts = {}; };
+const _closeTS = () => {
+  $('track-options-sheet')?.classList.remove('open'); 
+  _tsTrack = null; _tsOpts = {}; 
+  UI.setMainContentOverlayState(false);
+};
 const _openSleep = () => { $('sleep-timer-popup')?.classList.add('open'); UI.closeMoreSheet(); };
 const _closeSleep = () => $('sleep-timer-popup')?.classList.remove('open');
 
@@ -89,7 +94,9 @@ const _syncGlobalSheetLike = () => {
 
 export function initEvents() {
   document.addEventListener('click', e => {
-    const b = e.target.closest('.track-more-btn, .alb-track-more, .upl-track-more'); 
+    // Intercept generic 'more' buttons. We exclude .upl-track-more because userplaylist.js 
+    // handles it specifically to provide removal and reordering options.
+    const b = e.target.closest('.track-more-btn, .alb-track-more'); 
     if (!b) return; 
     e.stopPropagation();
     

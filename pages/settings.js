@@ -18,6 +18,65 @@ function _renderCacheSize() {
   if (el) el.textContent = stats.usage > 0 ? `${stats.text} items cached` : 'Cache is empty';
 }
 
+export function renderShortcuts() {
+  const container = $('shortcuts-container');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="settings-row no-border">
+      <div class="settings-row-info">
+        <span class="settings-row-label">Custom Bindings</span>
+        <span class="settings-row-sub">View and edit keyboard shortcuts</span>
+      </div>
+      <button class="settings-save-btn btn-nowrap" id="open-shortcuts-btn">Manage</button>
+    </div>`;
+}
+
+const KEY_SYMBOLS = {
+  Control: 'Ctrl',
+  Alt: 'Alt',
+  Shift: 'Shift',
+  Meta: '⌘',
+  Space: 'Space', ArrowRight: '→', ArrowLeft: '←', ArrowUp: '↑', ArrowDown: '↓',
+  Slash: '/', Backslash: '\\', BracketRight: ']', BracketLeft: '[', Comma: ',',
+  Period: '.', Semicolon: ';', Quote: "'", Backquote: '`', Minus: '-', Equal: '=',
+  Enter: '↵', Backspace: '⌫', Tab: '⇥', Escape: '⎋'
+};
+
+function _fmtK(code) {
+  if (!code) return '...';
+  return code.split('+').map(part => {
+    if (KEY_SYMBOLS[part]) return KEY_SYMBOLS[part];
+    if (part.startsWith('Key')) return part.slice(3);
+    if (part.startsWith('Digit')) return part.slice(5);
+    return part;
+  }).join('+');
+}
+
+export function renderFullShortcutsList() {
+  const container = $('shortcuts-list-container');
+  if (!container) return;
+
+  const saved = JSON.parse(localStorage.getItem('tt_shortcuts') || '{}');
+  const map = { ...DEFAULT_SHORTCUTS, ...saved };
+
+  container.innerHTML = Object.entries(SHORTCUT_LABELS).map(([action, label]) => `
+    <div class="settings-row">
+      <div class="settings-row-info">
+        <div class="settings-row-label">${label}</div>
+      </div>
+      <div class="shortcut-actions">
+        <kbd class="shortcut-key-trigger" data-action="${action}">${_fmtK(map[action])}</kbd>
+        <button class="shortcut-reset-btn" data-action="${action}" title="Reset to default">
+          ${UI.getIcon('refresh')}
+        </button>
+      </div>
+    </div>`).join('');
+}
+
+const DEFAULT_SHORTCUTS = { toggle: 'Space', next: 'KeyN', prev: 'KeyP', seekFwd: 'ArrowRight', seekBack: 'ArrowLeft', volUp: 'ArrowUp', volDown: 'ArrowDown', mute: 'KeyM', shuffle: 'KeyS', repeat: 'KeyR', home: 'KeyH', search: 'Slash', settings: 'KeyI' };
+const SHORTCUT_LABELS = { toggle: 'Play / Pause', next: 'Next Track', prev: 'Previous Track', seekFwd: 'Seek Forward', seekBack: 'Seek Backward', volUp: 'Volume Up', volDown: 'Volume Down', mute: 'Mute Toggle', shuffle: 'Toggle Shuffle', repeat: 'Toggle Repeat', home: 'Go to Home (Index)', search: 'Go to Search', settings: 'Open Settings' };
+
 // Update
 let _waitingWorker = null
 
@@ -119,6 +178,7 @@ export function render() {
   Theme.loadFonts();
   renderFonts();
   _renderCacheSize()
+  renderShortcuts();
   renderDownloadQuality()
   _initEqualizers()
   _injectSpinStyle()
@@ -266,9 +326,79 @@ export function initEvents() {
     }
   });
 
-  $('speed-options')?.addEventListener('click', e => { const btn = e.target.closest('.speed-btn'); if (!btn) return; const speed = parseFloat(btn.dataset.speed); localStorage.setItem('tt_speed', speed); renderSpeed(); UI.toast(`Playback speed: ${speed}×`); });
+  $('shortcuts-container')?.addEventListener('click', e => {
+    if (e.target.id === 'open-shortcuts-btn') {
+      renderFullShortcutsList();
+      $('shortcuts-sheet')?.classList.add('open');
+      UI.setMainContentOverlayState(true);
+    }
+  });
 
-  Player.on('trackChanged', () => { const speed = parseFloat(localStorage.getItem('tt_speed') || '1'); if (speed !== 1) setTimeout(() => document.querySelectorAll('audio,video').forEach(el => el.playbackRate = speed), 300); });
+  $('shortcuts-sheet')?.addEventListener('click', e => {
+    const trigger = e.target.closest('.shortcut-key-trigger');
+    const resetItemBtn = e.target.closest('.shortcut-reset-btn');
+
+    if (trigger) {
+      const action = trigger.dataset.action;
+      trigger.classList.add('active');
+      trigger.textContent = '...';
+
+      const capture = (ke) => {
+        // Ignore if only a modifier is pressed (allows holding Shift/Ctrl)
+        if (['Shift', 'Control', 'Alt', 'Meta'].includes(ke.key)) {
+          ke.preventDefault();
+          return;
+        }
+
+        ke.preventDefault(); ke.stopPropagation();
+
+        const mods = [];
+        if (ke.ctrlKey) mods.push('Control');
+        if (ke.altKey) mods.push('Alt');
+        if (ke.shiftKey) mods.push('Shift');
+        if (ke.metaKey) mods.push('Meta');
+
+        const combo = (mods.length ? mods.join('+') + '+' : '') + ke.code;
+
+        const saved = JSON.parse(localStorage.getItem('tt_shortcuts') || '{}');
+        saved[action] = combo;
+        localStorage.setItem('tt_shortcuts', JSON.stringify(saved));
+        
+        window.removeEventListener('keydown', capture, { capture: true });
+        trigger.classList.remove('active');
+        renderFullShortcutsList();
+        UI.toast(`Mapped ${SHORTCUT_LABELS[action]} to ${_fmtK(combo)}`);
+      };
+
+      window.addEventListener('keydown', capture, { capture: true });
+    }
+
+    if (resetItemBtn) {
+      const action = resetItemBtn.dataset.action;
+      const saved = JSON.parse(localStorage.getItem('tt_shortcuts') || '{}');
+      if (saved[action]) {
+        delete saved[action];
+        localStorage.setItem('tt_shortcuts', JSON.stringify(saved));
+        renderFullShortcutsList();
+        UI.toast(`Reset ${SHORTCUT_LABELS[action]} to default`);
+      }
+    }
+
+    if (e.target.id === 'shortcuts-sheet-reset') {
+      if (confirm('Reset all shortcuts?')) {
+        localStorage.removeItem('tt_shortcuts');
+        renderFullShortcutsList();
+        UI.toast('Shortcuts reset');
+      }
+    }
+
+    if (e.target.id === 'shortcuts-sheet-overlay' || e.target.id === 'shortcuts-sheet-close') {
+      $('shortcuts-sheet')?.classList.remove('open');
+      UI.setMainContentOverlayState(false);
+    }
+  });
+
+  $('speed-options')?.addEventListener('click', e => { const btn = e.target.closest('.speed-btn'); if (!btn) return; const speed = parseFloat(btn.dataset.speed); localStorage.setItem('tt_speed', speed); renderSpeed(); UI.toast(`Playback speed: ${speed}×`); });
   $('gapless-toggle')?.addEventListener('click', function () { const on = this.getAttribute('aria-checked') === 'true'; localStorage.setItem('tt_gapless', String(!on)); renderGapless(); UI.toast(on ? 'Gapless playback off' : 'Gapless playback on'); });
 
 

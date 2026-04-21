@@ -3,7 +3,7 @@ import { searchArtists, searchTracks, searchAlbums, getArtistTopTracks, getArtis
 import { escHtml } from '../api/utils.js'
 import * as UI from '../app/ui.js'
 import { toggle, has } from '../modules/likedSongs.js'
-import { toggleArtist, hasArtist } from '../modules/library.js'
+import { toggleArtist, hasArtist, isBlocked, toggleBlockArtist } from '../modules/library.js'
 import Queue from '../modules/queue.js'
 import * as Player from '../modules/player.js'
 import * as VideoPage from './video.js'
@@ -17,6 +17,13 @@ export function init(playFn, openAlb) {
   _playFn = playFn; _openAlbum = openAlb;
   $('artist-follow-btn')?.addEventListener('click', () => { if (_artist) { toggleArtist(_artist); _syncFollow(); } });
   $('artist-play-btn')?.addEventListener('click', () => _tracks.length && (_playFn(_tracks, 0), close()));
+  $('artist-block-btn')?.addEventListener('click', () => {
+    if (_artist) {
+      toggleBlockArtist(_artist.name);
+      _syncBlock();
+      UI.toast(isBlocked(_artist.name) ? `Blocked ${_artist.name}` : `Unblocked ${_artist.name}`);
+    }
+  });
   $('artist-share-btn')?.addEventListener('click', () => {
     if (!_artist) return;
     const slug = (_artist.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '_');
@@ -68,6 +75,7 @@ export async function open(input) {
     $('artist-hero-img').src = _artist.cover;
   }
   _syncFollow();
+  _syncBlock();
 
   await Promise.allSettled([
     _loadTs(_artist), 
@@ -108,6 +116,14 @@ function _syncFollow() {
   const f = hasArtist(_artist.id || _artist.name);
   btn.textContent = f ? 'Following' : 'Follow';
   btn.classList.toggle('following', f);
+}
+
+function _syncBlock() {
+  const btn = $('artist-block-btn');
+  const txt = $('artist-block-text');
+  if (!btn || !txt || !_artist) return;
+  const blocked = isBlocked(_artist.name);
+  txt.textContent = blocked ? 'Unblock Artist' : 'Block Artist';
 }
 
 async function _loadTs(a) {

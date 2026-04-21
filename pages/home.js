@@ -13,6 +13,7 @@ import * as AlbumPage from './album.js'
 import * as Playlists from '../modules/playlists.js'
 import * as VideoPage from './video.js'
 import * as UserPlaylistPage from './userplaylist.js'
+import { isArtistBlocked, isBlocked } from '../modules/library.js'
 
 let _homeCachedData = null;
 const $ = (id) => document.getElementById(id)
@@ -84,7 +85,8 @@ async function _performFetch(queries, ytFallback) {
   recsPromise.then(recTs => {
     if (recTs.length) {
       _homeCachedData = { ...(_homeCachedData || {}), recTs };
-      UI.renderHero(recTs[0]);
+      const heroTrack = recTs.find(t => !isArtistBlocked(t.artist));
+      UI.renderHero(heroTrack);
       if (tEl) { UI.renderTracks(recTs.slice(0, 20), tEl, null); attachTrackEvents(tEl); }
       _loadArtists(recTs);
       _loadForYou(recTs);
@@ -118,7 +120,8 @@ async function _performFetch(queries, ytFallback) {
 function _renderFromData(data) {
   const tEl = $('home-tracks'), nRow = $('home-new-row');
   if (data.recTs?.length) {
-    UI.renderHero(data.recTs[0]);
+    const heroTrack = data.recTs.find(t => !isArtistBlocked(t.artist));
+    UI.renderHero(heroTrack);
     if (tEl) { UI.renderTracks(data.recTs.slice(0, 20), tEl, null); attachTrackEvents(tEl); }
     _loadArtists(data.recTs);
     _loadForYou(data.recTs);
@@ -257,7 +260,7 @@ async function _loadArtists(recTracks) {
     if (!t.artist) continue;
     const names = t.artist.split(',').map(n => n.trim());
     for (const name of names) {
-      if (name && !seen.has(name)) { seen.add(name); arts.push(name); }
+      if (name && !seen.has(name) && !isBlocked(name)) { seen.add(name); arts.push(name); }
       if (arts.length >= 10) break;
     }
     if (arts.length >= 10) break;

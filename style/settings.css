@@ -262,3 +262,60 @@
   padding: var(--s2);
   min-height: 42px;
 }
+
+/* Shortcuts List Sheet Layout */
+.shortcut-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.shortcut-key-trigger {
+  font-family: monospace;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--surface-3);
+  color: var(--accent);
+  padding: 6px 12px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  min-width: 60px;
+  text-align: center;
+  transition: all 0.2s ease;
+  display: inline-block;
+}
+
+.shortcut-key-trigger:hover {
+  background: var(--surface-4);
+  border-color: var(--accent);
+}
+
+.shortcut-key-trigger.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  transform: scale(1.05);
+  box-shadow: 0 0 12px var(--accent-dim);
+}
+
+.shortcut-reset-btn {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+  font-size: 18px;
+}
+
+.shortcut-reset-btn:hover {
+  color: var(--accent);
+}
+
+.shortcuts-sheet-body {
+  max-height: 50vh;
+  overflow-y: auto;
+}

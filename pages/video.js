@@ -104,7 +104,7 @@ export async function open(track) {
   _current = track
   const video = $('vp-video')
   if (!video) return
-  document.body.classList.add('scroll-locked');
+  UI.setMainContentOverlayState(true);
   History.push(track, 'video');
 
   _destroyHls()
@@ -162,7 +162,7 @@ export async function open(track) {
 
 export function close() {
   if ($(PAGE_ID)) $(PAGE_ID).style.display = 'none'
-  document.body.classList.remove('scroll-locked');
+  UI.setMainContentOverlayState(false);
   const video = $('vp-video')
   if (video) {
     video.pause()

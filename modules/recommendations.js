@@ -39,11 +39,15 @@ function _collect(State, History) {
     }
   };
 
-  // Heavier weight for explicitly followed artists
-  followed.forEach(a => bump(a.name || a, 10));
-  liked.forEach(t => bump(t.artist, 4));
-  albums.forEach(a => bump(a.artist, 3));
-
+  const blocked = State.get('library.blockedArtists') || [];
+  const isblocked = (name) => {
+    if (!name) return false;
+    return blocked.some(b => b.toLowerCase() === name.toLowerCase());
+  
+  }
+  followed.forEach(a => { if (!isblocked(a.name)) bump(a.name, 10); });
+  liked.forEach(t => { if (!isblocked(t.artist)) bump(t.artist, 4); });
+  albums.forEach(a => { if (!isblocked(a.artist)) bump(a.artist, 3); });
   const counts = {};
   hist.forEach(t => { const k = t.artist?.trim().toLowerCase(); if (k) counts[k] = (counts[k] || 0) + 1; });
   

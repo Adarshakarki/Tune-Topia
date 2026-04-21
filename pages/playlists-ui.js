@@ -63,6 +63,7 @@ export function openCreateModal() {
   if (title) title.textContent = 'New Playlist'
   if (btn) btn.textContent = 'Create'
   $('playlist-modal-overlay').style.display = 'flex'
+  UI.setMainContentOverlayState(true);
   setTimeout(() => $('pl-modal-name-input')?.focus(), 80)
 }
 
@@ -78,11 +79,13 @@ export function openEditModal(playlistId) {
   if (title) title.textContent = 'Edit Playlist'
   if (btn) btn.textContent = 'Save'
   $('playlist-modal-overlay').style.display = 'flex'
+  UI.setMainContentOverlayState(true);
   setTimeout(() => $('pl-modal-name-input')?.focus(), 80)
 }
 
 export function closeCreateModal() {
   $('playlist-modal-overlay').style.display = 'none'
+  UI.setMainContentOverlayState(false);
 }
 
 function _updateModalCover(url) {
@@ -157,10 +160,12 @@ export function openPicker(track) {
     })
   }
   $('playlist-picker-sheet')?.classList.add('open')
+  UI.setMainContentOverlayState(true);
 }
 
 export function closePicker() {
   $('playlist-picker-sheet')?.classList.remove('open')
+  UI.setMainContentOverlayState(false);
   _pickerTrack = null
 }
 

@@ -156,8 +156,7 @@ function _render() {
     btn.addEventListener('click', (e) => {
       e.stopPropagation()
       const track = tracks[+btn.closest('.upl-track').dataset.index]
-      if (!track) return
-      _openTrackOptions(track)
+      if (track) _openTrackOptions(track)
     })
   })
 }

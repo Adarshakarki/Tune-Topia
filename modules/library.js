@@ -37,3 +37,28 @@ export function removeFromPlaylist(playlistId, trackId) {
 }
 
 export const deletePlaylist = (id) => State.set('library.playlists', getPlaylists().filter(p => p.id !== id));
+
+// Block Artists
+export const getBlockedArtists = () => State.get('library.blockedArtists') || [];
+
+export const isArtistBlocked = (artistStr) => {
+  if (!artistStr) return false;
+  const blocked = getBlockedArtists();
+  if (!blocked.length) return false;
+  const names = String(artistStr).split(',').map(n => n.trim().toLowerCase());
+  return names.some(n => blocked.some(b => b.toLowerCase() === n));
+};
+
+export const isBlocked = (name) => {
+  if (!name) return false;
+  return getBlockedArtists().some(b => b.toLowerCase() === name.toLowerCase());
+};
+
+export const toggleBlockArtist = (name) => {
+  if (!name) return;
+  const list = getBlockedArtists();
+  const exists = isBlocked(name);
+  const updated = exists ? list.filter(b => b.toLowerCase() !== name.toLowerCase()) : [...list, name];
+  State.set('library.blockedArtists', updated);
+  return !exists;
+};

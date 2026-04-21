@@ -24,7 +24,11 @@ export function render() {
 export function initEvents(showFn) {
   _showPage = showFn;
 
-  $('home-account-btn')?.addEventListener('click', () => { _sync(); $('profile-popup-sheet')?.classList.add('open'); });
+  $('home-account-btn')?.addEventListener('click', () => { 
+    _sync();
+    $('profile-popup-sheet')?.classList.add('open');
+    UI.setMainContentOverlayState(true);
+  });
   $('profile-popup-overlay')?.addEventListener('click', _close);
   
   // Popup
@@ -77,7 +81,10 @@ export function initEvents(showFn) {
   Capsule.initEvents();
 }
 
-const _close = () => $('profile-popup-sheet')?.classList.remove('open');
+const _close = () => { 
+  $('profile-popup-sheet')?.classList.remove('open');
+  UI.setMainContentOverlayState(false);
+};
 
 function _syncEl(imgId, wrapId, url) {
   const img = $(imgId), wrap = $(wrapId), safe = _safeImg(url);
