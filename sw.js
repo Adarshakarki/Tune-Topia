@@ -1,5 +1,5 @@
 // SW
-const CACHE = 'tunetopia-v2.4'
+const CACHE = 'tunetopia-v2.3.1'
 const VERSION = CACHE.split('-v')[1] || '1.0.0'
 
 // Cache
