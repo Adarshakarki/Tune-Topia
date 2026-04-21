@@ -728,18 +728,18 @@ export function closePlayer() {
  * @param {boolean} active - true to activate (add blur/lock), false to deactivate (remove).
  */
 export function setMainContentOverlayState(active) {
+  const scroller = $('main-content') || document.querySelector('.main-wrap');
+  if (!scroller) return;
+
   // Refined counter logic: Background is locked if at least one overlay is active.
   _activeOverlayCount = active ? (_activeOverlayCount + 1) : Math.max(0, _activeOverlayCount - 1);
 
-  const scroller = $('main-content') || document.querySelector('.main-wrap');
-  const body = document.body;
-
   if (_activeOverlayCount > 0) {
-    scroller?.classList.add('blur-active');
-    body.style.overflow = 'hidden'; // Lock background scroll on body
+    scroller.classList.add('blur-active');
+    scroller.style.overflowY = 'hidden'; // Lock background scroll
   } else {
-    scroller?.classList.remove('blur-active');
-    body.style.overflow = ''; // Restore background scroll
+    scroller.classList.remove('blur-active');
+    scroller.style.overflowY = 'auto'; // Restore background scroll
   }
 }
 
@@ -765,8 +765,10 @@ export function closeAllOverlays() {
   // Force unlock the main area
   _activeOverlayCount = 0;
   const scroller = $('main-content') || document.querySelector('.main-wrap');
-  scroller?.classList.remove('blur-active');
-  document.body.style.overflow = '';
+  if (scroller) {
+    scroller.classList.remove('blur-active');
+    scroller.style.overflowY = 'auto';
+  }
 
   revertThemeColor();
   updatePlayerPosition();
