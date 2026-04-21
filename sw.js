@@ -113,7 +113,6 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // HTML
   if (request.mode === 'navigate' || request.destination === 'document' || url.pathname.endsWith('.html') || url.pathname === '/') {
     e.respondWith(
       fetch(request)
@@ -124,13 +123,12 @@ self.addEventListener('fetch', (e) => {
           }
           return res;
         })
-        .catch(() => caches.match('offline.html')) // Always fallback to offline.html if network fails for navigation
+        .catch(() => caches.match('offline.html'))
         .then((res) => res || new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/html' } }))
     );
     return;
   }
 
-  // Assets
   e.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;

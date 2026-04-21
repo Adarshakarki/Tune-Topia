@@ -603,3 +603,41 @@
     overflow: hidden;
   }
 }
+
+@media (max-width: 768px) {
+  html {
+    height: auto !important;
+  }
+
+  body {
+    display: block !important;
+    height: auto !important;
+    min-height: 100vh !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+    position: relative !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #shell {
+    display: block !important;
+    position: relative !important;
+    height: auto !important;
+    min-height: 100vh !important;
+    overflow: visible !important;
+    width: 100vw !important;
+    inset: auto !important;
+  }
+
+  #sidebar:not(.open) {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  #main-wrap, #main-content {
+    display: block !important;
+    height: auto !important;
+    min-height: 100vh !important;
+    overflow: visible !important;
+  }
+}

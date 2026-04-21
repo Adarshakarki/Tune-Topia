@@ -52,6 +52,7 @@ export function showPage(name, push = true, params = {}) {
     UI.showPage(name);
     closeSidebar();
 
+    // 3. Reset scroll position to top of the content area
     const mainContent = $('main-content');
     if (mainContent) mainContent.scrollTop = 0;
 
