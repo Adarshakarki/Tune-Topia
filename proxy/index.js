@@ -10,7 +10,10 @@ const https = require('https')
 const app = express()
 
 // CORS
-app.use(cors())
+app.use(cors({
+  origin: '*',
+  exposedHeaders: ['Content-Range', 'Content-Length', 'Accept-Ranges']
+}))
 
 app.use((req, res, next) => {
   res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
@@ -186,13 +189,13 @@ app.get('/proxy', async (req, res) => {
     const safeUrl = `${protocol}://${safeHostname}${safeSuffix}`
 
     const proxyHeaders = {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
       'Accept': 'audio/*, */*',
       'Origin': 'https://listen.tidal.com',
       'Referer': 'https://listen.tidal.com/',
     }
 
-    if (req.headers.range) proxyHeaders['Range'] = req.headers.range
+    proxyHeaders['Range'] = req.headers.range || 'bytes=0-'
     if (req.headers.authorization) proxyHeaders['Authorization'] = req.headers.authorization
 
     const response = await axios.request({
