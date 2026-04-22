@@ -9,7 +9,7 @@ export async function onRequest(context) {
 
   const modifiedHeaders = new Headers(request.headers);
   modifiedHeaders.set("Origin", "https://listen.tidal.com");
-  modifiedHeaders.delete("Referer");
+  modifiedHeaders.set("Referer", "https://listen.tidal.com/");
   
   // Forward original IP for rate limiting/analytics
   const ip = request.headers.get("cf-connecting-ip");

@@ -187,8 +187,9 @@ app.get('/proxy', async (req, res) => {
 
     const proxyHeaders = {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
-      'Accept': '*/*',
-      'origin': 'https://listen.tidal.com',
+      'Accept': 'audio/*, */*',
+      'Origin': 'https://listen.tidal.com',
+      'Referer': 'https://listen.tidal.com/',
     }
 
     if (req.headers.range) proxyHeaders['Range'] = req.headers.range
@@ -197,9 +198,8 @@ app.get('/proxy', async (req, res) => {
     const response = await axios.request({
       method: 'GET',
       url: safeUrl,
-      responseType: 'arraybuffer',
+      responseType: 'stream',
       timeout: 15000,
-      maxContentLength: 50 * 1024 * 1024,
       maxRedirects: 3,
       httpAgent,
       httpsAgent,
@@ -207,6 +207,9 @@ app.get('/proxy', async (req, res) => {
       headers: proxyHeaders,
     })
     res.status(response.status)
+    if (response.headers['content-length']) {
+      res.set('Content-Length', response.headers['content-length'])
+    }
     if (response.headers['content-range']) {
       res.set('Content-Range', response.headers['content-range'])
     }
@@ -223,7 +226,7 @@ app.get('/proxy', async (req, res) => {
       }
     }
 
-    res.send(response.data)
+    response.data.pipe(res)
   } catch (err) {
     console.error('Proxy error:', err.message)
     res.status(500).json({

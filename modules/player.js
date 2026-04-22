@@ -14,6 +14,7 @@ import * as AnimatedArtwork from './animatedArtwork.js'
 
 // Audio
 export const audioA = document.getElementById('audio')
+if (audioA) audioA.crossOrigin = 'anonymous'
 export const audioB = new Audio()
 audioB.crossOrigin = 'anonymous'
 audioB.preload = 'auto'
