@@ -46,9 +46,10 @@ const API_BASE = window.location.hostname === 'localhost' || window.location.hos
 export const _proxify = (url) => {
   if (!url || url.startsWith('blob:') || url.startsWith('data:')) return url;
   
-  // Route Tidal API calls through the new path-based proxy
-  if (url.includes('api.tidal.com')) {
-    return url.replace('https://api.tidal.com', API_BASE);
+  // Route Tidal API calls through the path-based proxy (handles both http and https)
+  const tidalMatch = url.match(/^https?:\/\/api\.tidal\.com/);
+  if (tidalMatch) {
+    return url.replace(tidalMatch[0], API_BASE);
   }
 
   // Replace the URL below with the address of your hosted Node.js proxy server

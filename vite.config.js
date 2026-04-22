@@ -22,6 +22,16 @@ export default defineConfig({
           });
         },
       },
+      // Proxy for general 3rd party requests during local development
+      '/proxy': {
+        target: 'https://tune-topia.onrender.com',
+        changeOrigin: true,
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq) => {
+            proxyReq.setHeader('Origin', 'https://listen.tidal.com');
+          });
+        },
+      },
     },
   },
 });
