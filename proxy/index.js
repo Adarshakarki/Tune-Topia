@@ -111,8 +111,8 @@ function getProxyMode(hostname) {
 // Route
 app.get('/proxy', async (req, res) => {
   const targetUrl = req.query.url
-  if (!targetUrl) {
-    return res.status(400).send('Missing url')
+  if (!targetUrl || targetUrl === 'undefined') {
+    return res.status(400).send('Invalid or missing url parameter')
   }
 
   try {
@@ -206,14 +206,16 @@ app.get('/proxy', async (req, res) => {
       validateStatus: () => true,
       headers: proxyHeaders,
     })
-    res.status(response.status)
+
+    // Forward status and essential streaming headers
+    res.status(response.status);
     if (response.headers['content-length']) {
       res.set('Content-Length', response.headers['content-length'])
     }
     if (response.headers['content-range']) {
       res.set('Content-Range', response.headers['content-range'])
     }
-    res.set('Accept-Ranges', 'bytes')
+    res.set('Accept-Ranges', 'bytes');
     
     // Sanitise the reflected Content-Type to prevent header injection.
     // Only forward type/subtype; strip parameters that could carry CRLF.

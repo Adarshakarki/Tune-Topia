@@ -323,14 +323,26 @@ async function _playDash(manifestXml) {
 
 // Stream
 async function _getStream(track) {
-  if (track.source === 'youtube') return ytStream(track.id)
+  if (track.source === 'youtube') return ytStream(track.id);
+  
   try {
-    return await tidalStream(track.id)
-  } catch {}
-  /*
-  const yt = await searchVideos(`${track.title} ${track.artist} audio`)
-  if (yt.length) return ytStream(yt[0].id)
-  */
+    // Robust fetch via Katze API through the Render Proxy
+    const katzeUrl = `https://katze.qqdl.site/track/?id=${track.id}&quality=LOW`;
+    const response = await fetch(_proxify(katzeUrl));
+    const json = await response.json();
+
+    if (json?.data?.manifest) {
+      // Decode the "hidden" Base64 manifest
+      const decodedManifest = JSON.parse(atob(json.data.manifest));
+      return {
+        url: decodedManifest.urls[0],
+        type: 'url'
+      };
+    }
+  } catch (err) {
+    console.error('[Player] Katze fetch failed:', err);
+  }
+
   throw new Error('Stream unavailable')
 }
 
