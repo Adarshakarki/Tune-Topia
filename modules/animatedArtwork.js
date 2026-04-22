@@ -76,10 +76,25 @@ export async function getAnimatedUrl(track) {
 
     const apiUrl = `${BASE_URL}/search?${params}`;
 
-    const res = await fetch(apiUrl, {
-      mode: 'cors',
-      credentials: 'omit'
-    });
+    let res;
+    let retries = 0;
+    const maxRetries = 3;
+
+    while (retries < maxRetries) {
+      res = await fetch(apiUrl, {
+        mode: 'cors',
+        credentials: 'omit'
+      });
+
+      if (res.status === 429) {
+        retries++;
+        const delay = Math.pow(2, retries) * 1000;
+        console.warn(`[AnimatedArtwork] Rate limited (429). Retrying in ${delay}ms...`);
+        await new Promise(r => setTimeout(r, delay));
+      } else {
+        break;
+      }
+    }
 
     if (!res.ok) {
       console.warn('[AnimatedArtwork] API error:', res.status);

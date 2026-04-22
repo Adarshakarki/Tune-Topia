@@ -189,7 +189,6 @@ app.get('/proxy', async (req, res) => {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
       'Accept': '*/*',
       'origin': 'https://listen.tidal.com',
-      'Referer': 'https://listen.tidal.com/',
     }
 
     if (req.headers.range) proxyHeaders['Range'] = req.headers.range

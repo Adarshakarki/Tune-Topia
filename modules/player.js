@@ -37,10 +37,21 @@ let _preloaded = null
 let _preloading = false
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
 
+// Unified API base for Tidal requests
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+  ? '/api' 
+  : '/proxy';
+
 export const _proxify = (url) => {
   if (!url || url.startsWith('blob:') || url.startsWith('data:')) return url;
-  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  
+  // Route Tidal API calls through the new path-based proxy
+  if (url.includes('api.tidal.com')) {
+    return url.replace('https://api.tidal.com', API_BASE);
+  }
+
   // Replace the URL below with the address of your hosted Node.js proxy server
+  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   const proxyBase = isLocal ? '' : 'https://tune-topia.onrender.com';
   return `${proxyBase}/proxy?url=${encodeURIComponent(url)}`;
 };

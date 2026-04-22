@@ -11,5 +11,17 @@ export default defineConfig({
       'Cross-Origin-Opener-Policy': 'same-origin',
       'Cross-Origin-Embedder-Policy': 'require-corp',
     },
+    proxy: {
+      '/api': {
+        target: 'https://api.tidal.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq) => {
+            proxyReq.setHeader('Origin', 'https://listen.tidal.com');
+          });
+        },
+      },
+    },
   },
 });
