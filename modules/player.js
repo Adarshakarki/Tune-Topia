@@ -14,18 +14,21 @@ import * as AnimatedArtwork from './animatedArtwork.js'
 import { debugProxyStatus, proxifyUrl } from '../app/proxyRewrite.js'
 
 // Audio
-export const audioA = document.getElementById('audio')
-if (audioA) audioA.crossOrigin = 'anonymous'
-export const audioB = new Audio()
-audioB.crossOrigin = 'anonymous'
-audioB.preload = 'auto'
-audioB.style.display = 'none'
-document.body.appendChild(audioB)
+function _configureAudioElement(el) {
+  if (!el) return el
+  el.crossOrigin = 'anonymous'
+  el.preload = 'auto'
+  el.playsInline = true
+  el.setAttribute('playsinline', '')
+  el.setAttribute('webkit-playsinline', '')
+  return el
+}
+
+export const audioA = _configureAudioElement(document.getElementById('audio'))
+export const audioB = null
 
 let _active = audioA
-let _inactive = audioB
 let _dash = null
-let _swapping = false
 let _sleepAfterTrack = false
 let _handlersRegistered = false
 let _switching = false
@@ -36,8 +39,6 @@ let _playRequestId = 0
 
 const _preloadLead = 20
 const _listeners = {}
-let _preloaded = null
-let _preloading = false
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
 
 export const _proxify = (url) => proxifyUrl(url, 'player');
@@ -173,14 +174,14 @@ function _bindAudio(el) {
     if (el !== _active || !el.duration) return
     const remaining = el.duration - el.currentTime;
     _emit('progress', { pct: (el.currentTime / el.duration) * 100, current: el.currentTime, duration: el.duration });
-    if (!_preloading && !_preloaded && remaining <= _preloadLead) {
-      if (localStorage.getItem('tt_gapless') !== 'false') _preloadNext()
+    if (remaining <= _preloadLead) {
+      // Keep the active audio element warm on Safari/iOS near track end.
+      _active.currentTime = el.currentTime
     }
   })
 }
 
 _bindAudio(audioA)
-_bindAudio(audioB)
 
 // Logic
 function _onEnded() {
@@ -188,7 +189,6 @@ function _onEnded() {
     _sleepAfterTrack = false; _emit('playStateChanged', false); _emit('sleepTimerFired', null); return;
   }
   if (State.get('player.isRepeat')) { _active.currentTime = 0; _active.play(); return; }
-  if (_preloaded && !_swapping) { _swapToPreloaded(); return; }
 
   const hasNext = Queue.getNext();
   if (hasNext) { next(); return; }
@@ -237,60 +237,6 @@ async function _fillRadioQueue() {
   } finally {
     _loadingRadio = false;
   }
-}
-
-// Preload
-async function _preloadNext() {
-  const upcoming = Queue.getUpcoming();
-  let nextTrack = upcoming.priority[0] || upcoming.incoming[0];
-
-  if (!nextTrack && _radioMode) {
-    await _fillRadioQueue();
-    const updated = Queue.getUpcoming();
-    nextTrack = updated.priority[0] || updated.incoming[0];
-  }
-
-  if (!nextTrack) return;
-  _preloading = true;
-  try {
-    const stream = await _getStream(nextTrack);
-    if (stream.type === 'dash') { _preloading = false; return; }
-
-    _inactive.pause()
-    _inactive.src = ''
-    _inactive.load()
-    _inactive.src = _proxify(stream.url)
-    _inactive.volume = 0
-    _inactive.load()
-    _preloaded = { track: nextTrack }
-  } catch {}
-  _preloading = false
-}
-
-// Gapless
-function _swapToPreloaded() {
-  if (_swapping) return
-  _swapping = true;
-  const track = _preloaded.track;
-
-  _inactive.volume = 1; _inactive.play().catch(() => {});
-  _ensureMediaSessionHandlers();
-
-  _active.pause(); _active.src = ''; _active.volume = 1;
-  [_active, _inactive] = [_inactive, _active];
-
-  Queue.advance(1);
-  State.set('player.currentTrack', track); _emit('trackChanged', track);
-  _emit('queueUpdated', { tracks: State.get('queue.tracks'), position: State.get('player.queuePosition') });
-
-  AnimatedArtwork.getAnimatedUrl(track).then(url => {
-    _emit('animatedArtworkAvailable', { trackId: track.id, url });
-  });
-
-  History.push(track); _updateMediaSession(track);
-
-  _preloaded = null; _preloading = false; _swapping = false;
-  _preloadNext();
 }
 
 // DASH
@@ -347,12 +293,18 @@ export async function play(track, tracks, startIndex = 0) {
   if (tracks) Queue.load(tracks, startIndex);
   await processor.resume();
 
+  if (window.__userInteracted == null) {
+    window.__userInteracted = false
+    const markInteracted = () => { window.__userInteracted = true }
+    document.addEventListener('click', markInteracted, { capture: true, passive: true })
+    document.addEventListener('touchstart', markInteracted, { capture: true, passive: true })
+  }
+
   _radioHistory.add(track.id);
-  _switching = true; _pauseVideo(); _preloaded = null; _preloading = false; _swapping = false;
+  _switching = true; _pauseVideo();
 
   audioA.pause(); audioA.volume = 1; audioA.src = ''; audioA.load();
-  audioB.pause(); audioB.volume = 1; audioB.src = ''; audioB.load();
-  _active = audioA; _inactive = audioB; _switching = false;
+  _active = audioA; _switching = false;
   
   if (_dash) { try { _dash.destroy(); } catch {} _dash = null; }
 
@@ -450,6 +402,10 @@ export async function toggle() {
     if (State.get('player.isPlaying')) {
       _active.pause();
     } else {
+      if (!window.__userInteracted) {
+        console.log('User gesture required for mobile playback');
+        return;
+      }
       const playPromise = _active.play();
       if (playPromise !== undefined) {
         await playPromise;
@@ -612,3 +568,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 //mediasession-init
 setInterval(_updatePositionState, 1000)
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && _active) {
+    _active.currentTime = _active.currentTime;
+  }
+})

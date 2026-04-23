@@ -53,8 +53,8 @@ function _stripBackButtonText() {
 async function init() {
   State.init();
 
-  if (Player.audioA && Player.audioB) {
-    processor.init([Player.audioA, Player.audioB]);
+  if (Player.audioA) {
+    processor.init(Player.audioA);
     EQ.init();
   }
 
