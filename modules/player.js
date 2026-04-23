@@ -11,7 +11,7 @@ import {
 } from '../api/index.js'
 import { getAudioStream as ytStream, searchVideos } from '../api/index.js'
 import * as AnimatedArtwork from './animatedArtwork.js'
-import { proxifyUrl } from '../app/proxyRewrite.js'
+import { debugProxyStatus, proxifyUrl } from '../app/proxyRewrite.js'
 
 // Audio
 export const audioA = document.getElementById('audio')
@@ -57,6 +57,9 @@ function _emit(event, data) {
 // Media
 function _updateMediaSession(track) {
   if (!('mediaSession' in navigator)) return
+
+  const proxiedCoverSmall = _proxify(track.coverSmall || track.cover)
+  const proxiedCover = _proxify(track.cover)
   
   navigator.mediaSession.metadata = new MediaMetadata({
     title: track.title || '',
@@ -65,12 +68,12 @@ function _updateMediaSession(track) {
     artwork: track.cover
       ? [
           {
-            src: track.coverSmall || track.cover,
+            src: proxiedCoverSmall,
             sizes: '96x96',
             type: 'image/jpeg',
           },
-          { src: track.cover, sizes: '192x192', type: 'image/jpeg' },
-          { src: track.cover, sizes: '512x512', type: 'image/jpeg' },
+          { src: proxiedCover, sizes: '192x192', type: 'image/jpeg' },
+          { src: proxiedCover, sizes: '512x512', type: 'image/jpeg' },
         ]
       : [],
   })
@@ -158,6 +161,11 @@ function _bindAudio(el) {
   el.addEventListener('error', () => {
     if (el !== _active) return
     if (!el.src || el.src === window.location.href) return
+    console.error('[Player] Audio error event', {
+      code: el.error?.code,
+      message: el.error?.message,
+      src: el.currentSrc || el.src,
+    })
     _emit('error', 'Playback error');
     next()
   })
@@ -377,12 +385,22 @@ AnimatedArtwork.getAnimatedUrl(track)
         throw new Error('Stream URL is missing');
       }
 
+      if (!window.__userInteracted) {
+        console.log('User gesture required for mobile playback');
+        _emit('error', 'Tap play again to start playback on mobile')
+        return
+      }
+
+      const finalAudioUrl = _proxify(stream.url)
+      console.log('[Player] Final audio URL', finalAudioUrl)
+      void debugProxyStatus(finalAudioUrl, 'audio')
+
       _active.onerror = () => console.log('AUDIO ERROR:', _active.error)
       _active.oncanplay = () => console.log('AUDIO READY')
       _active.pause()
       _active.src = ''
       _active.load()
-      _active.src = _proxify(stream.url)
+      _active.src = finalAudioUrl
       _active.load()
       await _active.play().catch(err => console.log('PLAY FAILED:', err))
       if (requestId !== _playRequestId) {

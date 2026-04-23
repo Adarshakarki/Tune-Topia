@@ -1,5 +1,15 @@
 const PROXY_BASE = 'https://tune-topia.onrender.com/proxy';
-const TARGET_HOST_PATTERNS = ['tidal.com', 'amz-pr-fa.audio.tidal.com', 'binimum.org'];
+const TARGET_HOST_PATTERNS = [
+  'tidal.com',
+  'amz-pr-fa.audio.tidal.com',
+  'resources.tidal.com',
+  'binimum.org',
+  'tidal-api.binimum.org',
+  'lyrics-api.binimum.org',
+  'lrclib.net',
+  'wsrv.nl',
+  'm8tec.top',
+];
 
 function getUrlString(input) {
   if (!input) return null;
@@ -45,6 +55,21 @@ export function proxifyUrl(input, context = 'request') {
   return proxiedUrl;
 }
 
+export async function debugProxyStatus(input, context = 'request') {
+  const rawInput = getUrlString(input);
+  const proxiedUrl = isProxyUrl(rawInput) ? rawInput : proxifyUrl(input, `${context}:head`);
+  if (!proxiedUrl) return null;
+
+  try {
+    const response = await window.fetch(proxiedUrl, { method: 'HEAD' });
+    console.log(`[ProxyRewrite:${context}] proxy status`, response.status, proxiedUrl);
+    return response.status;
+  } catch (error) {
+    console.warn(`[ProxyRewrite:${context}] proxy HEAD failed`, error);
+    return null;
+  }
+}
+
 function installSrcDescriptor(ctor, context) {
   if (!ctor?.prototype) return;
 
@@ -71,6 +96,15 @@ function installSrcDescriptor(ctor, context) {
 export function installGlobalProxyInterceptors() {
   if (window.__ttGlobalProxyInstalled) return;
   window.__ttGlobalProxyInstalled = true;
+
+  window.__userInteracted = false;
+  const markUserInteracted = () => {
+    window.__userInteracted = true;
+  };
+
+  ['click', 'touchstart', 'keydown'].forEach((eventName) => {
+    document.addEventListener(eventName, markUserInteracted, { capture: true, passive: true });
+  });
 
   const originalFetch = window.fetch.bind(window);
   window.fetch = (input, init) => {
@@ -108,5 +142,9 @@ export function installGlobalProxyInterceptors() {
     }
     return originalSetAttribute.call(this, name, value);
   };
-}
 
+  const originalOpen = XMLHttpRequest.prototype.open;
+  XMLHttpRequest.prototype.open = function patchedOpen(method, url, ...rest) {
+    return originalOpen.call(this, method, proxifyUrl(url, 'xhr') ?? url, ...rest);
+  };
+}

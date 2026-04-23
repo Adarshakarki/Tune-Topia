@@ -21,6 +21,15 @@ app.use((req, res, next) => {
   next()
 })
 
+app.options('/proxy', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', '*')
+  res.setHeader('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Accept-Ranges')
+  res.setHeader('Accept-Ranges', 'bytes')
+  res.status(204).end()
+})
+
 app.use(express.static(path.join(__dirname, '../')))
 
 // SSRF PROTECTION
@@ -96,7 +105,8 @@ const apiHosts = [
   'binimum.org',
   'lossless.wtf',
   'm8tec.top',
-  'tidal-api.binimum.org'
+  'tidal-api.binimum.org',
+  'lyrics-api.binimum.org'
 ]
 
 function isAllowedHost(hostname) {
@@ -106,8 +116,22 @@ function isAllowedHost(hostname) {
   )
 }
 
+function applyProxyCors(res) {
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', '*')
+  res.setHeader('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Accept-Ranges')
+  res.setHeader('Accept-Ranges', 'bytes')
+}
+
 // PROXY ROUTE
-app.get('/proxy', async (req, res) => {
+app.use('/proxy', async (req, res) => {
+  if (!['GET', 'HEAD'].includes(req.method)) {
+    applyProxyCors(res)
+    return res.status(405).send('Method not allowed')
+  }
+
+  applyProxyCors(res)
   const targetUrl = req.query.url
 
   if (!targetUrl || targetUrl === 'undefined') {
@@ -157,7 +181,7 @@ app.get('/proxy', async (req, res) => {
 
     // FETCH STREAM 
     const response = await axios({
-      method: 'GET',
+      method: req.method,
       url: targetUrl,
       responseType: 'stream',
       decompress: false,
@@ -175,7 +199,7 @@ app.get('/proxy', async (req, res) => {
     const headers = response.headers
 
     if (headers['content-type']) {
-      res.setHeader('Content-Type', headers['content-type'].split(';')[0])
+      res.setHeader('Content-Type', headers['content-type'])
     }
 
     if (headers['content-length']) {
@@ -186,8 +210,17 @@ app.get('/proxy', async (req, res) => {
       res.setHeader('Content-Range', headers['content-range'])
     }
 
-    res.setHeader('Accept-Ranges', 'bytes')
-    res.setHeader('Access-Control-Allow-Origin', '*')
+    if (headers.etag) {
+      res.setHeader('ETag', headers.etag)
+    }
+
+    if (headers['last-modified']) {
+      res.setHeader('Last-Modified', headers['last-modified'])
+    }
+
+    if (headers['cache-control']) {
+      res.setHeader('Cache-Control', headers['cache-control'])
+    }
 
     // STREAM SAFETY
     response.data.on('error', (err) => {
@@ -198,6 +231,11 @@ app.get('/proxy', async (req, res) => {
     req.on('close', () => {
       response.data.destroy()
     })
+
+    if (req.method === 'HEAD') {
+      response.data.destroy()
+      return res.end()
+    }
 
     response.data.pipe(res)
 

@@ -1,6 +1,7 @@
 // Lyrics
 
 import { fetchJSON } from '../api/utils.js';
+import { proxifyUrl } from '../app/proxyRewrite.js';
 
 const LRCLIB_BASE = 'https://lrclib.net/api';
 
@@ -24,9 +25,9 @@ export async function fetchLyrics(title, artist, album = '', duration = 0) {
   try {
     let data;
     try {
-      data = await fetchJSON(`${LRCLIB_BASE}/get?${queryParams}`);
+      data = await fetchJSON(proxifyUrl(`${LRCLIB_BASE}/get?${queryParams}`, 'lyrics-get'));
     } catch {
-      const results = await fetchJSON(`${LRCLIB_BASE}/search?${queryParams}`);
+      const results = await fetchJSON(proxifyUrl(`${LRCLIB_BASE}/search?${queryParams}`, 'lyrics-search'));
       data = results?.[0];
     }
 
