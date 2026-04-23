@@ -11,6 +11,7 @@ import {
 } from '../api/index.js'
 import { getAudioStream as ytStream, searchVideos } from '../api/index.js'
 import * as AnimatedArtwork from './animatedArtwork.js'
+import { proxifyUrl } from '../app/proxyRewrite.js'
 
 // Audio
 export const audioA = document.getElementById('audio')
@@ -39,25 +40,7 @@ let _preloaded = null
 let _preloading = false
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
 
-// Unified API base for Tidal requests
-const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-  ? '/api' 
-  : '/proxy';
-
-export const _proxify = (url) => {
-  if (!url || url.startsWith('blob:') || url.startsWith('data:')) return url;
-  
-  // Route Tidal API calls through the path-based proxy (handles both http and https)
-  const tidalMatch = url.match(/^https?:\/\/api\.tidal\.com/);
-  if (tidalMatch) {
-    return url.replace(tidalMatch[0], API_BASE);
-  }
-
-  // Replace the URL below with the address of your hosted Node.js proxy server
-  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const proxyBase = isLocal ? '' : 'https://tune-topia.onrender.com';
-  return `${proxyBase}/proxy?url=${encodeURIComponent(url)}`;
-};
+export const _proxify = (url) => proxifyUrl(url, 'player');
 
 // Events
 export function on(event, cb) {
@@ -268,7 +251,7 @@ async function _preloadNext() {
     _inactive.pause()
     _inactive.src = ''
     _inactive.load()
-    _inactive.src = stream.url
+    _inactive.src = _proxify(stream.url)
     _inactive.volume = 0
     _inactive.load()
     _preloaded = { track: nextTrack }
@@ -399,7 +382,7 @@ AnimatedArtwork.getAnimatedUrl(track)
       _active.pause()
       _active.src = ''
       _active.load()
-      _active.src = stream.url
+      _active.src = _proxify(stream.url)
       _active.load()
       await _active.play().catch(err => console.log('PLAY FAILED:', err))
       if (requestId !== _playRequestId) {

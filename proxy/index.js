@@ -95,7 +95,8 @@ const apiHosts = [
   'geeked.wtf',
   'binimum.org',
   'lossless.wtf',
-  'm8tec.top'
+  'm8tec.top',
+  'tidal-api.binimum.org'
 ]
 
 function isAllowedHost(hostname) {
