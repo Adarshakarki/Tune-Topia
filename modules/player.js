@@ -31,6 +31,7 @@ let _switching = false
 let _radioMode = false
 const _radioHistory = new Set()
 let _loadingRadio = false
+let _playRequestId = 0
 
 const _preloadLead = 20
 const _listeners = {}
@@ -264,7 +265,10 @@ async function _preloadNext() {
     const stream = await _getStream(nextTrack);
     if (stream.type === 'dash') { _preloading = false; return; }
 
-    _inactive.src = _proxify(stream.url)
+    _inactive.pause()
+    _inactive.src = ''
+    _inactive.load()
+    _inactive.src = stream.url
     _inactive.volume = 0
     _inactive.load()
     _preloaded = { track: nextTrack }
@@ -326,36 +330,37 @@ async function _getStream(track) {
   if (track.source === 'youtube') return ytStream(track.id);
   
   try {
-    // Robust fetch via Katze API through the Render Proxy
     const katzeUrl = `https://katze.qqdl.site/track/?id=${track.id}&quality=LOW`;
-    const response = await fetch(_proxify(katzeUrl));
+
+    const response = await fetch(katzeUrl);
     const json = await response.json();
 
     if (json?.data?.manifest) {
-      // Decode the "hidden" Base64 manifest
       const decodedManifest = JSON.parse(atob(json.data.manifest));
+
       return {
-        url: decodedManifest.urls[0],
-        type: 'url'
+      url: decodedManifest.urls[0],
+      type: 'url'
       };
     }
   } catch (err) {
     console.error('[Player] Katze fetch failed:', err);
   }
 
-  throw new Error('Stream unavailable')
+  throw new Error('Stream unavailable');
 }
 
 // Playback
 export async function play(track, tracks, startIndex = 0) {
+  const requestId = ++_playRequestId
   if (tracks) Queue.load(tracks, startIndex);
   await processor.resume();
 
   _radioHistory.add(track.id);
   _switching = true; _pauseVideo(); _preloaded = null; _preloading = false; _swapping = false;
 
-  audioA.pause(); audioA.volume = 1; audioA.src = '';
-  audioB.pause(); audioB.volume = 1; audioB.src = '';
+  audioA.pause(); audioA.volume = 1; audioA.src = ''; audioA.load();
+  audioB.pause(); audioB.volume = 1; audioB.src = ''; audioB.load();
   _active = audioA; _inactive = audioB; _switching = false;
   
   if (_dash) { try { _dash.destroy(); } catch {} _dash = null; }
@@ -378,19 +383,39 @@ AnimatedArtwork.getAnimatedUrl(track)
 
   try {
     const stream = await _getStream(track)
+    if (requestId !== _playRequestId) return
+
+    console.log('STREAM:', stream)
+
     if (stream.type === 'dash') {
       await _playDash(stream.manifest)
     } else {
       if (!stream.url) {
         throw new Error('Stream URL is missing');
       }
-      _active.src = _proxify(stream.url)
-      await _active.play()
+
+      _active.onerror = () => console.log('AUDIO ERROR:', _active.error)
+      _active.oncanplay = () => console.log('AUDIO READY')
+      _active.pause()
+      _active.src = ''
+      _active.load()
+      _active.src = stream.url
+      _active.load()
+      await _active.play().catch(err => console.log('PLAY FAILED:', err))
+      if (requestId !== _playRequestId) {
+        _active.pause()
+        return
+      }
       _ensureMediaSessionHandlers()
-    } History.push(track);
+    }
+
+    if (requestId !== _playRequestId) return
+
+    History.push(track);
     _emit('queueUpdated', { tracks: State.get('queue.tracks'), position: State.get('player.queuePosition') });
     _updateMediaSession(track);
   } catch (e) {
+    if (requestId !== _playRequestId) return
     _emit('error', e.message || 'Playback error')
   }
 }

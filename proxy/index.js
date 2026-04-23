@@ -189,19 +189,22 @@ app.get('/proxy', async (req, res) => {
     const safeUrl = `${protocol}://${safeHostname}${safeSuffix}`
 
     const proxyHeaders = {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-      'Accept': 'audio/*, */*',
+      'User-Agent': 'Mozilla/5.0',
+      'Accept': '*/*',
+      'Accept-Encoding': 'identity',
+      'Connection': 'keep-alive',
       'Origin': 'https://listen.tidal.com',
       'Referer': 'https://listen.tidal.com/',
     }
 
-    proxyHeaders['Range'] = req.headers.range || 'bytes=0-'
+    if (req.headers.range) proxyHeaders['Range'] = req.headers.range
     if (req.headers.authorization) proxyHeaders['Authorization'] = req.headers.authorization
 
     const response = await axios.request({
       method: 'GET',
       url: safeUrl,
       responseType: 'stream',
+      decompress: false,
       timeout: 15000,
       maxRedirects: 3,
       httpAgent,
@@ -211,24 +214,23 @@ app.get('/proxy', async (req, res) => {
     })
 
     // Forward status and essential streaming headers
-    res.status(response.status);
+    res.status(response.status)
+
+    const rawContentType = response.headers['content-type']
+    if (rawContentType) {
+      const typeOnly = rawContentType.split(';')[0].trim()
+      if (/^[a-zA-Z0-9!#$&\-^_.+]+\/[a-zA-Z0-9!#$&\-^_.+]+$/.test(typeOnly)) {
+        res.set('Content-Type', typeOnly)
+      }
+    }
     if (response.headers['content-length']) {
       res.set('Content-Length', response.headers['content-length'])
     }
     if (response.headers['content-range']) {
       res.set('Content-Range', response.headers['content-range'])
     }
-    res.set('Accept-Ranges', 'bytes');
-    
-    // Sanitise the reflected Content-Type to prevent header injection.
-    // Only forward type/subtype; strip parameters that could carry CRLF.
-    const rawContentType = response.headers['content-type']
-    if (rawContentType) {
-      const typeOnly = rawContentType.split(';')[0].trim()
-      // Allow only valid RFC 7230 media-type tokens — no CRLF possible.
-      if (/^[a-zA-Z0-9!#$&\-^_.+]+\/[a-zA-Z0-9!#$&\-^_.+]+$/.test(typeOnly)) {
-        res.set('Content-Type', typeOnly)
-      }
+    if (response.headers['accept-ranges']) {
+      res.set('Accept-Ranges', response.headers['accept-ranges'])
     }
 
     response.data.pipe(res)
