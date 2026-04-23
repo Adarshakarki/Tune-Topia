@@ -12,7 +12,7 @@ const app = express()
 // CORS
 app.use(cors({
   origin: '*',
-  exposedHeaders: ['Content-Range', 'Content-Length', 'Accept-Ranges']
+  exposedHeaders: ['Content-Range', 'Content-Length', 'Accept-Ranges', 'Content-Type']
 }))
 
 app.use((req, res, next) => {
@@ -23,7 +23,7 @@ app.use((req, res, next) => {
 
 app.use(express.static(path.join(__dirname, '../')))
 
-// SSRF
+// SSRF PROTECTION
 function isPrivateIP(ip) {
   const version = net.isIP(ip)
   if (!version) return true
@@ -49,12 +49,13 @@ function isPrivateIP(ip) {
   )
 }
 
+// safe DNS lookup wrapper
 const safeLookup = (hostname, options, cb) => {
   dns.lookup(hostname, options, (err, address, family) => {
     if (err) return cb(err)
 
     const list = Array.isArray(address) ? address : [{ address }]
-    if (list.some((a) => isPrivateIP(a.address))) {
+    if (list.some(a => isPrivateIP(a.address))) {
       return cb(new Error('Blocked private IP'))
     }
 
@@ -65,7 +66,7 @@ const safeLookup = (hostname, options, cb) => {
 const httpAgent = new http.Agent({ lookup: safeLookup })
 const httpsAgent = new https.Agent({ lookup: safeLookup })
 
-// Media
+// HOST ALLOWLIST
 const mediaHosts = [
   'tidal.com',
   'resources.tidal.com',
@@ -80,10 +81,9 @@ const mediaHosts = [
   'itunes.apple.com',
   'is1-ssl.mzstatic.com',
   'video-ssl.itunes.apple.com',
-  'cdn.jsdelivr.net', // For hls.js
+  'cdn.jsdelivr.net'
 ]
 
-// API
 const apiHosts = [
   'spotisaver.net',
   'monochrome.tf',
@@ -95,34 +95,29 @@ const apiHosts = [
   'geeked.wtf',
   'binimum.org',
   'lossless.wtf',
-  'm8tec.top',
+  'm8tec.top'
 ]
 
-// Check
-function getProxyMode(hostname) {
-  if (mediaHosts.some((h) => hostname === h || hostname.endsWith('.' + h))) {
-    return 'media'
-  }
-
-  if (apiHosts.some((h) => hostname === h || hostname.endsWith('.' + h))) {
-    return 'api'
-  }
-
-  return null
+function isAllowedHost(hostname) {
+  return (
+    mediaHosts.some(h => hostname === h || hostname.endsWith('.' + h)) ||
+    apiHosts.some(h => hostname === h || hostname.endsWith('.' + h))
+  )
 }
 
-// Route
+// PROXY ROUTE
 app.get('/proxy', async (req, res) => {
   const targetUrl = req.query.url
+
   if (!targetUrl || targetUrl === 'undefined') {
-    return res.status(400).send('Invalid or missing url parameter')
+    return res.status(400).send('Missing url parameter')
   }
 
   try {
     const urlObj = new URL(targetUrl)
     const hostname = urlObj.hostname.toLowerCase()
 
-    // Protocol
+    // basic validation
     if (!['http:', 'https:'].includes(urlObj.protocol)) {
       return res.status(400).send('Invalid protocol')
     }
@@ -135,116 +130,87 @@ app.get('/proxy', async (req, res) => {
       return res.status(400).send('Invalid path')
     }
 
-    // Mode
-    const mode = getProxyMode(hostname)
-
-    if (!mode) {
-      return res.status(403).send('Host not allowed (no mode match)')
+    if (!isAllowedHost(hostname)) {
+      return res.status(403).send('Host not allowed')
     }
 
-    // Media
-    if (mode === 'media') {
-      const safe = await dns.promises.lookup(hostname, { all: true })
-      if (safe.some((a) => isPrivateIP(a.address))) {
-        return res.status(403).send('Blocked unsafe IP')
-      }
+    // DNS SSRF check
+    const safe = await dns.promises.lookup(hostname, { all: true })
+    if (safe.some(a => isPrivateIP(a.address))) {
+      return res.status(403).send('Blocked unsafe IP')
     }
 
-    // API
-    if (mode === 'api') {
-      const safe = await dns.promises.lookup(hostname, { all: true })
-      if (safe.some((a) => isPrivateIP(a.address))) {
-        return res.status(403).send('Blocked unsafe API host')
-      }
-    }
-
-    // Request (Safe URL)
-    //
-    // CodeQL taint-breaking strategy:
-    //
-    // 1. hostname — encodeURIComponent() is a recognised CodeQL sanitiser.
-    //    Valid hostnames only contain [a-z0-9.-]; none of these are percent-encoded
-    //    by encodeURIComponent (dots are in its safe set), so this is a functional
-    //    no-op but statically breaks the taint chain on the host portion.
-    //
-    // 2. pathname — split on '/', round-trip each segment through
-    //    decodeURIComponent → encodeURIComponent to normalise and sanitise.
-    //
-    // 3. search — rebuilt from scratch via URLSearchParams, another recognised
-    //    CodeQL sanitiser, so no raw user string reaches the sink.
-    //
-    // 4. protocol — produced by a ternary over a literal, never user-derived.
-
-    const safeHostname = encodeURIComponent(hostname)   // breaks taint on host
-
-    const safeSegments = urlObj.pathname
-      .split('/')
-      .map((seg) => (seg === '' ? '' : encodeURIComponent(decodeURIComponent(seg))))
-    const safePath = safeSegments.join('/')
-
-    const safeSearch = new URLSearchParams(urlObj.searchParams).toString()
-    const safeSuffix = safePath + (safeSearch ? '?' + safeSearch : '')
-
-    const protocol = urlObj.protocol === 'https:' ? 'https' : 'http'
-    const safeUrl = `${protocol}://${safeHostname}${safeSuffix}`
-
+    // HEADERS
     const proxyHeaders = {
       'User-Agent': 'Mozilla/5.0',
       'Accept': '*/*',
       'Accept-Encoding': 'identity',
       'Connection': 'keep-alive',
       'Origin': 'https://listen.tidal.com',
-      'Referer': 'https://listen.tidal.com/',
+      'Referer': 'https://listen.tidal.com/'
     }
 
-    if (req.headers.range) proxyHeaders['Range'] = req.headers.range
-    if (req.headers.authorization) proxyHeaders['Authorization'] = req.headers.authorization
+    if (req.headers.range) {
+      proxyHeaders.Range = req.headers.range
+    }
 
-    const response = await axios.request({
+    // FETCH STREAM 
+    const response = await axios({
       method: 'GET',
-      url: safeUrl,
+      url: targetUrl,
       responseType: 'stream',
       decompress: false,
-      timeout: 15000,
-      maxRedirects: 3,
+      timeout: 20000,
+      maxRedirects: 5,
       httpAgent,
       httpsAgent,
       validateStatus: () => true,
-      headers: proxyHeaders,
+      headers: proxyHeaders
     })
 
-    // Forward status and essential streaming headers
+    // RESPONSE HEADERS
     res.status(response.status)
 
-    const rawContentType = response.headers['content-type']
-    if (rawContentType) {
-      const typeOnly = rawContentType.split(';')[0].trim()
-      if (/^[a-zA-Z0-9!#$&\-^_.+]+\/[a-zA-Z0-9!#$&\-^_.+]+$/.test(typeOnly)) {
-        res.set('Content-Type', typeOnly)
-      }
-    }
-    if (response.headers['content-length']) {
-      res.set('Content-Length', response.headers['content-length'])
-    }
-    if (response.headers['content-range']) {
-      res.set('Content-Range', response.headers['content-range'])
-    }
-    if (response.headers['accept-ranges']) {
-      res.set('Accept-Ranges', response.headers['accept-ranges'])
+    const headers = response.headers
+
+    if (headers['content-type']) {
+      res.setHeader('Content-Type', headers['content-type'].split(';')[0])
     }
 
+    if (headers['content-length']) {
+      res.setHeader('Content-Length', headers['content-length'])
+    }
+
+    if (headers['content-range']) {
+      res.setHeader('Content-Range', headers['content-range'])
+    }
+
+    res.setHeader('Accept-Ranges', 'bytes')
+    res.setHeader('Access-Control-Allow-Origin', '*')
+
+    // STREAM SAFETY
+    response.data.on('error', (err) => {
+      console.error('Stream error:', err.message)
+      res.destroy()
+    })
+
+    req.on('close', () => {
+      response.data.destroy()
+    })
+
     response.data.pipe(res)
+
   } catch (err) {
     console.error('Proxy error:', err.message)
     res.status(500).json({
       success: false,
       error: 'Proxy failed',
-      details: err.message,
+      details: err.message
     })
   }
 })
 
-// Start
+// START SERVER
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {
   console.log(`Proxy running on port ${PORT}`)
