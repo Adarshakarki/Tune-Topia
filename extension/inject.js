@@ -1,6 +1,28 @@
 (() => {
   if (window.__tidalOriginExtension === true) return;
   window.__tidalOriginExtension = true;
+  
+  // Define the allowed targets, which can be hostnames or full URL prefixes.
+  const ALLOWED_TARGETS = [
+    'listen.tidal.com',
+    'tunetopia.app',
+    'https://adarshakarki.github.io/Tune-Topia/',
+  ];
+  const currentUrl = window.location.href.toLowerCase();
+  const currentHostname = window.location.hostname.toLowerCase();
+
+  let isAllowed = false;
+  for (const target of ALLOWED_TARGETS) {
+    const lowerCaseTarget = target.toLowerCase();
+    if (lowerCaseTarget.startsWith('http://') || lowerCaseTarget.startsWith('https://')) {
+      if (currentUrl.startsWith(lowerCaseTarget)) { isAllowed = true; break; }
+    } else {
+      if (currentHostname === lowerCaseTarget || currentHostname.endsWith(`.${lowerCaseTarget}`)) { isAllowed = true; break; }
+    }
+  }
+  if (!isAllowed) {
+    return;
+  }
 
   const PROXY_BASE = 'https://tune-topia.onrender.com/proxy';
   const TARGET_HOST_PATTERNS = ['tidal.com', 'amz-pr-fa.audio.tidal.com', 'binimum.org'];
@@ -112,23 +134,26 @@
   const rewriteNode = (node) => {
     if (!(node instanceof Element)) return;
 
-    if (node.hasAttribute('src')) {
-      const currentSrc = node.getAttribute('src');
-      const proxiedSrc = proxifyUrl(currentSrc, `observer:${node.tagName.toLowerCase()}`);
-      if (proxiedSrc && proxiedSrc !== currentSrc) {
-        node.setAttribute('src', proxiedSrc);
+    const process = (el) => {
+      if (el.hasAttribute('src')) {
+        const currentSrc = el.getAttribute('src');
+        const proxiedSrc = proxifyUrl(currentSrc, `observer:${el.tagName.toLowerCase()}`);
+        if (proxiedSrc && proxiedSrc !== currentSrc) {
+          el.setAttribute('src', proxiedSrc);
+        }
       }
-    }
 
-    if (node.hasAttribute('poster')) {
-      const currentPoster = node.getAttribute('poster');
-      const proxiedPoster = proxifyUrl(currentPoster, `observer-poster:${node.tagName.toLowerCase()}`);
-      if (proxiedPoster && proxiedPoster !== currentPoster) {
-        node.setAttribute('poster', proxiedPoster);
+      if (el.hasAttribute('poster')) {
+        const currentPoster = el.getAttribute('poster');
+        const proxiedPoster = proxifyUrl(currentPoster, `observer-poster:${el.tagName.toLowerCase()}`);
+        if (proxiedPoster && proxiedPoster !== currentPoster) {
+          el.setAttribute('poster', proxiedPoster);
+        }
       }
-    }
+    };
 
-    node.querySelectorAll?.('[src],[poster]').forEach(rewriteNode);
+    process(node);
+    node.querySelectorAll?.('[src],[poster]').forEach(process);
   };
 
   new MutationObserver((mutations) => {
