@@ -4,12 +4,11 @@ Tune Topia is a high-fidelity, privacy-focused music streaming web application. 
 
 ---
 
-> [!CAUTION] <br>
-> **Project Status: Archived.** <br>
-> Barely functional due to Monochrome/Tidal API crackdowns. [Details in SUNSET.md](./SUNSET.md)
+> [!CAUTION]
+> Project Status: Archived.
+> Barely functional due to Monochrome/Tidal API crackdowns. [Details in sunset.md](./sunset.md)
 
 ---
-
 # Key Features
 
 ### Audiophile Grade Streaming
